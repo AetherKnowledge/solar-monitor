@@ -37,7 +37,8 @@ void setup() {
     }
 
     server.serveStatic("/", LittleFS, "/")
-          .setDefaultFile("index.html");
+          .setDefaultFile("index.html")
+          .setTryGzipFirst(true);
 
     server.begin();
 

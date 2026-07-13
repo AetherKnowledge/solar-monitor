@@ -2,6 +2,7 @@ import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
+import { gzipOnly } from './plugins/gzip-only';
 
 export default defineConfig({
 	plugins: [
@@ -18,9 +19,12 @@ export default defineConfig({
 			// See https://svelte.dev/docs/kit/adapters for more information about adapters.
 			adapter: adapter({
 				pages: '../firmware/data',
-				assets: '../firmware/data',
-				fallback: 'index.html'
+				assets: '../firmware/data'
 			})
-		})
-	]
+		}),
+		gzipOnly('../firmware/data')
+	],
+	build: {
+		sourcemap: false
+	}
 });
