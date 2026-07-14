@@ -2,5 +2,5 @@
 </script>
 
 <main>
-	<h1>Welcome to the new page!</h1>
+	<p>MQTT</p>
 </main>

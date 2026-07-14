@@ -5,7 +5,7 @@ A modern web-based management interface for an ESP32 built with **Svelte**, **Ty
 ## Features
 
 - Modern responsive UI
-- Built with Svelte + TypeScript
+- Built with SvelteKit + TypeScript
 - Styled using Tailwind CSS and DaisyUI
 - Served directly from ESP32 LittleFS
 - Lightweight and optimized for embedded devices
@@ -36,7 +36,7 @@ The generated files in the `dist` directory can then be copied to the ESP32's `d
 
 ## Technology Stack
 
-- Svelte
+- SvelteKit
 - TypeScript
 - Vite
 - Tailwind CSS
