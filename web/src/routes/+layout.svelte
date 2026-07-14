@@ -2,7 +2,6 @@
 	import { resolve } from '$app/paths';
 	import type { RouteId } from '$app/types';
 	import favicon from '$lib/assets/favicon.svg';
-	import '@fontsource/roboto/latin-400.css';
 	import MqttFillIcon from '@iconify-svelte/mingcute/mqtt-fill';
 	import { LayoutDashboard, PanelLeftClose, PanelLeftOpen, SolarPanel, Wifi } from '@lucide/svelte';
 	import type { Component } from 'svelte';
@@ -47,7 +46,10 @@
 	});
 </script>
 
-<svelte:head><link rel="icon" href={favicon} /></svelte:head>
+<svelte:head>
+	<link rel="icon" href={favicon} />
+	<link rel="preload" href="/roboto.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+</svelte:head>
 
 <div class="drawer lg:drawer-open">
 	<input id="my-drawer-4" type="checkbox" class="drawer-toggle" bind:checked={drawerOpen} />

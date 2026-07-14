@@ -13,7 +13,8 @@ const COMPRESSIBLE_EXTENSIONS = new Set([
 	'.svg',
 	'.xml',
 	'.txt',
-	'.map'
+	'.map',
+	'.woff2'
 ]);
 
 export function gzipOnly(outputDir: string): Plugin {
