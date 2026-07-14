@@ -106,7 +106,9 @@
 			</div>
 		</nav>
 		<!-- Page content here -->
-		{@render children()}
+		<main class="flex flex-col p-4">
+			{@render children()}
+		</main>
 	</div>
 
 	<div class="drawer-side is-drawer-close:overflow-visible">

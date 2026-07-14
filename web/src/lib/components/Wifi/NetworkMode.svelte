@@ -1,5 +1,7 @@
 <script lang="ts">
-	let { networkMode = $bindable() }: { networkMode: 'ap' | 'wifi' } = $props();
+	import type { NetworkConfig } from '$lib/types/NetworkData';
+
+	let { networkConfig = $bindable() }: { networkConfig: NetworkConfig } = $props();
 </script>
 
 <fieldset class="fieldset bg-base-100 border border-base-300 rounded-box p-4">
@@ -14,7 +16,7 @@
 				name="network-mode"
 				class="radio radio-primary"
 				value="ap"
-				bind:group={networkMode}
+				bind:group={networkConfig.networkMode}
 			/>
 
 			<div>
@@ -33,7 +35,7 @@
 				name="network-mode"
 				class="radio radio-primary"
 				value="wifi"
-				bind:group={networkMode}
+				bind:group={networkConfig.networkMode}
 			/>
 
 			<div>
