@@ -3,7 +3,15 @@
 	import type { RouteId } from '$app/types';
 	import favicon from '$lib/assets/favicon.svg';
 	import MqttFillIcon from '@iconify-svelte/mingcute/mqtt-fill';
-	import { LayoutDashboard, PanelLeftClose, PanelLeftOpen, SolarPanel, Wifi } from '@lucide/svelte';
+	import {
+		Cable,
+		LayoutDashboard,
+		PanelLeftClose,
+		PanelLeftOpen,
+		RadioReceiver,
+		SolarPanel,
+		Wifi
+	} from '@lucide/svelte';
 	import type { Component } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
 	import { fly } from 'svelte/transition';
@@ -30,6 +38,16 @@
 			label: 'MQTT',
 			href: '/mqtt',
 			icon: MqttFillIcon
+		},
+		{
+			label: 'Devices',
+			href: '/devices',
+			icon: RadioReceiver
+		},
+		{
+			label: 'Registers',
+			href: '/registers',
+			icon: Cable
 		}
 	] satisfies SidebarItemProps[];
 
