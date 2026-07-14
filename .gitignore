@@ -5,7 +5,7 @@
 .vscode/launch.json
 .vscode/ipch
 .mypy_cache
-firmware/data
+firmware/data/website
 
 node_modules
 logs

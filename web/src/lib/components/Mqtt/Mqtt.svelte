@@ -5,17 +5,17 @@
 	import { slide } from 'svelte/transition';
 
 	type MqttConfig = {
-		host?: string;
-		port?: number;
+		host: string;
+		port: number;
 		username?: string;
 		password?: string;
-		autodiscoveryEnabled?: boolean;
+		autodiscoveryEnabled: boolean;
 		autodiscoveryPrefix?: string;
 		clientId?: string;
 	};
 
 	let savedMqttConfig: MqttConfig = $state({
-		host: '',
+		host: 'http://192.168.1.10',
 		port: 1883,
 		username: '',
 		password: '',
@@ -70,6 +70,7 @@
 				<input
 					bind:value={mqttConfig.host}
 					type="url"
+					required
 					class="grow"
 					placeholder="Enter MQTT broker address"
 				/>
@@ -92,6 +93,7 @@
 					max="65535"
 					step="1"
 					placeholder="Enter port"
+					required
 					bind:value={mqttConfig.port}
 				/>
 			</label>
@@ -179,6 +181,7 @@
 				type="checkbox"
 				class="toggle toggle-primary"
 				bind:checked={mqttConfig.autodiscoveryEnabled}
+				required
 			/>
 		</div>
 

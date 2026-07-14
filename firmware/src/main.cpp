@@ -1,26 +1,25 @@
 #include <Arduino.h>
 #include <WiFi.h>
-#include <ESPAsyncWebServer.h>
-#include <LittleFS.h>
+#include <WebServer/WebServer.h>
 
-const char* ssid = "GlobeAtHome";
-const char* password = "donotopen8";
-
-AsyncWebServer server(80);
+const char *ssid = "GlobeAtHome";
+const char *password = "donotopen8";
 
 #define LED_PIN 2
 
-void setup() {
-  Serial.begin(115200);
-  // put your setup code here, to run once:
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);
+void setup()
+{
+    Serial.begin(115200);
+    // put your setup code here, to run once:
+    pinMode(LED_PIN, OUTPUT);
+    digitalWrite(LED_PIN, HIGH);
 
-  WiFi.begin(ssid, password);
+    WiFi.begin(ssid, password);
 
     Serial.print("Connecting");
 
-    while (WiFi.status() != WL_CONNECTED) {
+    while (WiFi.status() != WL_CONNECTED)
+    {
         delay(500);
         Serial.print(".");
     }
@@ -31,20 +30,9 @@ void setup() {
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
 
-    if (!LittleFS.begin()) {
-        Serial.println("LittleFS Mount Failed");
-        return;
-    }
-
-    server.serveStatic("/", LittleFS, "/")
-          .setDefaultFile("index.html")
-          .setTryGzipFirst(true);
-
-    server.begin();
-
-    Serial.println("Web server started");
-  
+    startWebServer();
 }
 
-void loop() {
+void loop()
+{
 }
