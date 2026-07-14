@@ -4,19 +4,13 @@
 	import type { NetworkConfig } from '$lib/types/NetworkData';
 
 	let savedNetworkConfig = $state<NetworkConfig>({
-		networkMode: 'wifi',
-		network: {
-			ssid: 'Home Wi-Fi',
-			signal: 5,
-			secure: true,
-			saved: true,
-			connected: true
-		},
+		networkMode: 'ap+sta',
+		ssid: 'Home Wi-Fi',
 		password: ''
 	});
 
 	// svelte-ignore state_referenced_locally
-	let networkConfig = $state($state.snapshot(savedNetworkConfig));
+	let networkConfig: NetworkConfig = $state($state.snapshot(savedNetworkConfig));
 
 	let form: HTMLFormElement;
 	let isValid = $state(false);
@@ -26,8 +20,10 @@
 	}
 
 	$effect(() => {
-		networkConfig.networkMode;
-		networkConfig.network?.secure;
+		// updates the validity of the form whenever the networkConfig changes
+
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		networkConfig.ssid;
 
 		updateValidity();
 	});
@@ -49,9 +45,7 @@
 
 <form bind:this={form} oninput={updateValidity} onchange={updateValidity}>
 	<NetworkMode bind:networkConfig />
-	{#if networkConfig.networkMode === 'wifi'}
-		<WifiNetwork bind:networkConfig />
-	{/if}
+	<WifiNetwork bind:networkConfig />
 	<div class="flex justify-between">
 		<button
 			type="button"

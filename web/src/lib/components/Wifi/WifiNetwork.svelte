@@ -73,7 +73,7 @@
 	);
 
 	function select(network: NetworkData) {
-		selected.network = network;
+		selected.ssid = network.ssid;
 		searchInput = '';
 
 		popover.hidePopover();
@@ -104,6 +104,10 @@
 
 		scanning = false;
 	}
+
+	function findNetwork(ssid: string = '') {
+		return networks.find((n) => n.ssid === ssid);
+	}
 </script>
 
 <fieldset class="fieldset bg-base-100 border border-base-300 rounded-box p-4 gap-5">
@@ -120,7 +124,7 @@
 			<label class="input w-full join-item">
 				<Wifi class="size-4 opacity-60" />
 				<input
-					value={selected.network?.ssid}
+					value={findNetwork(selected.ssid)?.ssid || ''}
 					type="search"
 					class="grow"
 					readonly
@@ -128,7 +132,7 @@
 					placeholder="Search"
 				/>
 				<div class="flex items-center gap-2">
-					{@render SignalIcon(selected.network?.signal || 0)}
+					{@render SignalIcon(findNetwork(selected.ssid)?.signal || 0)}
 				</div>
 			</label>
 			<button
@@ -183,7 +187,7 @@
 		</div>
 	</div>
 
-	{#if selected.network?.secure}
+	{#if findNetwork(selected.ssid)?.secure}
 		<div class="flex flex-col">
 			<div class="flex flex-col">
 				<span class="font-medium">Wi-Fi Password</span>
@@ -250,7 +254,7 @@
 			<div class="flex items-center gap-2">
 				{@render SignalIcon(network.signal)}
 
-				{#if selected.network?.ssid === network.ssid}
+				{#if selected.ssid === network.ssid}
 					<Check class="size-4 text-primary" />
 				{/if}
 			</div>

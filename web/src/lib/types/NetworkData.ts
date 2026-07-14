@@ -7,7 +7,7 @@ export type NetworkData = {
 };
 
 export type NetworkConfig = {
-	networkMode: 'ap' | 'wifi';
-	network?: NetworkData;
+	networkMode: 'ap+sta' | 'sta';
+	ssid?: string;
 	password?: string;
 };

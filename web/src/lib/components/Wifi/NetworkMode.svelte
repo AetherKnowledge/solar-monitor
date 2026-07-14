@@ -15,14 +15,15 @@
 				type="radio"
 				name="network-mode"
 				class="radio radio-primary"
-				value="ap"
+				value="ap+sta"
 				bind:group={networkConfig.networkMode}
 			/>
 
 			<div>
-				<div class="font-medium">Access Point</div>
-				<div class="text-base-content/70 text-sm">
-					Host your own Wi-Fi network for setup and maintenance.
+				<div class="font-medium">Access Point + Wi-Fi Client</div>
+				<div class="text-base-content/70 text-sm text-wrap">
+					Connect this device to your Wi-Fi network while allowing direct connections to its own
+					Wi-Fi network for configuration.
 				</div>
 			</div>
 		</label>
@@ -34,14 +35,15 @@
 				type="radio"
 				name="network-mode"
 				class="radio radio-primary"
-				value="wifi"
+				value="sta"
 				bind:group={networkConfig.networkMode}
 			/>
 
 			<div>
 				<div class="font-medium">Wi-Fi Client</div>
-				<div class="text-base-content/70 text-sm">
-					Connect this device to an existing Wi-Fi network.
+				<div class="text-base-content/70 text-sm text-wrap">
+					Connect this device to your Wi-Fi network using your existing router. Direct connections
+					to the device's Wi-Fi network will be unavailable.
 				</div>
 			</div>
 		</label>
