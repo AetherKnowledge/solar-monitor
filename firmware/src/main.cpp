@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WebServer/WebServer.h>
+#include <Config/Config.h>
 
 const char *ssid = "GlobeAtHome";
 const char *password = "donotopen8";
@@ -30,6 +31,7 @@ void setup()
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
 
+    loadConfig();
     startWebServer();
 }
 

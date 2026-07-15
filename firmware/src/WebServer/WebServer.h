@@ -2,3 +2,4 @@
 
 bool startWebServer();
 bool stopWebServer();
+void registerWebServerApis();

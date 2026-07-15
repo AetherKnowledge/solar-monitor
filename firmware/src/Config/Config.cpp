@@ -6,12 +6,23 @@ Config config;
 
 bool loadConfig()
 {
+    Serial.println("Loading config");
+
+    if (!LittleFS.begin())
+    {
+        Serial.println("LittleFS Mount Failed");
+        return false;
+    }
+
     // incase the config file does not exist or is invalid, reset to default values
     resetConfig();
 
     File file = LittleFS.open("/config.json", "r");
     if (!file)
+    {
+        Serial.println("Failed to open config file");
         return false;
+    }
 
     JsonDocument doc;
     DeserializationError error = deserializeJson(doc, file);
@@ -19,11 +30,14 @@ bool loadConfig()
 
     if (error)
     {
+        Serial.println("Failed to deserialize JSON");
         file.close();
         return false;
     }
 
     config.fromJson(doc.as<JsonObjectConst>());
+
+    Serial.println("Config loaded");
 
     return true;
 }
@@ -35,10 +49,15 @@ bool saveConfig()
 
     File file = LittleFS.open("/config.json", "w");
     if (!file)
+    {
+        Serial.println("Failed to open config file for writing");
         return false;
+    }
 
     serializeJsonPretty(doc, file);
     file.close();
+
+    Serial.println("Config saved");
 
     return true;
 }

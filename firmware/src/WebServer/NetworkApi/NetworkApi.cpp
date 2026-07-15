@@ -17,6 +17,8 @@ void registerNetworkApi(AsyncWebServer &server)
            size_t,
            size_t)
         { handleUpdateNetworkConfig(request, data, len); });
+
+    Serial.println("Network API registered");
 }
 
 void handleGetNetworkConfig(AsyncWebServerRequest *request)
@@ -26,6 +28,8 @@ void handleGetNetworkConfig(AsyncWebServerRequest *request)
 
     String response;
     serializeJson(doc, response);
+
+    Serial.println("Network Config: " + response);
 
     request->send(200, "application/json", response);
 }
