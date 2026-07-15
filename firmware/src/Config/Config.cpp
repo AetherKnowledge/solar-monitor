@@ -38,6 +38,7 @@ bool loadConfig()
     config.fromJson(doc.as<JsonObjectConst>());
 
     Serial.println("Config loaded");
+    Serial.println(config.toString().c_str());
 
     return true;
 }

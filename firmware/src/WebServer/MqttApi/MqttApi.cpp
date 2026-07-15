@@ -20,7 +20,7 @@ void registerMqttApi(AsyncWebServer &server)
 void handleGetMqttConfig(AsyncWebServerRequest *request)
 {
     JsonDocument doc;
-    config.mqtt.fromJson(doc.to<JsonObject>());
+    config.mqtt.toJson(doc.to<JsonObject>());
 
     String response;
     serializeJson(doc, response);

@@ -24,7 +24,7 @@ void registerNetworkApi(AsyncWebServer &server)
 void handleGetNetworkConfig(AsyncWebServerRequest *request)
 {
     JsonDocument doc;
-    config.network.fromJson(doc.to<JsonObject>());
+    config.network.toJson(doc.to<JsonObject>());
 
     String response;
     serializeJson(doc, response);
