@@ -11,4 +11,4 @@ extern volatile bool wifiScanRequested;
 
 bool connectToWiFi(const String &ssid, const String &password, WiFiMode_t mode);
 void startScanning();
-void scanNetworksAsync();
+void scanNetworks();

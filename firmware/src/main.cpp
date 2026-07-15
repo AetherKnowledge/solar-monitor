@@ -30,6 +30,16 @@ void loop()
         startScanning();
     }
 
-    scanNetworksAsync();
+    if (wifiScanStatus == InProgress)
+    {
+        scanNetworks();
+    }
+
+    if (networkUpdateRequested)
+    {
+        networkUpdateRequested = false;
+        setNetworkConfig(pendingNetworkConfig);
+    }
+
     delay(10);
 }

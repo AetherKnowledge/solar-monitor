@@ -59,16 +59,10 @@ void handleUpdateNetworkConfig(AsyncWebServerRequest *request, uint8_t *data, si
 
     NetworkConfig newConfig;
     newConfig.fromJson(doc.as<JsonObjectConst>());
+    networkUpdateRequested = true;
+    pendingNetworkConfig = newConfig;
 
-    // move to volatile variable to be used in the main loop to trigger a network change
-    bool result = setNetworkConfig(newConfig);
-    if (!result)
-    {
-        request->send(400, "text/plain", "Failed to connect to the new network. Keeping the old configuration.");
-        return;
-    }
-
-    request->send(200, "text/plain", "OK");
+    request->send(202, "text/plain", "OK");
 }
 
 void handleGetMqttConfig(AsyncWebServerRequest *request)

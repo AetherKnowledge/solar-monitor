@@ -5,8 +5,8 @@
 extern Config config;
 extern bool configLoaded;
 
-extern volatile bool configUpdateRequested;
-extern Config pendingConfig;
+extern volatile bool networkUpdateRequested;
+extern NetworkConfig pendingNetworkConfig;
 
 bool loadConfig();
 bool saveConfig();

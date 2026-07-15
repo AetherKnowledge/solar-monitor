@@ -17,37 +17,34 @@ void startScanning()
     }
 }
 
-void scanNetworksAsync()
+void scanNetworks()
 {
-    if (wifiScanStatus == InProgress)
+    int n = WiFi.scanComplete();
+
+    if (n == WIFI_SCAN_FAILED)
     {
-        int n = WiFi.scanComplete();
+        Serial.println("WiFi scan failed");
+        wifiScanStatus = UpdateFailed;
+        return;
+    }
 
-        if (n == WIFI_SCAN_FAILED)
+    if (n >= 0)
+    {
+        Serial.println("WiFi scan complete");
+        cachedWifiNetworks.clear();
+        for (int i = 0; i < n; ++i)
         {
-            Serial.println("WiFi scan failed");
-            wifiScanStatus = UpdateFailed;
-            return;
-        }
+            WiFiNetwork network;
+            network.ssid = WiFi.SSID(i);
+            network.rssi = WiFi.RSSI(i);
+            network.encryptionType = WiFi.encryptionType(i);
+            network.saved = false;
+            network.connected = WiFi.SSID() == network.ssid;
 
-        if (n >= 0)
-        {
-            Serial.println("WiFi scan complete");
-            cachedWifiNetworks.clear();
-            for (int i = 0; i < n; ++i)
-            {
-                WiFiNetwork network;
-                network.ssid = WiFi.SSID(i);
-                network.rssi = WiFi.RSSI(i);
-                network.encryptionType = WiFi.encryptionType(i);
-                network.saved = false;
-                network.connected = WiFi.SSID() == network.ssid;
-
-                cachedWifiNetworks.push_back(network);
-            }
-            WiFi.scanDelete();
-            wifiScanStatus = UpdateComplete;
+            cachedWifiNetworks.push_back(network);
         }
+        WiFi.scanDelete();
+        wifiScanStatus = UpdateComplete;
     }
 }
 
