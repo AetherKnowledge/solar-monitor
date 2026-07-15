@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { createNetworkQueryOptions, scanNetworks } from '$lib/components/Wifi/WifiQueries';
-	import { WifiScanStatus, type NetworkConfig, type WifiNetwork } from '$lib/types/NetworkConfig';
+	import { type NetworkConfig } from '$lib/config/ConfigTypes';
+	import { createNetworkQueryOptions, scanNetworks } from '$lib/network/NetworkQueries';
 	import {
 		Check,
 		ChevronDown,
@@ -19,6 +19,7 @@
 		Wifi
 	} from '@lucide/svelte';
 	import { createQuery } from '@tanstack/svelte-query';
+	import { type WifiNetwork, WifiScanStatus } from './NetworkTypes';
 
 	type Props = {
 		networkConfig: NetworkConfig;

@@ -17,9 +17,3 @@ export type ScanRequestResponse = {
 	status: WifiScanStatus;
 	networks: WifiNetwork[];
 };
-
-export type NetworkConfig = {
-	networkMode: 'ap+sta' | 'sta';
-	ssid?: string;
-	password?: string;
-};

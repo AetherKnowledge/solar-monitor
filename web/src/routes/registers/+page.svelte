@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Registers from '$lib/components/Registers/Registers.svelte';
+	import Registers from '$lib/registers/RegistersPage.svelte';
 </script>
 
 <Registers />

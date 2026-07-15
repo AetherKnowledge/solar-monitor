@@ -1,7 +1,7 @@
 <script lang="ts">
-	import NetworkMode from '$lib/components/Wifi/NetworkMode.svelte';
-	import WifiNetwork from '$lib/components/Wifi/WifiNetwork.svelte';
-	import type { NetworkConfig } from '$lib/types/NetworkConfig';
+	import type { NetworkConfig } from '$lib/config/ConfigTypes';
+	import NetworkMode from '$lib/network/NetworkMode.svelte';
+	import WifiNetwork from '$lib/network/NetworkPage.svelte';
 
 	let savedNetworkConfig = $state<NetworkConfig>({
 		networkMode: 'ap+sta',

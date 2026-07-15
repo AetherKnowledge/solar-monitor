@@ -1,4 +1,4 @@
-import { type ScanRequestResponse, WifiScanStatus } from '$lib/types/NetworkConfig';
+import { type ScanRequestResponse, WifiScanStatus } from '$lib/network/NetworkTypes';
 import { queryOptions } from '@tanstack/svelte-query';
 
 export function createNetworkQueryOptions() {
@@ -22,7 +22,7 @@ const getNetworks = async () => {
 	const response = await fetch(`/api/network/wifinetworks`);
 	const result: ScanRequestResponse = await response.json();
 
-	if (result.status === 'not_started') {
+	if (result.status === WifiScanStatus.SCAN_STATUS_NOT_STARTED) {
 		const scanResult = await scanNetworks();
 		result.status = scanResult.status;
 	}
