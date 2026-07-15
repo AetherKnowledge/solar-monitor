@@ -3,7 +3,6 @@ export type WifiNetwork = {
 	rssi: number;
 	encryptionType: number;
 	saved: boolean;
-	connected: boolean;
 };
 
 export enum WifiScanStatus {
@@ -16,4 +15,16 @@ export enum WifiScanStatus {
 export type ScanRequestResponse = {
 	status: WifiScanStatus;
 	networks: WifiNetwork[];
+};
+
+export type NetworkConfig = {
+	mode: 'ap+sta' | 'sta';
+	ssid?: string;
+	password?: string;
+};
+
+export const defaultNetworkConfig: NetworkConfig = {
+	mode: 'ap+sta',
+	ssid: '',
+	password: ''
 };

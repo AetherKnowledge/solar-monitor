@@ -71,9 +71,9 @@
 	<link rel="preload" href="/roboto.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
 </svelte:head>
 <QueryClientProvider client={queryClient}>
-	<div class="drawer lg:drawer-open">
+	<div class="drawer h-screen overflow-hidden lg:drawer-open">
 		<input id="my-drawer-4" type="checkbox" class="drawer-toggle" bind:checked={drawerOpen} />
-		<div class="drawer-content">
+		<div class="drawer-content h-screen flex flex-col">
 			<!-- Navbar -->
 			<nav class="navbar w-full bg-base-300">
 				<label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost">
@@ -126,7 +126,7 @@
 				</div>
 			</nav>
 			<!-- Page content here -->
-			<main class="flex flex-col p-4">
+			<main class="flex-1 overflow-auto p-4">
 				{@render children()}
 			</main>
 		</div>
@@ -134,7 +134,7 @@
 		<div class="drawer-side is-drawer-close:overflow-visible">
 			<label for="my-drawer-4" aria-label="close sidebar" class="drawer-overlay"></label>
 			<div
-				class="flex min-h-full flex-col items-start bg-base-200 is-drawer-close:w-14 is-drawer-open:w-64"
+				class="flex h-screen flex-col items-start bg-base-200 is-drawer-close:w-14 is-drawer-open:w-64"
 			>
 				<!-- Sidebar content here -->
 				<ul class="menu w-full grow">

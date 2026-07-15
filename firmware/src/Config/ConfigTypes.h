@@ -65,8 +65,8 @@ struct MQTTConfig
         username = json["username"] | "";
         password = json["password"] | "";
         autoDiscoveryEnabled = json["autoDiscoveryEnabled"] | false;
-        autoDiscoveryPrefix = json["autoDiscoveryPrefix"] | "homeassistant";
-        clientId = json["clientId"] | "solar-monitor";
+        autoDiscoveryPrefix = json["autoDiscoveryPrefix"] | "";
+        clientId = json["clientId"] | "";
     }
 };
 

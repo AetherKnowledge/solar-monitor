@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { type NetworkConfig } from '$lib/config/ConfigTypes';
-	import { createNetworkQueryOptions, scanNetworks } from '$lib/network/NetworkQueries';
 	import {
 		Check,
 		ChevronDown,
@@ -20,13 +18,14 @@
 	} from '@lucide/svelte';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { onMount } from 'svelte';
-	import { type WifiNetwork, WifiScanStatus } from './NetworkTypes';
+	import { createNetworkQueryOptions, scanNetworks } from './NetworkQueries';
+	import { type NetworkConfig, type WifiNetwork, WifiScanStatus } from './NetworkTypes';
 
 	type Props = {
 		networkConfig: NetworkConfig;
 	};
 
-	let { networkConfig: selected = $bindable() }: Props = $props();
+	let { networkConfig = $bindable() }: Props = $props();
 
 	const networksQuery = createQuery(() => createNetworkQueryOptions());
 	const status = $derived(networksQuery.data.status);
@@ -45,7 +44,7 @@
 	);
 
 	function select(network: WifiNetwork) {
-		selected.ssid = network.ssid;
+		networkConfig.ssid = network.ssid;
 		searchInput = '';
 
 		popover.hidePopover();
@@ -83,9 +82,7 @@
 		refreshNetworks();
 	});
 
-	function findNetwork(ssid: string = '') {
-		return networks.find((n) => n.ssid === ssid);
-	}
+	const selectedNetwork = $derived.by(() => networks.find((n) => n.ssid === networkConfig.ssid));
 </script>
 
 <fieldset class="fieldset bg-base-100 border border-base-300 rounded-box p-4 gap-5">
@@ -102,7 +99,7 @@
 			<label class="input w-full join-item">
 				<Wifi class="size-4 opacity-60" />
 				<input
-					value={findNetwork(selected.ssid)?.ssid || ''}
+					value={selectedNetwork?.ssid || ''}
 					type="search"
 					class="grow"
 					readonly
@@ -110,7 +107,9 @@
 					placeholder="Search"
 				/>
 				<div class="flex items-center gap-2">
-					{@render SignalIcon(findNetwork(selected.ssid)?.rssi || 0)}
+					{#if selectedNetwork}
+						{@render SignalIcon(selectedNetwork.rssi)}
+					{/if}
 				</div>
 			</label>
 			<button
@@ -165,7 +164,7 @@
 		</div>
 	</div>
 
-	{#if findNetwork(selected.ssid)?.encryptionType === 0}
+	{#if selectedNetwork?.encryptionType !== 0}
 		<div class="flex flex-col">
 			<div class="flex flex-col">
 				<span class="font-medium">Wi-Fi Password</span>
@@ -182,7 +181,7 @@
 						type={showPassword ? 'text' : 'password'}
 						placeholder="Enter Wi-Fi password"
 						required
-						bind:value={selected.password}
+						bind:value={networkConfig.password}
 					/>
 				</label>
 
@@ -218,7 +217,7 @@
 					</div>
 
 					<div class="flex gap-1 mt-1">
-						{#if network.connected}
+						{#if networkConfig.ssid === network.ssid}
 							<div class="badge badge-success badge-xs">Connected</div>
 						{/if}
 
@@ -232,7 +231,7 @@
 			<div class="flex items-center gap-2">
 				{@render SignalIcon(network.rssi)}
 
-				{#if selected.ssid === network.ssid}
+				{#if networkConfig.ssid === network.ssid}
 					<Check class="size-4 text-primary" />
 				{/if}
 			</div>

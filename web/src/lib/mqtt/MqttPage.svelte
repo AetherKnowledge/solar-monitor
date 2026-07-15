@@ -3,16 +3,7 @@
 	import { EthernetPort, Eye, EyeOff, KeyRound, SearchCode, User } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
-
-	type MqttConfig = {
-		host: string;
-		port: number;
-		username?: string;
-		password?: string;
-		autodiscoveryEnabled: boolean;
-		autodiscoveryPrefix?: string;
-		clientId?: string;
-	};
+	import type { MqttConfig } from './MqttTypes';
 
 	let savedMqttConfig: MqttConfig = $state({
 		host: 'http://192.168.1.10',

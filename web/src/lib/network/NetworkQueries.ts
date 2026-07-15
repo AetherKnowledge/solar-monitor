@@ -1,5 +1,6 @@
 import { type ScanRequestResponse, WifiScanStatus } from '$lib/network/NetworkTypes';
 import { queryOptions } from '@tanstack/svelte-query';
+import type { NetworkConfig } from './NetworkTypes';
 
 export function createNetworkQueryOptions() {
 	return queryOptions<ScanRequestResponse>({
@@ -35,4 +36,18 @@ export const scanNetworks = async () => {
 		method: 'POST'
 	});
 	return (await response.json()) as { status: WifiScanStatus };
+};
+
+export function createNetworkConfigQueryOptions() {
+	return queryOptions<NetworkConfig>({
+		queryKey: ['networkConfig'],
+		queryFn: async () => getNetworkConfig()
+	});
+}
+
+const getNetworkConfig = async () => {
+	const response = await fetch(`/api/network/config`);
+	const result: NetworkConfig = await response.json();
+
+	return result;
 };
