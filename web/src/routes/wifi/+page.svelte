@@ -2,13 +2,17 @@
 	import PageLoading from '$lib/loading/PageLoading.svelte';
 	import NetworkMode from '$lib/network/NetworkMode.svelte';
 	import WifiNetwork from '$lib/network/NetworkPage.svelte';
-	import { createNetworkConfigQueryOptions } from '$lib/network/NetworkQueries';
+	import {
+		createNetworkConfigQueryOptions,
+		updateNetworkConfig
+	} from '$lib/network/NetworkQueries';
 	import { defaultNetworkConfig, type NetworkConfig } from '$lib/network/NetworkTypes';
 	import { createQuery } from '@tanstack/svelte-query';
 
 	let networksConfigQuery = createQuery(() => createNetworkConfigQueryOptions());
 	let savedNetworkConfig = $derived(networksConfigQuery.data);
 	let isPending = $derived(networksConfigQuery.isPending);
+	let isSaving = $state(false);
 
 	let networkConfig: NetworkConfig = $state(defaultNetworkConfig);
 
@@ -27,7 +31,7 @@
 		updateValidity();
 	});
 
-	let initialized = false;
+	let initialized = $state(false);
 	$effect(() => {
 		if (!initialized && savedNetworkConfig) {
 			Object.assign(networkConfig, savedNetworkConfig);
@@ -45,13 +49,27 @@
 		}
 	}
 
-	function saveChanges() {
-		console.log('Saving network configuration:', networkConfig);
+	async function saveChanges() {
+		isSaving = true;
+		try {
+			await updateNetworkConfig(networkConfig);
+			await networksConfigQuery.refetch();
+		} finally {
+			isSaving = false;
+		}
 	}
 </script>
 
-{#if !isPending}
-	<form bind:this={form} oninput={updateValidity} onchange={updateValidity}>
+<div class="relative h-full">
+	<form
+		bind:this={form}
+		oninput={updateValidity}
+		onchange={updateValidity}
+		onsubmit={(e) => {
+			e.preventDefault();
+			saveChanges();
+		}}
+	>
 		<NetworkMode bind:networkConfig />
 		<WifiNetwork bind:networkConfig />
 		<div class="flex justify-between">
@@ -63,16 +81,15 @@
 			>
 				Cancel
 			</button>
-			<button
-				type="submit"
-				class="btn btn-success mt-4 w-20"
-				disabled={!hasChanged || !isValid}
-				onclick={saveChanges}
-			>
+			<button type="submit" class="btn btn-success mt-4 w-20" disabled={!hasChanged || !isValid}>
 				Save
 			</button>
 		</div>
 	</form>
-{:else}
-	<PageLoading text="Loading network configuration..." />
-{/if}
+
+	{#if isPending}
+		<PageLoading text="Loading network configuration..." />
+	{:else if isSaving}
+		<PageLoading text="Saving network configuration..." />
+	{/if}
+</div>

@@ -51,3 +51,13 @@ const getNetworkConfig = async () => {
 
 	return result;
 };
+
+export async function updateNetworkConfig(config: NetworkConfig) {
+	await fetch(`/api/network/config`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(config)
+	});
+}
