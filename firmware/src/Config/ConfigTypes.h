@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ArduinoJson.h>
 #include <Arduino.h>
 
 struct NetworkConfig
@@ -8,11 +9,23 @@ struct NetworkConfig
     String ssid;
     String password;
 
-    const char *c_str() const
+    String toString() const
     {
-        String configString = "Mode: " + mode + "\nSSID: " + ssid + "\nPassword: ***";
+        return "Mode: " + mode + "\nSSID: " + ssid + "\nPassword: ***";
+    }
 
-        return configString.c_str();
+    void toJson(JsonObject json) const
+    {
+        json["mode"] = mode;
+        json["ssid"] = ssid;
+        json["password"] = password;
+    }
+
+    void fromJson(JsonObjectConst json)
+    {
+        mode = json["mode"] | "ap+sta";
+        ssid = json["ssid"] | "";
+        password = json["password"] | "";
     }
 };
 
@@ -27,11 +40,33 @@ struct MQTTConfig
     String autoDiscoveryPrefix;
     String clientId;
 
-    const char *c_str() const
+    String toString() const
     {
-        String configString = "Enabled: " + String(enabled) + "\nHost: " + host + "\nPort: " + String(port) + "\nUsername: " + username + "\nPassword: ***" + "\nAuto Discovery Enabled: " + String(autoDiscoveryEnabled) + "\nAuto Discovery Prefix: " + autoDiscoveryPrefix + "\nClient ID: " + clientId;
+        return "Enabled: " + String(enabled) + "\nHost: " + host + "\nPort: " + String(port) + "\nUsername: " + username + "\nPassword: ***" + "\nAuto Discovery Enabled: " + String(autoDiscoveryEnabled) + "\nAuto Discovery Prefix: " + autoDiscoveryPrefix + "\nClient ID: " + clientId;
+    }
 
-        return configString.c_str();
+    void toJson(JsonObject json) const
+    {
+        json["enabled"] = enabled;
+        json["host"] = host;
+        json["port"] = port;
+        json["username"] = username;
+        json["password"] = password;
+        json["autoDiscoveryEnabled"] = autoDiscoveryEnabled;
+        json["autoDiscoveryPrefix"] = autoDiscoveryPrefix;
+        json["clientId"] = clientId;
+    }
+
+    void fromJson(JsonObjectConst json)
+    {
+        enabled = json["enabled"] | false;
+        host = json["host"] | "";
+        port = json["port"] | 1883;
+        username = json["username"] | "";
+        password = json["password"] | "";
+        autoDiscoveryEnabled = json["autoDiscoveryEnabled"] | false;
+        autoDiscoveryPrefix = json["autoDiscoveryPrefix"] | "homeassistant";
+        clientId = json["clientId"] | "solar-monitor";
     }
 };
 
@@ -40,10 +75,20 @@ struct Config
     NetworkConfig network;
     MQTTConfig mqtt;
 
-    const char *c_str() const
+    String toString() const
     {
-        String configString = "Network Config:\n" + String(network.c_str()) + "\nMQTT Config:\n" + String(mqtt.c_str());
+        return "Network Config:\n" + String(network.toString()) + "\nMQTT Config:\n" + String(mqtt.toString());
+    }
 
-        return configString.c_str();
+    void toJson(JsonObject json) const
+    {
+        network.toJson(json["network"]);
+        mqtt.toJson(json["mqtt"]);
+    }
+
+    void fromJson(JsonObjectConst json)
+    {
+        network.fromJson(json["network"]);
+        mqtt.fromJson(json["mqtt"]);
     }
 };

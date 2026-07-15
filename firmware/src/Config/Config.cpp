@@ -23,18 +23,7 @@ bool loadConfig()
         return false;
     }
 
-    config.network.mode = doc["network"]["mode"] | "ap+sta";
-    config.network.ssid = doc["network"]["ssid"] | "";
-    config.network.password = doc["network"]["password"] | "";
-
-    config.mqtt.enabled = doc["mqtt"]["enabled"] | false;
-    config.mqtt.host = doc["mqtt"]["host"] | "";
-    config.mqtt.port = doc["mqtt"]["port"] | 1883;
-    config.mqtt.username = doc["mqtt"]["username"] | "";
-    config.mqtt.password = doc["mqtt"]["password"] | "";
-    config.mqtt.autoDiscoveryEnabled = doc["mqtt"]["autoDiscoveryEnabled"] | false;
-    config.mqtt.autoDiscoveryPrefix = doc["mqtt"]["autoDiscoveryPrefix"] | "homeassistant";
-    config.mqtt.clientId = doc["mqtt"]["clientId"] | "solar-monitor";
+    config.fromJson(doc.as<JsonObjectConst>());
 
     return true;
 }
@@ -42,19 +31,7 @@ bool loadConfig()
 bool saveConfig()
 {
     JsonDocument doc;
-
-    doc["network"]["mode"] = config.network.mode;
-    doc["network"]["ssid"] = config.network.ssid;
-    doc["network"]["password"] = config.network.password;
-
-    doc["mqtt"]["enabled"] = config.mqtt.enabled;
-    doc["mqtt"]["host"] = config.mqtt.host;
-    doc["mqtt"]["port"] = config.mqtt.port;
-    doc["mqtt"]["username"] = config.mqtt.username;
-    doc["mqtt"]["password"] = config.mqtt.password;
-    doc["mqtt"]["autoDiscoveryEnabled"] = config.mqtt.autoDiscoveryEnabled;
-    doc["mqtt"]["autoDiscoveryPrefix"] = config.mqtt.autoDiscoveryPrefix;
-    doc["mqtt"]["clientId"] = config.mqtt.clientId;
+    config.toJson(doc.to<JsonObject>());
 
     File file = LittleFS.open("/config.json", "w");
     if (!file)
@@ -80,4 +57,24 @@ void resetConfig()
     config.mqtt.autoDiscoveryEnabled = false;
     config.mqtt.autoDiscoveryPrefix = "homeassistant";
     config.mqtt.clientId = "solar-monitor";
+}
+
+bool setNetworkConfig(const NetworkConfig &newConfig)
+{
+    config.network = newConfig;
+    saveConfig();
+
+    Serial.println("Network configuration updated");
+    Serial.println(newConfig.toString().c_str());
+
+    return true;
+}
+
+bool setMqttConfig(const MQTTConfig &newConfig)
+{
+    config.mqtt = newConfig;
+    saveConfig();
+    Serial.println("MQTT configuration updated");
+    Serial.println(newConfig.toString().c_str());
+    return true;
 }
