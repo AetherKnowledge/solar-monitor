@@ -6,7 +6,7 @@ import { gzipOnly } from './plugins/gzip-only';
 
 const websitePath = '../firmware/data/website';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
 	plugins: [
 		tailwindcss(),
 		sveltekit({
@@ -28,5 +28,16 @@ export default defineConfig({
 	],
 	build: {
 		sourcemap: false
-	}
-});
+	},
+	server:
+		command === 'serve'
+			? {
+					proxy: {
+						'/api': {
+							target: 'http://192.168.254.122',
+							changeOrigin: true
+						}
+					}
+				}
+			: undefined
+}));

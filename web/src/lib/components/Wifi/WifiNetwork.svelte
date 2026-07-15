@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { NetworkConfig, WifiNetwork } from '$lib/types/NetworkConfig';
+	import { createNetworkQueryOptions, scanNetworks } from '$lib/components/Wifi/WifiQueries';
+	import { WifiScanStatus, type NetworkConfig, type WifiNetwork } from '$lib/types/NetworkConfig';
 	import {
 		Check,
 		ChevronDown,
@@ -17,6 +18,7 @@
 		SignalZero,
 		Wifi
 	} from '@lucide/svelte';
+	import { createQuery } from '@tanstack/svelte-query';
 
 	type Props = {
 		networkConfig: NetworkConfig;
@@ -24,50 +26,9 @@
 
 	let { networkConfig: selected = $bindable() }: Props = $props();
 
-	let networks = $state<WifiNetwork[]>([
-		{
-			ssid: 'Home Wi-Fi',
-			rssi: -45,
-			encryptionType: 1,
-			saved: true,
-			connected: true
-		},
-		{
-			ssid: 'Office',
-			rssi: -55,
-			encryptionType: 1,
-			saved: true,
-			connected: false
-		},
-		{
-			ssid: 'PLDT_Fiber_2.4G',
-			rssi: -60,
-			encryptionType: 1,
-			saved: true,
-			connected: false
-		},
-		{
-			ssid: 'Coffee Shop',
-			rssi: -70,
-			encryptionType: 0,
-			saved: false,
-			connected: false
-		},
-		{
-			ssid: 'GlobeAtHome',
-			rssi: -55,
-			encryptionType: 1,
-			saved: false,
-			connected: false
-		},
-		{
-			ssid: 'Guest',
-			rssi: -75,
-			encryptionType: 0,
-			saved: false,
-			connected: false
-		}
-	]);
+	const networksQuery = createQuery(() => createNetworkQueryOptions());
+	const status = $derived(networksQuery.data.status);
+	const networks = $derived(networksQuery.data.networks);
 
 	let showPassword = $state(false);
 
@@ -89,12 +50,12 @@
 	}
 
 	function signalLevel(rssi: number): 1 | 2 | 3 | 4 | 5 {
-	if (rssi >= -50) return 5;
-	if (rssi >= -60) return 4;
-	if (rssi >= -70) return 3;
-	if (rssi >= -80) return 2;
-	return 1;
-}
+		if (rssi >= -50) return 5;
+		if (rssi >= -60) return 4;
+		if (rssi >= -70) return 3;
+		if (rssi >= -80) return 2;
+		return 1;
+	}
 
 	function signalIcon(rssi: number) {
 		switch (signalLevel(rssi)) {
@@ -111,15 +72,9 @@
 		}
 	}
 
-	let scanning = $state(false);
 	async function refreshNetworks() {
-		scanning = true;
-
-		await new Promise((r) => setTimeout(r, 1500));
-
-		networks = [...networks].sort(() => Math.random() - 0.5);
-
-		scanning = false;
+		await scanNetworks();
+		networksQuery.refetch();
 	}
 
 	function findNetwork(ssid: string = '') {
@@ -186,7 +141,7 @@
 						</button>
 					</div>
 				</li>
-				{#if scanning}
+				{#if status === WifiScanStatus.SCAN_STATUS_IN_PROGRESS}
 					<li class="menu-disabled flex flex-col items-center gap-2 py-4">
 						<span class="loading loading-spinner loading-xl text-base-content">wew</span>
 						<span>Loading</span>
