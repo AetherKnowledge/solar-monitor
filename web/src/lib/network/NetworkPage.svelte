@@ -19,6 +19,7 @@
 		Wifi
 	} from '@lucide/svelte';
 	import { createQuery } from '@tanstack/svelte-query';
+	import { onMount } from 'svelte';
 	import { type WifiNetwork, WifiScanStatus } from './NetworkTypes';
 
 	type Props = {
@@ -77,6 +78,10 @@
 		await scanNetworks();
 		networksQuery.refetch();
 	}
+
+	onMount(() => {
+		refreshNetworks();
+	});
 
 	function findNetwork(ssid: string = '') {
 		return networks.find((n) => n.ssid === ssid);
