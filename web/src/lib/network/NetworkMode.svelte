@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { NetworkConfig } from './NetworkTypes';
+	import { type NetworkConfig, WifiMode } from './NetworkTypes';
 
 	let { networkConfig = $bindable() }: { networkConfig: NetworkConfig } = $props();
 </script>
@@ -15,7 +15,7 @@
 				type="radio"
 				name="network-mode"
 				class="radio radio-primary"
-				value="ap+sta"
+				value={WifiMode.AP_STA}
 				bind:group={networkConfig.mode}
 			/>
 
@@ -35,7 +35,7 @@
 				type="radio"
 				name="network-mode"
 				class="radio radio-primary"
-				value="sta"
+				value={WifiMode.STA}
 				bind:group={networkConfig.mode}
 			/>
 

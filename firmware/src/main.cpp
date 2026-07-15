@@ -1,11 +1,7 @@
 #include <Arduino.h>
-#include <WiFi.h>
 #include <Networking/Networking.h>
 #include <WebServer/WebServer.h>
 #include <Config/Config.h>
-
-const char *ssid = "GlobeAtHome";
-const char *password = "donotopen8";
 
 #define LED_PIN 2
 
@@ -16,25 +12,13 @@ void setup()
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
 
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, password);
-    WiFi.setSleep(false);
+    loadConfig();
 
-    Serial.print("Connecting");
-
-    while (WiFi.status() != WL_CONNECTED)
+    if (configLoaded)
     {
-        delay(500);
-        Serial.print(".");
+        connectToWiFi(config.network.ssid, config.network.password, config.network.mode);
     }
 
-    Serial.println();
-    Serial.println("Connected!");
-
-    Serial.print("IP Address: ");
-    Serial.println(WiFi.localIP());
-
-    loadConfig();
     startWebServer();
 }
 

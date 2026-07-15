@@ -2,28 +2,53 @@
 
 #include <ArduinoJson.h>
 #include <Arduino.h>
+#include <WiFiType.h>
+
+static WiFiMode_t modeFromString(const String &str)
+{
+    if (str == "ap")
+        return WIFI_AP;
+    if (str == "sta")
+        return WIFI_STA;
+    return WIFI_AP_STA;
+}
+
+static const char *modeToString(WiFiMode_t mode)
+{
+    switch (mode)
+    {
+    case WIFI_AP:
+        return "ap";
+    case WIFI_STA:
+        return "sta";
+    case WIFI_AP_STA:
+        return "ap+sta";
+    default:
+        return "ap+sta";
+    }
+}
 
 struct NetworkConfig
 {
-    String mode;
+    WiFiMode_t mode;
     String ssid;
     String password;
 
     String toString() const
     {
-        return "Mode: " + mode + "\nSSID: " + ssid + "\nPassword: ***";
+        return "Mode: " + String(mode) + "\nSSID: " + ssid + "\nPassword: ***";
     }
 
     void toJson(JsonObject json) const
     {
-        json["mode"] = mode;
         json["ssid"] = ssid;
+        json["mode"] = modeToString(mode);
         json["password"] = password;
     }
 
     void fromJson(JsonObjectConst json)
     {
-        mode = json["mode"] | "ap+sta";
+        mode = modeFromString(json["mode"] | "ap+sta");
         ssid = json["ssid"] | "";
         password = json["password"] | "";
     }
@@ -82,13 +107,13 @@ struct Config
 
     void toJson(JsonObject json) const
     {
-        network.toJson(json["network"]);
-        mqtt.toJson(json["mqtt"]);
+        network.toJson(json["network"].to<JsonObject>());
+        mqtt.toJson(json["mqtt"].to<JsonObject>());
     }
 
     void fromJson(JsonObjectConst json)
     {
-        network.fromJson(json["network"]);
-        mqtt.fromJson(json["mqtt"]);
+        network.fromJson(json["network"].as<JsonObjectConst>());
+        mqtt.fromJson(json["mqtt"].as<JsonObjectConst>());
     }
 };

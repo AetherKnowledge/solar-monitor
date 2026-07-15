@@ -3,6 +3,7 @@
 #include "ConfigTypes.h"
 
 extern Config config;
+extern bool configLoaded;
 
 bool loadConfig();
 bool saveConfig();

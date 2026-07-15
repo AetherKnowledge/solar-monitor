@@ -1,11 +1,14 @@
 #include "Config.h"
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#include <Networking/Networking.h>
 
 Config config;
+bool configLoaded = false;
 
 bool loadConfig()
 {
+    Serial.println();
     Serial.println("Loading config");
 
     if (!LittleFS.begin())
@@ -40,6 +43,7 @@ bool loadConfig()
     Serial.println("Config loaded");
     Serial.println(config.toString().c_str());
 
+    configLoaded = true;
     return true;
 }
 
@@ -58,6 +62,7 @@ bool saveConfig()
     serializeJsonPretty(doc, file);
     file.close();
 
+    Serial.println();
     Serial.println("Config saved");
 
     return true;
@@ -65,7 +70,7 @@ bool saveConfig()
 
 void resetConfig()
 {
-    config.network.mode = "ap+sta";
+    config.network.mode = WiFiMode_t::WIFI_AP_STA;
     config.network.ssid = "";
     config.network.password = "";
 
@@ -81,11 +86,23 @@ void resetConfig()
 
 bool setNetworkConfig(const NetworkConfig &newConfig)
 {
+    bool isValidConnection = connectToWiFi(newConfig.ssid, newConfig.password, newConfig.mode);
+    if (!isValidConnection)
+    {
+        Serial.println();
+        Serial.println("Failed to connect to the new network. Keeping the old configuration.");
+
+        connectToWiFi(config.network.ssid, config.network.password, config.network.mode);
+
+        return false;
+    }
+
     config.network = newConfig;
     saveConfig();
 
+    Serial.println();
     Serial.println("Network configuration updated");
-    Serial.println(newConfig.toString().c_str());
+    Serial.println(config.network.toString().c_str());
 
     return true;
 }
@@ -94,7 +111,10 @@ bool setMqttConfig(const MQTTConfig &newConfig)
 {
     config.mqtt = newConfig;
     saveConfig();
+
+    Serial.println();
     Serial.println("MQTT configuration updated");
-    Serial.println(newConfig.toString().c_str());
+    Serial.println(config.mqtt.toString().c_str());
+
     return true;
 }

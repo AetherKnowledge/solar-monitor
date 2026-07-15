@@ -17,14 +17,20 @@ export type ScanRequestResponse = {
 	networks: WifiNetwork[];
 };
 
+export enum WifiMode {
+	AP = 'ap',
+	STA = 'sta',
+	AP_STA = 'ap+sta'
+}
+
 export type NetworkConfig = {
-	mode: 'ap+sta' | 'sta';
+	mode: WifiMode;
 	ssid?: string;
 	password?: string;
 };
 
 export const defaultNetworkConfig: NetworkConfig = {
-	mode: 'ap+sta',
+	mode: WifiMode.AP_STA,
 	ssid: '',
 	password: ''
 };
