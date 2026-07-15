@@ -1,13 +1,15 @@
 #include "NetworkApi.h"
+#include <Networking/Networking.h>
+#include <WiFi.h>
 
 void registerNetworkApi(AsyncWebServer &server)
 {
-    server.on("/api/config/network", HTTP_GET,
+    server.on("/api/network/config", HTTP_GET,
               [](AsyncWebServerRequest *request)
               { handleGetNetworkConfig(request); });
 
     server.on(
-        "/api/config/network",
+        "/api/network/config",
         HTTP_POST,
         [](AsyncWebServerRequest *) {},
         nullptr,
@@ -17,6 +19,18 @@ void registerNetworkApi(AsyncWebServer &server)
            size_t,
            size_t)
         { handleUpdateNetworkConfig(request, data, len); });
+
+    server.on("/api/network/wifinetworks", HTTP_GET,
+              [](AsyncWebServerRequest *request)
+              { handleGetWifiNetworks(request); });
+
+    server.on(
+        "/api/network/wifinetworks/scan",
+        HTTP_POST,
+        [](AsyncWebServerRequest *request)
+        {
+            handleScanWifiNetworks(request);
+        });
 
     Serial.println("Network API registered");
 }
@@ -50,4 +64,42 @@ void handleUpdateNetworkConfig(AsyncWebServerRequest *request, uint8_t *data, si
     setNetworkConfig(newConfig);
 
     request->send(200, "text/plain", "OK");
+}
+
+void handleGetWifiNetworks(AsyncWebServerRequest *request)
+{
+    JsonDocument doc;
+    doc["status"] = scanStatusToString(wifiScanStatus);
+    JsonArray networks = doc["networks"].to<JsonArray>();
+
+    for (const auto &network : cachedWifiNetworks)
+    {
+        JsonObject json = networks.add<JsonObject>();
+        network.toJson(json);
+    }
+
+    String response;
+    serializeJson(doc, response);
+
+    Serial.println("WiFi Networks: " + response);
+
+    request->send(200, "application/json", response);
+}
+
+void handleScanWifiNetworks(AsyncWebServerRequest *request)
+{
+    if (wifiScanStatus != SCAN_STATUS_IN_PROGRESS)
+    {
+        wifiScanRequested = true;
+    }
+
+    JsonDocument doc;
+    doc["status"] = scanStatusToString(wifiScanStatus);
+
+    String response;
+    serializeJson(doc, response);
+
+    Serial.println("Scan WiFi Networks: " + response);
+
+    request->send(200, "application/json", response);
 }

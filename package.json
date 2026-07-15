@@ -3,7 +3,8 @@
   "scripts": {
     "dev": "pnpm --dir web dev",
     "build:web": "pnpm --dir web build",
-    "build": "pnpm build:web && pio run",
+    "build:firmware": "pio run",
+    "build": "pnpm build:web && pnpm build:firmware",
     "upload": "pio run -t upload",
     "uploadfs": "pio run -t uploadfs",
     "flash": "pnpm build:web && pnpm uploadfs && pnpm upload"

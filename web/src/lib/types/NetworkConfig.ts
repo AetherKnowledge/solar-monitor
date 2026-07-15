@@ -1,9 +1,9 @@
-export type NetworkData = {
+export type WifiNetwork = {
 	ssid: string;
-	signal: 1 | 2 | 3 | 4 | 5;
-	secure: boolean;
-	saved?: boolean;
-	connected?: boolean;
+	rssi: number;
+	encryptionType: number;
+	saved: boolean;
+	connected: boolean;
 };
 
 export type NetworkConfig = {

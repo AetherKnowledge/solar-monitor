@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { NetworkConfig } from '$lib/types/NetworkData';
+	import type { NetworkConfig } from '$lib/types/NetworkConfig';
 
 	let { networkConfig = $bindable() }: { networkConfig: NetworkConfig } = $props();
 </script>

@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <WiFi.h>
+#include <Networking/Networking.h>
 #include <WebServer/WebServer.h>
 #include <Config/Config.h>
 
@@ -15,7 +16,9 @@ void setup()
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
 
+    WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, password);
+    WiFi.setSleep(false);
 
     Serial.print("Connecting");
 
@@ -37,4 +40,12 @@ void setup()
 
 void loop()
 {
+    if (wifiScanRequested)
+    {
+        wifiScanRequested = false;
+        startScanning();
+    }
+
+    scanNetworksAsync();
+    delay(10);
 }

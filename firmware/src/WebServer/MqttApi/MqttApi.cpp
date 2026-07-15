@@ -2,11 +2,11 @@
 
 void registerMqttApi(AsyncWebServer &server)
 {
-    server.on("/api/config/mqtt", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/api/mqtt/config", HTTP_GET, [](AsyncWebServerRequest *request)
               { handleGetMqttConfig(request); });
 
     server.on(
-        "/api/config/mqtt",
+        "/api/mqtt/config",
         HTTP_POST,
         [](AsyncWebServerRequest *request) {},
         nullptr,

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { NetworkConfig, NetworkData } from '$lib/types/NetworkData';
+	import type { NetworkConfig, WifiNetwork } from '$lib/types/NetworkConfig';
 	import {
 		Check,
 		ChevronDown,
@@ -24,39 +24,48 @@
 
 	let { networkConfig: selected = $bindable() }: Props = $props();
 
-	let networks = $state<NetworkData[]>([
+	let networks = $state<WifiNetwork[]>([
 		{
 			ssid: 'Home Wi-Fi',
-			signal: 5,
-			secure: true,
+			rssi: -45,
+			encryptionType: 1,
 			saved: true,
 			connected: true
 		},
 		{
 			ssid: 'Office',
-			signal: 4,
-			secure: true
+			rssi: -55,
+			encryptionType: 1,
+			saved: true,
+			connected: false
 		},
 		{
 			ssid: 'PLDT_Fiber_2.4G',
-			signal: 4,
-			secure: true,
-			saved: true
+			rssi: -60,
+			encryptionType: 1,
+			saved: true,
+			connected: false
 		},
 		{
 			ssid: 'Coffee Shop',
-			signal: 3,
-			secure: false
+			rssi: -70,
+			encryptionType: 0,
+			saved: false,
+			connected: false
 		},
 		{
 			ssid: 'GlobeAtHome',
-			signal: 2,
-			secure: true
+			rssi: -55,
+			encryptionType: 1,
+			saved: false,
+			connected: false
 		},
 		{
 			ssid: 'Guest',
-			signal: 1,
-			secure: false
+			rssi: -75,
+			encryptionType: 0,
+			saved: false,
+			connected: false
 		}
 	]);
 
@@ -69,18 +78,26 @@
 	const filtered = $derived(
 		networks
 			.filter((n) => n.ssid.toLowerCase().includes(searchInput.toLowerCase()))
-			.sort((a, b) => b.signal - a.signal)
+			.sort((a, b) => b.rssi - a.rssi)
 	);
 
-	function select(network: NetworkData) {
+	function select(network: WifiNetwork) {
 		selected.ssid = network.ssid;
 		searchInput = '';
 
 		popover.hidePopover();
 	}
 
-	function signalIcon(level: number) {
-		switch (level) {
+	function signalLevel(rssi: number): 1 | 2 | 3 | 4 | 5 {
+	if (rssi >= -50) return 5;
+	if (rssi >= -60) return 4;
+	if (rssi >= -70) return 3;
+	if (rssi >= -80) return 2;
+	return 1;
+}
+
+	function signalIcon(rssi: number) {
+		switch (signalLevel(rssi)) {
 			case 5:
 				return Signal;
 			case 4:
@@ -132,7 +149,7 @@
 					placeholder="Search"
 				/>
 				<div class="flex items-center gap-2">
-					{@render SignalIcon(findNetwork(selected.ssid)?.signal || 0)}
+					{@render SignalIcon(findNetwork(selected.ssid)?.rssi || 0)}
 				</div>
 			</label>
 			<button
@@ -187,7 +204,7 @@
 		</div>
 	</div>
 
-	{#if findNetwork(selected.ssid)?.secure}
+	{#if findNetwork(selected.ssid)?.encryptionType === 0}
 		<div class="flex flex-col">
 			<div class="flex flex-col">
 				<span class="font-medium">Wi-Fi Password</span>
@@ -224,11 +241,11 @@
 	{/if}
 </fieldset>
 
-{#snippet NetworkBar(network: NetworkData)}
+{#snippet NetworkBar(network: WifiNetwork)}
 	<li>
 		<button type="button" class="justify-between" onclick={() => select(network)}>
 			<div class="flex items-center gap-3">
-				{#if network.secure}
+				{#if network.encryptionType !== 0}
 					<Lock class="size-4 opacity-60" />
 				{:else}
 					<LockOpen class="size-4 opacity-40" />
@@ -252,7 +269,7 @@
 			</div>
 
 			<div class="flex items-center gap-2">
-				{@render SignalIcon(network.signal)}
+				{@render SignalIcon(network.rssi)}
 
 				{#if selected.ssid === network.ssid}
 					<Check class="size-4 text-primary" />
@@ -262,8 +279,8 @@
 	</li>
 {/snippet}
 
-{#snippet SignalIcon(level: number)}
-	{@const Icon = signalIcon(level)}
+{#snippet SignalIcon(rssi: number)}
+	{@const Icon = signalIcon(rssi)}
 
-	<Icon class="size-4 opacity-70 text-green-" />
+	<Icon class="size-4 opacity-70 text-green-500" />
 {/snippet}
