@@ -6,6 +6,9 @@
 Config config;
 bool configLoaded = false;
 
+volatile bool networkUpdateRequested = false;
+NetworkConfig pendingNetworkConfig;
+
 bool loadConfig()
 {
     Serial.println();

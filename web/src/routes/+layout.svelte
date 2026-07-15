@@ -53,7 +53,7 @@
 		}
 	] satisfies SidebarItemProps[];
 
-	let drawerOpen = $state(true);
+	let drawerOpen = $state(false);
 	let { children } = $props();
 
 	import { page } from '$app/state';

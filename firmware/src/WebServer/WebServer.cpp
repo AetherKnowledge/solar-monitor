@@ -1,9 +1,9 @@
 #include "WebServer.h"
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
-#include <Config/Config.h>
 #include "NetworkApi/NetworkApi.h"
 #include "MqttApi/MqttApi.h"
+#include "ConfigApi/ConfigApi.h"
 
 AsyncWebServer server(80);
 
@@ -33,6 +33,7 @@ void registerWebServerApis()
 {
     registerNetworkApi(server);
     registerMqttApi(server);
+    registerConfigApi(server);
 }
 
 bool stopWebServer()

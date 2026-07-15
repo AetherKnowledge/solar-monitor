@@ -25,11 +25,3 @@ struct WiFiNetwork
         json["connected"] = connected;
     }
 };
-
-enum ScanStatus
-{
-    SCAN_STATUS_IN_PROGRESS,
-    SCAN_STATUS_COMPLETE,
-    SCAN_STATUS_NOT_STARTED,
-    SCAN_STATUS_FAILED
-};

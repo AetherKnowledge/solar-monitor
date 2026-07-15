@@ -1,3 +1,5 @@
+import type { Status } from '$lib/common/CommonTypes';
+
 export type WifiNetwork = {
 	ssid: string;
 	rssi: number;
@@ -5,15 +7,8 @@ export type WifiNetwork = {
 	saved: boolean;
 };
 
-export enum WifiScanStatus {
-	SCAN_STATUS_IN_PROGRESS = 'in_progress',
-	SCAN_STATUS_COMPLETE = 'complete',
-	SCAN_STATUS_FAILED = 'failed',
-	SCAN_STATUS_NOT_STARTED = 'not_started'
-}
-
 export type ScanRequestResponse = {
-	status: WifiScanStatus;
+	status: Status;
 	networks: WifiNetwork[];
 };
 

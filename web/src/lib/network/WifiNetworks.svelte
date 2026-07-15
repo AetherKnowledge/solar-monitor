@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Status } from '$lib/common/CommonTypes';
 	import {
 		Check,
 		ChevronDown,
@@ -19,7 +20,7 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	import { onMount } from 'svelte';
 	import { createNetworkQueryOptions, scanNetworks } from './NetworkQueries';
-	import { type NetworkConfig, type WifiNetwork, WifiScanStatus } from './NetworkTypes';
+	import { type NetworkConfig, type WifiNetwork } from './NetworkTypes';
 
 	type Props = {
 		networkConfig: NetworkConfig;
@@ -146,7 +147,7 @@
 						</button>
 					</div>
 				</li>
-				{#if status === WifiScanStatus.SCAN_STATUS_IN_PROGRESS}
+				{#if status === Status.InProgress}
 					<li class="menu-disabled flex flex-col items-center gap-2 py-4">
 						<span class="loading loading-spinner loading-xl text-base-content">wew</span>
 						<span>Loading</span>

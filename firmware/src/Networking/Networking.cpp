@@ -1,9 +1,8 @@
 #include <Networking/Networking.h>
 #include <WiFi.h>
-#include <Config/Config.h>
 
 std::vector<WiFiNetwork> cachedWifiNetworks;
-ScanStatus wifiScanStatus = SCAN_STATUS_NOT_STARTED;
+Status wifiScanStatus = NotStarted;
 
 volatile bool wifiScanRequested = false;
 
@@ -11,23 +10,23 @@ void startScanning()
 {
     Serial.println("Starting WiFi scan");
 
-    if (wifiScanStatus != SCAN_STATUS_IN_PROGRESS)
+    if (wifiScanStatus != InProgress)
     {
-        wifiScanStatus = SCAN_STATUS_IN_PROGRESS;
+        wifiScanStatus = InProgress;
         int r = WiFi.scanNetworks(true);
     }
 }
 
 void scanNetworksAsync()
 {
-    if (wifiScanStatus == SCAN_STATUS_IN_PROGRESS)
+    if (wifiScanStatus == InProgress)
     {
         int n = WiFi.scanComplete();
 
         if (n == WIFI_SCAN_FAILED)
         {
             Serial.println("WiFi scan failed");
-            wifiScanStatus = SCAN_STATUS_FAILED;
+            wifiScanStatus = UpdateFailed;
             return;
         }
 
@@ -47,26 +46,9 @@ void scanNetworksAsync()
                 cachedWifiNetworks.push_back(network);
             }
             WiFi.scanDelete();
-            wifiScanStatus = SCAN_STATUS_COMPLETE;
+            wifiScanStatus = UpdateComplete;
         }
     }
-}
-
-const char *scanStatusToString(ScanStatus status)
-{
-    switch (status)
-    {
-    case SCAN_STATUS_NOT_STARTED:
-        return "not_started";
-    case SCAN_STATUS_IN_PROGRESS:
-        return "in_progress";
-    case SCAN_STATUS_COMPLETE:
-        return "complete";
-    case SCAN_STATUS_FAILED:
-        return "failed";
-    }
-
-    return "unknown";
 }
 
 bool connectToWiFi(const String &ssid, const String &password, WiFiMode_t mode)
