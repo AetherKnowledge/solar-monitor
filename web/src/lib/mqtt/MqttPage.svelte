@@ -56,12 +56,6 @@
 
 		console.log('Saving MQTT configuration:', mqttConfig);
 	}
-
-	$effect(() => {
-		console.log('mqttConfig changed:', { ...mqttConfig });
-		console.log('savedMqttConfig:', savedMqttConfig);
-		console.log('hasChanged:', hasChanged);
-	});
 </script>
 
 <div class="relative h-full">

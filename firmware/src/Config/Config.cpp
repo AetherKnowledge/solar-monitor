@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 #include <Networking/Networking.h>
+#include <Mqtt/MqttManager.h>
 
 Config config;
 bool configLoaded = false;
@@ -103,6 +104,9 @@ bool updateNetworkConfig(const NetworkConfig &newConfig)
     config.network = newConfig;
     saveConfig();
 
+    MqttManager::disconnect();
+    MqttManager::setup();
+
     Serial.println();
     Serial.println("Network configuration updated");
     Serial.println(config.network.toString().c_str());
@@ -114,6 +118,9 @@ bool updateMqttConfig(const MQTTConfig &newConfig)
 {
     config.mqtt = newConfig;
     saveConfig();
+
+    MqttManager::disconnect();
+    MqttManager::setup();
 
     Serial.println();
     Serial.println("MQTT configuration updated");
