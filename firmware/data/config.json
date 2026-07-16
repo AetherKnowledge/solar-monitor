@@ -13,5 +13,544 @@
     "autoDiscoveryEnabled": true,
     "autoDiscoveryPrefix": "homeassistant",
     "clientId": "solar-monitor"
-  }
+  },
+  "modbusDevices": [
+    {
+      "name": "YH 4.2kW Inverter",
+      "identifier": "YH4K2",
+      "slaveId": 5,
+      "timeout": 2000,
+      "baudrate": 2400,
+      "port": 1,
+      "wordOrder": "BADC",
+      "discoveryDevice": {
+        "manufacturer": "YH",
+        "model": "YH 4K2"
+      },
+      "readRegisters": [
+        {
+          "address": 4501,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Output Source Priority Num",
+            "unique_id": "output_source_priority",
+            "state_topic": "solar/yhinverter/output_source_priority"
+          }
+        },
+        {
+          "address": 4502,
+          "rounding": 1,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "AC Voltage",
+            "unique_id": "ac_voltage",
+            "state_topic": "solar/yhinverter/ac_voltage",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "unit_of_measurement": "V"
+          }
+        },
+        {
+          "address": 4503,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "AC Frequency",
+            "unique_id": "ac_frequency",
+            "state_topic": "solar/yhinverter/ac_frequency",
+            "device_class": "frequency",
+            "state_class": "measurement",
+            "unit_of_measurement": "Hz"
+          }
+        },
+        {
+          "address": 4504,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "PV Voltage",
+            "unique_id": "pv_voltage",
+            "state_topic": "solar/yhinverter/pv_voltage",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "unit_of_measurement": "V"
+          }
+        },
+        {
+          "address": 4505,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "PV Power",
+            "unique_id": "charging",
+            "state_topic": "solar/yhinverter/charging",
+            "device_class": "power",
+            "state_class": "measurement",
+            "unit_of_measurement": "W"
+          }
+        },
+        {
+          "address": 4506,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "Battery Voltage",
+            "unique_id": "battery_voltage",
+            "state_topic": "solar/yhinverter/battery_voltage",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "unit_of_measurement": "V"
+          }
+        },
+        {
+          "address": 4507,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Battery SOC",
+            "unique_id": "battery_soc",
+            "state_topic": "solar/yhinverter/battery_soc",
+            "device_class": "battery",
+            "state_class": "measurement",
+            "unit_of_measurement": "%"
+          }
+        },
+        {
+          "address": 4508,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Battery Charge Current",
+            "unique_id": "battery_charge_current",
+            "state_topic": "solar/yhinverter/battery_charge_current",
+            "device_class": "current",
+            "state_class": "measurement",
+            "unit_of_measurement": "A"
+          }
+        },
+        {
+          "address": 4509,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Battery Discharge Current",
+            "unique_id": "battery_discharge_current",
+            "state_topic": "solar/yhinverter/battery_discharge_current",
+            "device_class": "current",
+            "state_class": "measurement",
+            "unit_of_measurement": "A"
+          }
+        },
+        {
+          "address": 4510,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "AC Out Voltage",
+            "unique_id": "load_voltage",
+            "state_topic": "solar/yhinverter/load_voltage",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "unit_of_measurement": "V"
+          }
+        },
+        {
+          "address": 4511,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "AC Out Frequency",
+            "unique_id": "load_frequency",
+            "state_topic": "solar/yhinverter/load_frequency",
+            "device_class": "frequency",
+            "state_class": "measurement",
+            "unit_of_measurement": "Hz"
+          }
+        },
+        {
+          "address": 4512,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Load VA",
+            "unique_id": "load_va",
+            "state_topic": "solar/yhinverter/load_va",
+            "device_class": "apparent_power",
+            "state_class": "measurement",
+            "unit_of_measurement": "VA"
+          }
+        },
+        {
+          "address": 4513,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Load Power",
+            "unique_id": "load_power",
+            "state_topic": "solar/yhinverter/load_power",
+            "device_class": "power",
+            "state_class": "measurement",
+            "unit_of_measurement": "W"
+          }
+        },
+        {
+          "address": 4514,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Load Percent",
+            "unique_id": "load_percent",
+            "state_topic": "solar/yhinverter/load_percent",
+            "state_class": "measurement",
+            "unit_of_measurement": "%"
+          }
+        },
+        {
+          "address": 4515,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Load Percent",
+            "unique_id": "load_percent2",
+            "state_topic": "solar/yhinverter/load_percent2",
+            "state_class": "measurement",
+            "unit_of_measurement": "%"
+          }
+        },
+        {
+          "address": 4516,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "",
+            "unique_id": "register4516",
+            "state_topic": "solar/yhinverter/register4516"
+          }
+        },
+        {
+          "address": 4530,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Error Code",
+            "unique_id": "error_code",
+            "state_topic": "solar/yhinverter/error_code"
+          }
+        },
+        {
+          "address": 4535,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "",
+            "unique_id": "register4535",
+            "state_topic": "solar/yhinverter/register4535"
+          }
+        },
+        {
+          "address": 4536,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Charger Source Priority",
+            "unique_id": "charger_source_priority",
+            "state_topic": "solar/yhinverter/charger_source_priority"
+          }
+        },
+        {
+          "address": 4537,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Output Source Priority",
+            "unique_id": "output_source_priority_correct",
+            "state_topic": "solar/yhinverter/output_source_priority_correct"
+          }
+        },
+        {
+          "address": 4538,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "AC Input Voltage Range",
+            "unique_id": "ac_input_voltage_range",
+            "state_topic": "solar/yhinverter/ac_input_voltage_range"
+          }
+        },
+        {
+          "address": 4540,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "AC Output Target Frequency",
+            "unique_id": "target_output_frequency",
+            "state_topic": "solar/yhinverter/target_output_frequency",
+            "device_class": "frequency",
+            "state_class": "measurement",
+            "unit_of_measurement": "Hz"
+          }
+        },
+        {
+          "address": 4541,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Max Charging Current",
+            "unique_id": "max_total_charging_current",
+            "state_topic": "solar/yhinverter/max_total_charging_current",
+            "device_class": "current",
+            "state_class": "measurement",
+            "unit_of_measurement": "A"
+          }
+        },
+        {
+          "address": 4542,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "AC Output Target Voltage",
+            "unique_id": "target_output_voltage",
+            "state_topic": "solar/yhinverter/target_output_voltage",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "unit_of_measurement": "V"
+          }
+        },
+        {
+          "address": 4543,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Max AC Charging Current",
+            "unique_id": "max_utility_charging_current",
+            "state_topic": "solar/yhinverter/max_utility_charging_current",
+            "device_class": "current",
+            "state_class": "measurement",
+            "unit_of_measurement": "A"
+          }
+        },
+        {
+          "address": 4544,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "Back to Utility Battery Voltage",
+            "unique_id": "back_to_utility_source_voltage",
+            "state_topic": "solar/yhinverter/back_to_utility_source_voltage",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "unit_of_measurement": "V"
+          }
+        },
+        {
+          "address": 4545,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "Back to Battery Battery Voltage",
+            "unique_id": "back_to_battery_source_voltage",
+            "state_topic": "solar/yhinverter/back_to_battery_source_voltage",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "unit_of_measurement": "V"
+          }
+        },
+        {
+          "address": 4546,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "Bulk Charging Voltage",
+            "unique_id": "bulk_charging_voltage",
+            "state_topic": "solar/yhinverter/bulk_charging_voltage",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "unit_of_measurement": "V"
+          }
+        },
+        {
+          "address": 4547,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "Floating Charging Voltage",
+            "unique_id": "floating_charging_voltage",
+            "state_topic": "solar/yhinverter/floating_charging_voltage",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "unit_of_measurement": "V"
+          }
+        },
+        {
+          "address": 4548,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "Battery Low Voltage Cutoff",
+            "unique_id": "low_cutoff_voltage",
+            "state_topic": "solar/yhinverter/low_cutoff_voltage",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "unit_of_measurement": "V"
+          }
+        },
+        {
+          "address": 4549,
+          "rounding": 2,
+          "transform": "Divide",
+          "transformArgument": 10.0,
+          "discoveryConfig": {
+            "name": "Battery Equalization Voltage",
+            "unique_id": "battery_equalization_voltage",
+            "state_topic": "solar/yhinverter/battery_equalization_voltage",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "unit_of_measurement": "V"
+          }
+        },
+        {
+          "address": 4550,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Battery Equalize Time",
+            "unique_id": "battery_equalized_time",
+            "state_topic": "solar/yhinverter/battery_equalized_time",
+            "device_class": "duration",
+            "state_class": "measurement",
+            "unit_of_measurement": "min"
+          }
+        },
+        {
+          "address": 4551,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Battery Equalize Timeout",
+            "unique_id": "battery_equalized_timeout",
+            "state_topic": "solar/yhinverter/battery_equalized_timeout",
+            "device_class": "duration",
+            "state_class": "measurement",
+            "unit_of_measurement": "min"
+          }
+        },
+        {
+          "address": 4552,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Battery Equalize Time Interval",
+            "unique_id": "equalization_interval",
+            "state_topic": "solar/yhinverter/equalization_interval",
+            "device_class": "duration",
+            "state_class": "measurement",
+            "unit_of_measurement": "d"
+          }
+        },
+        {
+          "address": 4553,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "",
+            "unique_id": "register4553",
+            "state_topic": "solar/yhinverter/register4553"
+          }
+        },
+        {
+          "address": 4554,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "",
+            "unique_id": "register4554",
+            "state_topic": "solar/yhinverter/register4554"
+          }
+        },
+        {
+          "address": 4555,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "",
+            "unique_id": "charger_status",
+            "state_topic": "solar/yhinverter/charger_status"
+          }
+        },
+        {
+          "address": 4557,
+          "rounding": 1,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "Radiator Temperature",
+            "unique_id": "temperature_sensor",
+            "state_topic": "solar/yhinverter/temperature_sensor",
+            "device_class": "temperature",
+            "state_class": "measurement",
+            "unit_of_measurement": "\u00b0C"
+          }
+        },
+        {
+          "address": 5034,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "",
+            "unique_id": "register5034",
+            "state_topic": "solar/yhinverter/register5034"
+          }
+        },
+        {
+          "address": 5035,
+          "rounding": 0,
+          "transform": "Divide",
+          "transformArgument": 1.0,
+          "discoveryConfig": {
+            "name": "",
+            "unique_id": "register5035",
+            "state_topic": "solar/yhinverter/register5035"
+          }
+        }
+      ]
+    }
+  ]
 }

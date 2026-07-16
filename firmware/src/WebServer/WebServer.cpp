@@ -4,6 +4,7 @@
 #include "NetworkApi/NetworkApi.h"
 #include "MqttApi/MqttApi.h"
 #include "ConfigApi/ConfigApi.h"
+#include "ModbusApi/ModbusApi.h"
 
 AsyncWebServer server(80);
 
@@ -61,6 +62,7 @@ void registerWebServerApis()
     registerNetworkApi(server);
     registerMqttApi(server);
     registerConfigApi(server);
+    registerModbusApi(server);
 }
 
 bool stopWebServer()

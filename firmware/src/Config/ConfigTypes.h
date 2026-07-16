@@ -4,6 +4,8 @@
 #include <Arduino.h>
 #include <WiFiType.h>
 #include <Networking/WifiMode.h>
+#include <Modbus/ModbusTypes.h>
+#include <vector>
 
 struct NetworkConfig
 {
@@ -76,21 +78,36 @@ struct Config
 {
     NetworkConfig network;
     MQTTConfig mqtt;
+    std::vector<ModbusDevice> modbusDevices;
 
     String toString() const
     {
-        return "Network Config:\n" + String(network.toString()) + "\nMQTT Config:\n" + String(mqtt.toString());
+        return "Network Config:\n" + String(network.toString()) + "\nMQTT Config:\n" + String(mqtt.toString()) + "\nModbus Devices:\n" + String(modbusDevices.size());
     }
 
     void toJson(JsonObject json) const
     {
         network.toJson(json["network"].to<JsonObject>());
         mqtt.toJson(json["mqtt"].to<JsonObject>());
+
+        JsonArray modbusArray = json["modbusDevices"].to<JsonArray>();
+        for (const auto &device : modbusDevices)
+        {
+            JsonObject deviceJson = modbusArray.add<JsonObject>();
+            device.toJson(deviceJson);
+        }
     }
 
-    void fromJson(JsonObjectConst json)
+    void fromJson(JsonObject json)
     {
-        network.fromJson(json["network"].as<JsonObjectConst>());
-        mqtt.fromJson(json["mqtt"].as<JsonObjectConst>());
+        network.fromJson(json["network"].as<JsonObject>());
+        mqtt.fromJson(json["mqtt"].as<JsonObject>());
+
+        for (JsonObject deviceJson : json["modbusDevices"].as<JsonArray>())
+        {
+            ModbusDevice device;
+            device.fromJson(deviceJson);
+            modbusDevices.push_back(device);
+        }
     }
 };

@@ -100,4 +100,17 @@ struct ModbusDevice
             readRegisters.push_back(readRegister);
         }
     }
+
+    String toString() const
+    {
+        String result = "Name: " + name + "\n";
+        result += "Identifier: " + identifier + "\n";
+        result += "Slave ID: " + String(slaveId) + "\n";
+        result += "Timeout: " + String(timeout) + "\n";
+        result += "Baudrate: " + String(baudrate) + "\n";
+        result += "Port: " + String(port) + "\n";
+        result += "Word Order: " + String(Enum::toString(wordOrder)) + "\n";
+        result += "Read Registers Count: " + String(readRegisters.size()) + "\n";
+        return result;
+    }
 };
