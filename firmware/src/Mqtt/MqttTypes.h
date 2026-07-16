@@ -2,6 +2,7 @@
 
 #include <ArduinoJson.h>
 #include <Arduino.h>
+#include <vector>
 
 struct MqttDiscoveryDevice
 {
@@ -10,10 +11,16 @@ struct MqttDiscoveryDevice
     String model;
     String name;
 
+    void setDeviceInfo(const String &deviceName, const String &deviceIdentifier)
+    {
+        name = deviceName;
+        identifier = deviceIdentifier;
+    }
+
     void toJson(JsonObject json) const
     {
-        JsonArray ids = json["identifiers"].to<JsonArray>();
-        ids.add(identifier);
+        JsonArray identifiers = json["identifiers"].to<JsonArray>();
+        identifiers.add(identifier);
 
         json["manufacturer"] = manufacturer;
 
@@ -22,6 +29,23 @@ struct MqttDiscoveryDevice
 
         if (!name.isEmpty())
             json["name"] = name;
+    }
+
+    void fromJson(JsonObject json)
+    {
+        JsonArray identifiers = json["identifiers"].as<JsonArray>();
+        if (!identifiers.isNull() && identifiers.size() > 0)
+        {
+            identifier = identifiers[0].as<String>();
+        }
+        else
+        {
+            identifier = "";
+        }
+
+        manufacturer = json["manufacturer"].as<String>();
+        model = json["model"].as<String>();
+        name = json["name"].as<String>();
     }
 };
 
@@ -34,13 +58,10 @@ struct MqttDiscoveryConfig
     String deviceClass;
     String stateClass;
     String unitOfMeasurement;
-    MqttDiscoveryDevice device;
     String icon;
 
-    void toJson(JsonDocument &doc) const
+    void toJson(JsonObject json) const
     {
-        JsonObject json = doc.to<JsonObject>();
-
         json["name"] = name;
         json["unique_id"] = uniqueId;
         json["state_topic"] = stateTopic;
@@ -56,7 +77,17 @@ struct MqttDiscoveryConfig
 
         if (!icon.isEmpty())
             json["icon"] = icon;
+    }
 
-        device.toJson(json["device"].to<JsonObject>());
+    void fromJson(JsonObject json)
+    {
+        name = json["name"].as<String>();
+        uniqueId = json["unique_id"].as<String>();
+        stateTopic = json["state_topic"].as<String>();
+
+        deviceClass = json["device_class"].as<String>();
+        stateClass = json["state_class"].as<String>();
+        unitOfMeasurement = json["unit_of_measurement"].as<String>();
+        icon = json["icon"].as<String>();
     }
 };

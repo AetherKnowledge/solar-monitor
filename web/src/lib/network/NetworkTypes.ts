@@ -1,4 +1,4 @@
-import type { Status } from '$lib/common/CommonTypes';
+import type { UpdateStatus } from '$lib/common/CommonTypes';
 
 export type WifiNetwork = {
 	ssid: string;
@@ -8,7 +8,7 @@ export type WifiNetwork = {
 };
 
 export type ScanRequestResponse = {
-	status: Status;
+	status: UpdateStatus;
 	networks: WifiNetwork[];
 };
 

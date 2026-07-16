@@ -12,11 +12,11 @@ namespace MqttDiscovery
         discoveryConfig.stateTopic = "solar-monitor/uptime";
         discoveryConfig.unitOfMeasurement = "s";
         discoveryConfig.stateClass = "measurement";
-        discoveryConfig.device.identifier = "solar-monitor";
-        discoveryConfig.device.name = "Solar Monitor";
+        discoveryConfig.name = "Solar Monitor";
 
         JsonDocument doc;
-        discoveryConfig.toJson(doc);
+        JsonObject json = doc.to<JsonObject>();
+        discoveryConfig.toJson(json);
 
         bool ok = MqttManager::publish(
             "homeassistant/sensor/solar-monitor/uptime/config",

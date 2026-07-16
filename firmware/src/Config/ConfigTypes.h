@@ -3,30 +3,7 @@
 #include <ArduinoJson.h>
 #include <Arduino.h>
 #include <WiFiType.h>
-
-static WiFiMode_t modeFromString(const String &str)
-{
-    if (str == "ap")
-        return WIFI_AP;
-    if (str == "sta")
-        return WIFI_STA;
-    return WIFI_AP_STA;
-}
-
-static const char *modeToString(WiFiMode_t mode)
-{
-    switch (mode)
-    {
-    case WIFI_AP:
-        return "ap";
-    case WIFI_STA:
-        return "sta";
-    case WIFI_AP_STA:
-        return "ap+sta";
-    default:
-        return "ap+sta";
-    }
-}
+#include <Networking/EnumWifiMode.h>
 
 struct NetworkConfig
 {
@@ -42,13 +19,13 @@ struct NetworkConfig
     void toJson(JsonObject json) const
     {
         json["ssid"] = ssid;
-        json["mode"] = modeToString(mode);
+        json["mode"] = Enum::toString(mode);
         json["password"] = password;
     }
 
     void fromJson(JsonObjectConst json)
     {
-        mode = modeFromString(json["mode"] | "ap+sta");
+        mode = Enum::fromString<WiFiMode_t>(json["mode"] | "ap+sta");
         ssid = json["ssid"] | "";
         password = json["password"] | "";
     }

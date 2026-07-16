@@ -1,7 +1,6 @@
 #include "NetworkApi.h"
 #include <Networking/Networking.h>
 #include <WiFi.h>
-#include <Common/Common.h>
 
 void registerNetworkApi(AsyncWebServer &server)
 {
@@ -23,7 +22,7 @@ void registerNetworkApi(AsyncWebServer &server)
 void handleGetWifiNetworks(AsyncWebServerRequest *request)
 {
     JsonDocument doc;
-    doc["status"] = StatusToString(wifiScanStatus);
+    doc["status"] = Enum::toString(wifiScanStatus);
     JsonArray networks = doc["networks"].to<JsonArray>();
 
     for (const auto &network : cachedWifiNetworks)
@@ -42,13 +41,13 @@ void handleGetWifiNetworks(AsyncWebServerRequest *request)
 
 void handleScanWifiNetworks(AsyncWebServerRequest *request)
 {
-    if (wifiScanStatus != InProgress)
+    if (wifiScanStatus != UpdateStatus::InProgress)
     {
         wifiScanRequested = true;
     }
 
     JsonDocument doc;
-    doc["status"] = StatusToString(wifiScanStatus);
+    doc["status"] = Enum::toString(wifiScanStatus);
 
     String response;
     serializeJson(doc, response);

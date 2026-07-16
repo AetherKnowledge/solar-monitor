@@ -33,7 +33,7 @@ void loop()
         wifiScanRequested = false;
     }
 
-    if (wifiScanStatus == InProgress)
+    if (wifiScanStatus == UpdateStatus::InProgress)
     {
         scanNetworks();
     }

@@ -2,7 +2,7 @@
 #include <WiFi.h>
 
 std::vector<WiFiNetwork> cachedWifiNetworks;
-Status wifiScanStatus = NotStarted;
+UpdateStatus wifiScanStatus = UpdateStatus::NotStarted;
 
 volatile bool wifiScanRequested = false;
 
@@ -10,9 +10,9 @@ void startScanning()
 {
     Serial.println("Starting WiFi scan");
 
-    if (wifiScanStatus != InProgress)
+    if (wifiScanStatus != UpdateStatus::InProgress)
     {
-        wifiScanStatus = InProgress;
+        wifiScanStatus = UpdateStatus::InProgress;
         int r = WiFi.scanNetworks(true);
     }
 }
@@ -24,7 +24,7 @@ void scanNetworks()
     if (n == WIFI_SCAN_FAILED)
     {
         Serial.println("WiFi scan failed");
-        wifiScanStatus = UpdateFailed;
+        wifiScanStatus = UpdateStatus::UpdateFailed;
         return;
     }
 
@@ -44,7 +44,7 @@ void scanNetworks()
             cachedWifiNetworks.push_back(network);
         }
         WiFi.scanDelete();
-        wifiScanStatus = UpdateComplete;
+        wifiScanStatus = UpdateStatus::UpdateComplete;
     }
 }
 

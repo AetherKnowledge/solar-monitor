@@ -1,4 +1,4 @@
-import { Status } from '$lib/common/CommonTypes';
+import { UpdateStatus } from '$lib/common/CommonTypes';
 import { type ScanRequestResponse } from '$lib/network/NetworkTypes';
 import { queryOptions } from '@tanstack/svelte-query';
 import type { NetworkConfig } from './NetworkTypes';
@@ -8,12 +8,12 @@ export function createNetworkQueryOptions() {
 		queryKey: ['networks'],
 		queryFn: async () => getNetworks(),
 		initialData: {
-			status: Status.NotStarted,
+			status: UpdateStatus.NotStarted,
 			networks: []
 		},
 		refetchInterval: (query) => {
 			const status = query.state.data?.status;
-			if (status === Status.InProgress) {
+			if (status === UpdateStatus.InProgress) {
 				return 1000; // Refetch every second while scanning
 			}
 		}
@@ -24,7 +24,7 @@ const getNetworks = async () => {
 	const response = await fetch(`/api/network/wifinetworks`);
 	const result: ScanRequestResponse = await response.json();
 
-	if (result.status === Status.NotStarted) {
+	if (result.status === UpdateStatus.NotStarted) {
 		const scanResult = await scanNetworks();
 		result.status = scanResult.status;
 	}
@@ -36,7 +36,7 @@ export const scanNetworks = async () => {
 	const response = await fetch(`/api/network/wifinetworks/scan`, {
 		method: 'POST'
 	});
-	return (await response.json()) as { status: Status };
+	return (await response.json()) as { status: UpdateStatus };
 };
 
 export function createNetworkConfigQueryOptions() {

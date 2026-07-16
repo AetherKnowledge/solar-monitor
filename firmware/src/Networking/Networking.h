@@ -2,11 +2,11 @@
 
 #include <vector>
 #include "NetworkingTypes.h"
+#include <Common/EnumUpdateStatus.h>
 #include <WiFiType.h>
-#include <Common/CommonTypes.h>
 
 extern std::vector<WiFiNetwork> cachedWifiNetworks;
-extern Status wifiScanStatus;
+extern UpdateStatus wifiScanStatus;
 extern volatile bool wifiScanRequested;
 
 bool connectToWiFi(const String &ssid, const String &password, WiFiMode_t mode);

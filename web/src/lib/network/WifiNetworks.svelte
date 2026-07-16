@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Status } from '$lib/common/CommonTypes';
+	import { UpdateStatus } from '$lib/common/CommonTypes';
 	import {
 		Check,
 		ChevronDown,
@@ -147,7 +147,7 @@
 						</button>
 					</div>
 				</li>
-				{#if status === Status.InProgress}
+				{#if status === UpdateStatus.InProgress}
 					<li class="menu-disabled flex flex-col items-center gap-2 py-4">
 						<span class="loading loading-spinner loading-xl text-base-content">wew</span>
 						<span>Loading</span>
