@@ -1,6 +1,14 @@
 #include "Common/Enum.h"
 #include "Modbus/ModbusTypes.h"
 
+enum class WordOrder : uint8_t
+{
+    ABCD,
+    BADC,
+    CDAB,
+    DCBA
+};
+
 template <>
 inline const char *Enum::toString(WordOrder value)
 {

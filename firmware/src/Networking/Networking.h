@@ -2,7 +2,7 @@
 
 #include <vector>
 #include "NetworkingTypes.h"
-#include <Common/EnumUpdateStatus.h>
+#include "UpdateStatus.h"
 #include <WiFiType.h>
 
 extern std::vector<WiFiNetwork> cachedWifiNetworks;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Enum.h"
+#include <Common/Enum.h>
 
 enum class UpdateStatus : uint8_t
 {

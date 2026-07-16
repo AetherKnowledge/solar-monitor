@@ -3,7 +3,7 @@
 #include <ArduinoJson.h>
 #include <Arduino.h>
 #include <WiFiType.h>
-#include <Networking/EnumWifiMode.h>
+#include <Networking/WifiMode.h>
 
 struct NetworkConfig
 {

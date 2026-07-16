@@ -4,13 +4,14 @@
 #include <Arduino.h>
 #include <vector>
 #include <Mqtt/MqttTypes.h>
-#include "EnumTransform.h"
+#include "RegisterTransform.h"
+#include "WordOrder.h"
 
 struct ReadRegister
 {
     uint16_t address;
     uint8_t rounding = 0;
-    ReadRegisterTransform transform = ReadRegisterTransform::None;
+    RegisterTransform transform = RegisterTransform::None;
     float transformArgument = 0.0f;
 
     MqttDiscoveryConfig discoveryConfig;
@@ -30,7 +31,7 @@ struct ReadRegister
     {
         address = json["address"].as<uint16_t>();
         rounding = json["rounding"].as<uint8_t>();
-        transform = Enum::fromString<ReadRegisterTransform>(json["transform"] | "None");
+        transform = Enum::fromString<RegisterTransform>(json["transform"] | "None");
         transformArgument = json["transformArgument"].as<float>();
 
         JsonObject discoveryJson = json["discoveryConfig"].as<JsonObject>();
