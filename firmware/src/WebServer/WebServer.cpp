@@ -19,9 +19,36 @@ bool startWebServer()
 
     registerWebServerApis();
 
+    server.serveStatic("/_app", LittleFS, "/website/_app")
+        .setCacheControl("public, max-age=31536000, immutable")
+        .setTryGzipFirst(true);
+
+    server.serveStatic("/roboto.woff2", LittleFS, "/website/roboto.woff2")
+        .setCacheControl("public, max-age=31536000, immutable")
+        .setTryGzipFirst(true);
+
     server.serveStatic("/", LittleFS, "/website")
         .setDefaultFile("index.html")
+        .setCacheControl("no-cache")
         .setTryGzipFirst(true);
+
+    server.onNotFound([](AsyncWebServerRequest *request)
+                      {
+    if (request->url().startsWith("/api/"))
+    {
+        request->send(404);
+        return;
+    }
+
+    AsyncWebServerResponse *response =
+        request->beginResponse(LittleFS,
+                               "/website/index.html.gz",
+                               "text/html");
+
+    response->addHeader("Cache-Control", "no-cache");
+    response->addHeader("Content-Encoding", "gzip");
+
+    request->send(response); });
 
     server.begin();
 

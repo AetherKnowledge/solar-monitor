@@ -24,13 +24,19 @@ export default defineConfig(({ command }) => ({
 			// See https://svelte.dev/docs/kit/adapters for more information about adapters.
 			adapter: adapter({
 				pages: websitePath,
-				assets: websitePath
+				assets: websitePath,
+				fallback: 'index.html'
 			})
 		}),
 		gzipOnly(websitePath)
 	],
 	build: {
-		sourcemap: false
+		sourcemap: false,
+		rollupOptions: {
+			output: {
+				manualChunks: () => 'app'
+			}
+		}
 	},
 	server:
 		command === 'serve'

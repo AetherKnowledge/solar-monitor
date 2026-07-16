@@ -7,5 +7,7 @@
 .mypy_cache
 firmware/data/website
 
+web/src/routes/test
+
 node_modules
 logs
