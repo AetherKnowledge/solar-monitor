@@ -87,7 +87,7 @@ void resetConfig()
     config.mqtt.clientId = "solar-monitor";
 }
 
-bool setNetworkConfig(const NetworkConfig &newConfig)
+bool updateNetworkConfig(const NetworkConfig &newConfig)
 {
     bool isValidConnection = connectToWiFi(newConfig.ssid, newConfig.password, newConfig.mode);
     if (!isValidConnection)
@@ -110,7 +110,7 @@ bool setNetworkConfig(const NetworkConfig &newConfig)
     return true;
 }
 
-bool setMqttConfig(const MQTTConfig &newConfig)
+bool updateMqttConfig(const MQTTConfig &newConfig)
 {
     config.mqtt = newConfig;
     saveConfig();

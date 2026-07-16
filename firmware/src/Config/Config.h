@@ -10,6 +10,6 @@ extern NetworkConfig pendingNetworkConfig;
 
 bool loadConfig();
 bool saveConfig();
-bool setNetworkConfig(const NetworkConfig &newConfig);
-bool setMqttConfig(const MQTTConfig &newConfig);
+bool updateNetworkConfig(const NetworkConfig &newConfig);
+bool updateMqttConfig(const MQTTConfig &newConfig);
 void resetConfig();

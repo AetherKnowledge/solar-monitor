@@ -54,11 +54,13 @@ const getNetworkConfig = async () => {
 };
 
 export async function updateNetworkConfig(config: NetworkConfig) {
-	await fetch(`/api/config/network`, {
+	const result = await fetch(`/api/config/network`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify(config)
 	});
+
+	console.log('Network config updated:', await result.text());
 }

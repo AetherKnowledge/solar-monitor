@@ -19,11 +19,11 @@ void registerConfigApi(AsyncWebServer &server)
            size_t)
         { handleUpdateNetworkConfig(request, data, len); });
 
-    server.on("/api/mqtt/config", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/api/config/mqtt", HTTP_GET, [](AsyncWebServerRequest *request)
               { handleGetMqttConfig(request); });
 
     server.on(
-        "/api/mqtt/config",
+        "/api/config/mqtt",
         HTTP_POST,
         [](AsyncWebServerRequest *request) {},
         nullptr,
@@ -91,7 +91,7 @@ void handleUpdateMqttConfig(AsyncWebServerRequest *request, uint8_t *data, size_
     MQTTConfig newConfig;
     newConfig.fromJson(doc.as<JsonObjectConst>());
 
-    setMqttConfig(newConfig);
+    updateMqttConfig(newConfig);
 
     request->send(200, "text/plain", "OK");
 }

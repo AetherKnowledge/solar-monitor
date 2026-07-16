@@ -26,8 +26,8 @@ void loop()
 {
     if (wifiScanRequested)
     {
-        wifiScanRequested = false;
         startScanning();
+        wifiScanRequested = false;
     }
 
     if (wifiScanStatus == InProgress)
@@ -37,8 +37,8 @@ void loop()
 
     if (networkUpdateRequested)
     {
+        updateNetworkConfig(pendingNetworkConfig);
         networkUpdateRequested = false;
-        setNetworkConfig(pendingNetworkConfig);
     }
 
     delay(10);

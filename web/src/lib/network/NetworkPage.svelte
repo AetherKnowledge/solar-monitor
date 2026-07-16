@@ -16,6 +16,14 @@
 
 	let networkConfig = $state<NetworkConfig>(defaultNetworkConfig);
 
+	let initialized = $state(false);
+	$effect(() => {
+		if (!initialized && savedNetworkConfig) {
+			networkConfig = { ...savedNetworkConfig };
+			initialized = true;
+		}
+	});
+
 	let form: HTMLFormElement | undefined = $state(undefined);
 	let isValid = $state(false);
 
@@ -29,14 +37,6 @@
 		networkConfig?.ssid;
 
 		updateValidity();
-	});
-
-	let initialized = $state(false);
-	$effect(() => {
-		if (!initialized && savedNetworkConfig) {
-			networkConfig = { ...savedNetworkConfig };
-			initialized = true;
-		}
 	});
 
 	let hasChanged = $derived.by(
@@ -58,12 +58,6 @@
 			isSaving = false;
 		}
 	}
-
-	$effect(() => {
-		console.log('networkConfig changed:', networkConfig);
-		console.log('savedNetworkConfig:', savedNetworkConfig);
-		console.log('hasChanged:', hasChanged);
-	});
 </script>
 
 <div class="relative h-full">

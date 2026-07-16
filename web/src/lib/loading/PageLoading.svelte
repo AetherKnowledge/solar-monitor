@@ -8,7 +8,7 @@
 	let { text = 'Loading...', progress = null, showProgress = false }: Props = $props();
 </script>
 
-<div class="absolute inset-0 bg-base-100/70 backdrop-blur-sm">
+<div class="fixed inset-0 bg-base-100/70 backdrop-blur-sm">
 	<div class="relative flex h-full items-center justify-center overflow-hidden">
 		<!-- Background -->
 		<div class="absolute inset-0 overflow-hidden">
