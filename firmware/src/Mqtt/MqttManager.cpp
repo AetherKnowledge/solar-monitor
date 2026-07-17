@@ -117,7 +117,7 @@ namespace MqttManager
         if (!mqttClient.connected())
             return false;
 
-        Serial.printf("Publishing to MQTT topic: %s, payload: %s\n", topic.c_str(), payload.c_str());
+        // Serial.printf("Publishing to MQTT topic: %s, payload: %s\n", topic.c_str(), payload.c_str());
         return mqttClient.publish(topic.c_str(), payload.c_str(), retain);
     }
 

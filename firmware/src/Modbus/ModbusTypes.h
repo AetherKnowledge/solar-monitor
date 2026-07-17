@@ -44,6 +44,14 @@ struct ReadRegister
     }
 };
 
+struct ReadGroup
+{
+    uint16_t startAddress;
+    uint16_t count;
+
+    std::vector<ReadRegister *> registers;
+};
+
 struct ModbusDevice
 {
     String name;
@@ -61,6 +69,7 @@ struct ModbusDevice
     bool initialized = false;
 
     std::vector<ReadRegister> readRegisters;
+    std::vector<ReadGroup> readGroups;
 
     void toJson(JsonObject json) const
     {

@@ -7,6 +7,7 @@ namespace ModbusManager
 {
     bool hasStarted = false;
     std::set<int> portsInUse;
+    constexpr uint16_t MAX_GAP = 2;
 
     void setup()
     {
@@ -17,6 +18,17 @@ namespace ModbusManager
 
         for (auto &device : config.modbusDevices)
         {
+            createReadGroups(device);
+            for (const auto &group : device.readGroups)
+            {
+                Serial.printf(
+                    "Read group for device %s: %u-%u (%u registers)\n",
+                    device.name.c_str(),
+                    group.startAddress,
+                    group.startAddress + group.count - 1,
+                    group.count);
+            }
+
             setupDevice(device);
         }
 
@@ -87,6 +99,7 @@ namespace ModbusManager
         for (auto &device : config.modbusDevices)
         {
             device.initialized = false;
+            device.readGroups.clear();
         }
     }
 
@@ -115,28 +128,32 @@ namespace ModbusManager
     {
         Serial.println("Polling Modbus device " + device.name + " (" + device.identifier + ")");
 
-        for (auto &reg : device.readRegisters)
+        for (auto &group : device.readGroups)
         {
-            ReadResult result = readRegister(device, reg);
+            ReadResultGrouped result = readGroupedRegisters(device, group);
 
-            if (result == ReadResult::Error)
+            if (!result.success)
             {
                 Serial.printf(
-                    "Failed to read register %u\n",
-                    reg.address);
+                    "Failed to read register group %u-%u\n",
+                    group.startAddress,
+                    group.startAddress + group.count - 1);
                 continue;
             }
 
-            if (result == ReadResult::Changed && device.mqttEnabled)
+            if (!result.changedRegisters.empty() && device.mqttEnabled)
             {
-                MqttManager::publish(
-                    MqttDiscovery::getStateTopic(device.identifier, reg.discoveryConfig.uniqueId),
-                    String(reg.value));
+                for (const auto &reg : result.changedRegisters)
+                {
+                    MqttManager::publish(
+                        MqttDiscovery::getStateTopic(device.identifier, reg->discoveryConfig.uniqueId),
+                        String(reg->value));
+                }
             }
         }
     }
 
-    ReadResult readRegister(ModbusDevice &device, ReadRegister &reg)
+    ReadResultSingle readSingleRegister(ModbusDevice &device, ReadRegister &reg)
     {
         auto result =
             device.modbus.readHoldingRegisters(reg.address, 1);
@@ -144,11 +161,42 @@ namespace ModbusManager
         if (result != device.modbus.ku8MBSuccess)
         {
             Serial.printf("Modbus error: %02X\n", result);
-            return ReadResult::Error;
+            return ReadResultSingle::Error;
         }
 
-        uint16_t raw = device.modbus.getResponseBuffer(0);
+        bool changed = processRegister(device, reg, device.modbus.getResponseBuffer(0));
+        return changed ? ReadResultSingle::Changed : ReadResultSingle::Unchanged;
+    }
 
+    ReadResultGrouped readGroupedRegisters(ModbusDevice &device, ReadGroup &group)
+    {
+        auto result =
+            device.modbus.readHoldingRegisters(group.startAddress, group.count);
+
+        if (result != device.modbus.ku8MBSuccess)
+        {
+            Serial.printf("Modbus error: %02X\n", result);
+            return ReadResultGrouped{false, {}};
+        }
+
+        std::vector<ReadRegister *> changedRegisters;
+
+        for (ReadRegister *reg : group.registers)
+        {
+            uint16_t offset = reg->address - group.startAddress;
+
+            bool changed = processRegister(device, *reg, device.modbus.getResponseBuffer(offset));
+
+            if (changed)
+            {
+                changedRegisters.push_back(reg);
+            }
+        }
+        return ReadResultGrouped{true, changedRegisters};
+    }
+
+    bool processRegister(ModbusDevice &device, ReadRegister &reg, uint16_t raw)
+    {
         if (device.swapBytes)
         {
             raw = __builtin_bswap16(raw);
@@ -162,8 +210,7 @@ namespace ModbusManager
 
         if (reg.rounding > 0)
         {
-            float factor = pow(10, reg.rounding);
-            value = round(value * factor) / factor;
+            value = applyRounding(value, reg.rounding);
         }
 
         if (value != reg.value)
@@ -176,9 +223,9 @@ namespace ModbusManager
                 value);
 
             reg.value = value;
-            return ReadResult::Changed;
+            return true;
         }
-        return ReadResult::Unchanged;
+        return false;
     }
 
     float transformRegisterValue(const ReadRegister &reg, float value)
@@ -195,4 +242,59 @@ namespace ModbusManager
             return value;
         }
     }
+
+    float applyRounding(float value, uint8_t decimals)
+    {
+        static constexpr float factors[] =
+            {
+                1.0f,
+                10.0f,
+                100.0f,
+                1000.0f};
+
+        if (decimals >= std::size(factors))
+            return value;
+
+        return roundf(value * factors[decimals]) / factors[decimals];
+    }
+
+    void createReadGroups(ModbusDevice &device)
+    {
+        device.readGroups.clear();
+
+        std::sort(device.readRegisters.begin(), device.readRegisters.end(),
+                  [](const ReadRegister &a, const ReadRegister &b)
+                  {
+                      return a.address < b.address;
+                  });
+
+        for (auto &reg : device.readRegisters)
+        {
+            if (device.readGroups.empty())
+            {
+                createNewGroup(device, reg);
+                continue;
+            }
+
+            ReadGroup &lastGroup = device.readGroups.back();
+
+            if (reg.address <= lastGroup.startAddress + lastGroup.count + MAX_GAP)
+            {
+                lastGroup.registers.push_back(&reg);
+                lastGroup.count = reg.address - lastGroup.startAddress + 1;
+            }
+            else
+            {
+                createNewGroup(device, reg);
+            }
+        }
+    }
+
+    void createNewGroup(ModbusDevice &device, ReadRegister &reg)
+    {
+        device.readGroups.push_back({.startAddress = reg.address,
+                                     .count = 1,
+                                     .registers = {&reg}});
+    }
+
 }

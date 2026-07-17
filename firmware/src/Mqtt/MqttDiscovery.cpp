@@ -29,14 +29,25 @@ namespace MqttDiscovery
 
         for (const auto &device : config.modbusDevices)
         {
+            auto publishedDiscoveryCount = 0;
+
             for (const auto &readRegister : device.readRegisters)
             {
-                publishReadRegisterDiscovery(device, readRegister);
+                if (publishReadRegisterDiscovery(device, readRegister))
+                {
+                    publishedDiscoveryCount++;
+                }
             }
+
+            Serial.printf(
+                "Published %d discovery messages for Modbus device %s (%s)\n",
+                publishedDiscoveryCount,
+                device.name.c_str(),
+                device.identifier.c_str());
         }
     }
 
-    void publishReadRegisterDiscovery(const ModbusDevice &device, const ReadRegister &readRegister)
+    bool publishReadRegisterDiscovery(const ModbusDevice &device, const ReadRegister &readRegister)
     {
         JsonDocument doc;
         JsonObject json = doc.to<JsonObject>();
@@ -49,7 +60,7 @@ namespace MqttDiscovery
             device.identifier,
             readRegister.discoveryConfig.uniqueId);
 
-        MqttManager::publish(
+        return MqttManager::publish(
             getDiscoveryTopic(
                 device.identifier,
                 readRegister.discoveryConfig.uniqueId),
