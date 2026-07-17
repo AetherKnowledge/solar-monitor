@@ -1,9 +1,9 @@
 import { apiFetch } from '$lib/common/CommonFunctions';
-import type { NetworkConfig } from '$lib/network/NetworkTypes';
+import type { ModbusDevice } from './DeviceTypes';
 
 export function createDevicesConfigQueryOptions() {
 	return {
 		queryKey: ['devicesConfig'],
-		queryFn: async () => apiFetch<NetworkConfig>(`/api/config/modbus`)
+		queryFn: async () => apiFetch<ModbusDevice[]>(`/api/config/modbus`)
 	};
 }
