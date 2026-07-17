@@ -1,4 +1,5 @@
-import { UpdateStatus } from '$lib/common/CommonTypes';
+import { apiFetch } from '$lib/common/CommonFunctions';
+import { UpdateStatus, type SimpleResponse } from '$lib/common/CommonTypes';
 import { type ScanRequestResponse } from '$lib/network/NetworkTypes';
 import { queryOptions } from '@tanstack/svelte-query';
 import type { NetworkConfig } from './NetworkTypes';
@@ -21,8 +22,7 @@ export function createNetworkQueryOptions() {
 }
 
 const getNetworks = async () => {
-	const response = await fetch(`/api/network/wifinetworks`);
-	const result: ScanRequestResponse = await response.json();
+	const result = await apiFetch<ScanRequestResponse>(`/api/network/wifinetworks`);
 
 	if (result.status === UpdateStatus.NotStarted) {
 		const scanResult = await scanNetworks();
@@ -33,28 +33,18 @@ const getNetworks = async () => {
 };
 
 export const scanNetworks = async () => {
-	const response = await fetch(`/api/network/wifinetworks/scan`, {
-		method: 'POST'
-	});
-	return (await response.json()) as { status: UpdateStatus };
+	return apiFetch<ScanRequestResponse>(`/api/network/wifinetworks/scan`);
 };
 
 export function createNetworkConfigQueryOptions() {
 	return queryOptions<NetworkConfig>({
 		queryKey: ['networkConfig'],
-		queryFn: async () => getNetworkConfig()
+		queryFn: async () => apiFetch<NetworkConfig>(`/api/config/network`)
 	});
 }
 
-const getNetworkConfig = async () => {
-	const response = await fetch(`/api/config/network`);
-	const result: NetworkConfig = await response.json();
-
-	return result;
-};
-
 export async function updateNetworkConfig(config: NetworkConfig) {
-	const result = await fetch(`/api/config/network`, {
+	const result = await apiFetch<SimpleResponse>(`/api/config/network`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -62,5 +52,5 @@ export async function updateNetworkConfig(config: NetworkConfig) {
 		body: JSON.stringify(config)
 	});
 
-	console.log('Network config updated:', await result.text());
+	console.log('Network config updated:', result.message);
 }

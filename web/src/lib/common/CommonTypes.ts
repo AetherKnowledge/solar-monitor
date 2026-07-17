@@ -4,3 +4,7 @@ export enum UpdateStatus {
 	UpdateFailed = 'failed',
 	NotStarted = 'not_started'
 }
+
+export type SimpleResponse = {
+	message: string;
+};

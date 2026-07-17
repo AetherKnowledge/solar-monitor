@@ -1,5 +1,6 @@
 #include "ConfigApi.h"
 #include <Config/Config.h>
+#include <Common/Response.h>
 
 void registerConfigApi(AsyncWebServer &server)
 {
@@ -53,7 +54,7 @@ void handleUpdateNetworkConfig(AsyncWebServerRequest *request, uint8_t *data, si
 
     if (deserializeJson(doc, data, len))
     {
-        request->send(400, "text/plain", "Invalid JSON");
+        Response::error(request, 400, "Invalid JSON");
         return;
     }
 
@@ -62,7 +63,7 @@ void handleUpdateNetworkConfig(AsyncWebServerRequest *request, uint8_t *data, si
     networkUpdateRequested = true;
     pendingNetworkConfig = newConfig;
 
-    request->send(202, "text/plain", "OK");
+    Response::success(request, 202, "OK");
 }
 
 void handleGetMqttConfig(AsyncWebServerRequest *request)
@@ -84,7 +85,7 @@ void handleUpdateMqttConfig(AsyncWebServerRequest *request, uint8_t *data, size_
 
     if (deserializeJson(doc, data, len))
     {
-        request->send(400, "text/plain", "Invalid JSON");
+        Response::error(request, 400, "Invalid JSON");
         return;
     }
 
@@ -93,5 +94,5 @@ void handleUpdateMqttConfig(AsyncWebServerRequest *request, uint8_t *data, size_
 
     updateMqttConfig(newConfig);
 
-    request->send(200, "text/plain", "OK");
+    Response::success(request, 200, "OK");
 }
