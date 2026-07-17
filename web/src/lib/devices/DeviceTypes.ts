@@ -18,6 +18,7 @@ export interface ReadRegister {
 	rounding: number;
 	transform: RegisterTransform;
 	transformArgument: number;
+	signedValue: boolean;
 
 	discoveryConfig: MqttDiscoveryConfig;
 }
@@ -29,7 +30,8 @@ export interface ModbusDevice {
 	timeout: number;
 	baudrate: number;
 	port: number;
-	wordOrder: WordOrder;
+	swapBytes: boolean;
+	mqttEnabled: boolean;
 
 	discoveryDevice: MqttDiscoveryDevice;
 	readRegisters: ReadRegister[];

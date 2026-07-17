@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Modbus/ModbusTypes.h>
+
 namespace MqttDiscovery
 {
     void start();

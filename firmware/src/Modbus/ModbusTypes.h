@@ -6,6 +6,7 @@
 #include <Mqtt/MqttTypes.h>
 #include "RegisterTransform.h"
 #include "WordOrder.h"
+#include <ModbusMaster.h>
 
 struct ReadRegister
 {
@@ -13,6 +14,8 @@ struct ReadRegister
     uint8_t rounding = 0;
     RegisterTransform transform = RegisterTransform::None;
     float transformArgument = 0.0f;
+    float value = 0.0f;
+    bool signedValue = false;
 
     MqttDiscoveryConfig discoveryConfig;
 
@@ -22,6 +25,7 @@ struct ReadRegister
         json["rounding"] = rounding;
         json["transform"] = Enum::toString(transform);
         json["transformArgument"] = transformArgument;
+        json["signedValue"] = signedValue;
 
         JsonObject discoveryJson = json["discoveryConfig"].to<JsonObject>();
         discoveryConfig.toJson(discoveryJson);
@@ -32,6 +36,7 @@ struct ReadRegister
         address = json["address"].as<uint16_t>();
         rounding = json["rounding"].as<uint8_t>();
         transform = Enum::fromString<RegisterTransform>(json["transform"] | "None");
+        signedValue = json["signedValue"] | false;
         transformArgument = json["transformArgument"].as<float>();
 
         JsonObject discoveryJson = json["discoveryConfig"].as<JsonObject>();
@@ -47,9 +52,13 @@ struct ModbusDevice
     uint32_t timeout = 1000;
     uint32_t baudrate = 2400;
     uint8_t port = 1;
-    WordOrder wordOrder = WordOrder::BADC;
+    bool swapBytes = false;
 
     MqttDiscoveryDevice discoveryDevice;
+    bool mqttEnabled = true;
+
+    ModbusMaster modbus;
+    bool initialized = false;
 
     std::vector<ReadRegister> readRegisters;
 
@@ -61,7 +70,8 @@ struct ModbusDevice
         json["timeout"] = timeout;
         json["baudrate"] = baudrate;
         json["port"] = port;
-        json["wordOrder"] = Enum::toString(wordOrder);
+        json["swapBytes"] = swapBytes;
+        json["mqttEnabled"] = mqttEnabled;
 
         JsonArray readRegistersArray = json["readRegisters"].to<JsonArray>();
         for (const auto &readRegister : readRegisters)
@@ -85,7 +95,8 @@ struct ModbusDevice
         timeout = json["timeout"].as<uint32_t>();
         baudrate = json["baudrate"].as<uint32_t>();
         port = json["port"].as<uint8_t>();
-        wordOrder = Enum::fromString<WordOrder>(json["wordOrder"] | "BADC");
+        swapBytes = json["swapBytes"] | false;
+        mqttEnabled = json["mqttEnabled"] | true;
 
         JsonObject discoveryDeviceJson = json["discoveryDevice"].as<JsonObject>();
         discoveryDevice.fromJson(discoveryDeviceJson);
@@ -109,7 +120,7 @@ struct ModbusDevice
         result += "Timeout: " + String(timeout) + "\n";
         result += "Baudrate: " + String(baudrate) + "\n";
         result += "Port: " + String(port) + "\n";
-        result += "Word Order: " + String(Enum::toString(wordOrder)) + "\n";
+        result += "Swap Bytes: " + String(swapBytes ? "true" : "false") + "\n";
         result += "Read Registers Count: " + String(readRegisters.size()) + "\n";
         return result;
     }

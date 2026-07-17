@@ -48,7 +48,7 @@
 
 			<div class="flex items-center gap-1.5">
 				<ArrowLeftRight class="size-4" />
-				<span>{device.wordOrder}</span>
+				<span>{device.swapBytes ? 'Swap Bytes' : 'No Swap'}</span>
 			</div>
 
 			<div class="flex items-center gap-1.5">
