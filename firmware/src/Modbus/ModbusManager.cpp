@@ -113,37 +113,30 @@ namespace ModbusManager
 
     void pollDevice(ModbusDevice &device)
     {
-        Serial.println("Polling Modbus device" + device.name + " (" + device.identifier + ")");
+        Serial.println("Polling Modbus device " + device.name + " (" + device.identifier + ")");
 
         for (auto &reg : device.readRegisters)
         {
-            bool result = readRegister(device, reg);
+            ReadResult result = readRegister(device, reg);
 
-            Serial.printf(
-                "Read register %s (address: %d): ",
-                reg.discoveryConfig.name.c_str(),
-                reg.address);
-
-            if (result)
+            if (result == ReadResult::Error)
             {
                 Serial.printf(
-                    "%s = %.1f\n",
-                    reg.discoveryConfig.name.c_str(),
-                    reg.value);
-
-                if (device.mqttEnabled)
-                    MqttManager::publish(
-                        MqttDiscovery::getStateTopic(device.identifier, reg.discoveryConfig.uniqueId),
-                        String(reg.value));
+                    "Failed to read register %u\n",
+                    reg.address);
+                continue;
             }
-            else
+
+            if (result == ReadResult::Changed && device.mqttEnabled)
             {
-                Serial.println("Failed to read register");
+                MqttManager::publish(
+                    MqttDiscovery::getStateTopic(device.identifier, reg.discoveryConfig.uniqueId),
+                    String(reg.value));
             }
         }
     }
 
-    bool readRegister(ModbusDevice &device, ReadRegister &reg)
+    ReadResult readRegister(ModbusDevice &device, ReadRegister &reg)
     {
         auto result =
             device.modbus.readHoldingRegisters(reg.address, 1);
@@ -151,7 +144,7 @@ namespace ModbusManager
         if (result != device.modbus.ku8MBSuccess)
         {
             Serial.printf("Modbus error: %02X\n", result);
-            return false;
+            return ReadResult::Error;
         }
 
         uint16_t raw = device.modbus.getResponseBuffer(0);
@@ -165,9 +158,27 @@ namespace ModbusManager
                           ? static_cast<float>(static_cast<int16_t>(raw))
                           : static_cast<float>(raw);
 
-        reg.value = transformRegisterValue(reg, value);
+        value = transformRegisterValue(reg, value);
 
-        return true;
+        if (reg.rounding > 0)
+        {
+            float factor = pow(10, reg.rounding);
+            value = round(value * factor) / factor;
+        }
+
+        if (value != reg.value)
+        {
+            Serial.printf(
+                "Register %s (address: %d) value changed from %.2f to %.2f\n",
+                reg.discoveryConfig.name.c_str(),
+                reg.address,
+                reg.value,
+                value);
+
+            reg.value = value;
+            return ReadResult::Changed;
+        }
+        return ReadResult::Unchanged;
     }
 
     float transformRegisterValue(const ReadRegister &reg, float value)
