@@ -7,7 +7,9 @@ namespace ModbusManager
 {
     bool hasStarted = false;
     std::set<int> portsInUse;
+
     constexpr uint16_t MAX_GAP = 2;
+    constexpr uint16_t MAX_REGISTERS_PER_REQUEST = 125;
 
     void setup()
     {
@@ -268,25 +270,39 @@ namespace ModbusManager
                       return a.address < b.address;
                   });
 
+        ReadRegister *previousRegister = nullptr;
         for (auto &reg : device.readRegisters)
         {
             if (device.readGroups.empty())
             {
                 createNewGroup(device, reg);
+                previousRegister = &reg;
+                continue;
+            }
+
+            if (previousRegister && reg.address == previousRegister->address)
+            {
+                Serial.printf(
+                    "Duplicate register %u found in device %s. Only the first occurrence will be used.\n",
+                    reg.address,
+                    device.name.c_str());
                 continue;
             }
 
             ReadGroup &lastGroup = device.readGroups.back();
 
-            if (reg.address <= lastGroup.startAddress + lastGroup.count + MAX_GAP)
+            uint16_t newCount = reg.address - lastGroup.startAddress + 1;
+            if (reg.address <= lastGroup.startAddress + lastGroup.count + MAX_GAP && newCount < MAX_REGISTERS_PER_REQUEST)
             {
                 lastGroup.registers.push_back(&reg);
-                lastGroup.count = reg.address - lastGroup.startAddress + 1;
+                lastGroup.count = newCount;
             }
             else
             {
                 createNewGroup(device, reg);
             }
+
+            previousRegister = &reg;
         }
     }
 
