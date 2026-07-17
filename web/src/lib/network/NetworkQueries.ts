@@ -26,14 +26,16 @@ const getNetworks = async () => {
 
 	if (result.status === UpdateStatus.NotStarted) {
 		const scanResult = await scanNetworks();
-		result.status = scanResult.status;
+		result.status = scanResult;
 	}
 
 	return result;
 };
 
 export const scanNetworks = async () => {
-	return apiFetch<ScanRequestResponse>(`/api/network/wifinetworks/scan`);
+	return await apiFetch<UpdateStatus>(`/api/network/wifinetworks/scan`, {
+		method: 'POST'
+	});
 };
 
 export function createNetworkConfigQueryOptions() {
