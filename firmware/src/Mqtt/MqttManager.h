@@ -12,13 +12,13 @@ namespace MqttManager
 
     void loop();
 
-    bool publish(const String &topic, const String &payload);
-    bool publish(const String &topic, const JsonDocument &payload);
+    bool publish(const String &topic, const String &payload, bool retain = true);
+    bool publish(const String &topic, const JsonDocument &payload, bool retain = true);
 
     template <typename T>
-    bool publish(const String &topic, const T &value)
+    bool publish(const String &topic, const T &value, bool retain = true)
     {
-        return publish(topic, String(value));
+        return publish(topic, String(value), retain);
     }
 
     void callback(char *topic, byte *payload, unsigned int length);

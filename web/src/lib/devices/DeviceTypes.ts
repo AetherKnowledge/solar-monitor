@@ -45,7 +45,6 @@ export interface MqttDiscoveryDevice {
 export interface MqttDiscoveryConfig {
 	name: string;
 	uniqueId: string;
-	stateTopic: string;
 
 	deviceClass: string;
 	stateClass: string;

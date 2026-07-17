@@ -65,7 +65,7 @@ namespace MqttManager
             Serial.println("Connected to MQTT");
             mqttClient.publish("solar-monitor/status", "online", true);
 
-            MqttDiscovery::setup();
+            MqttDiscovery::start();
         }
         else
         {
@@ -112,20 +112,20 @@ namespace MqttManager
         mqttClient.loop();
     }
 
-    bool publish(const String &topic, const String &payload)
+    bool publish(const String &topic, const String &payload, bool retain = true)
     {
         if (!mqttClient.connected())
             return false;
 
         Serial.printf("Publishing to MQTT topic: %s, payload: %s\n", topic.c_str(), payload.c_str());
-        return mqttClient.publish(topic.c_str(), payload.c_str(), true);
+        return mqttClient.publish(topic.c_str(), payload.c_str(), retain);
     }
 
-    bool publish(const String &topic, const JsonDocument &payload)
+    bool publish(const String &topic, const JsonDocument &payload, bool retain = true)
     {
         String payloadString;
         serializeJson(payload, payloadString);
-        return publish(topic, payloadString);
+        return publish(topic, payloadString, retain);
     }
 
     void callback(char *topic, byte *payload, unsigned int length)

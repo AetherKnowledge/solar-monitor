@@ -94,5 +94,5 @@ void handleUpdateMqttConfig(AsyncWebServerRequest *request, uint8_t *data, size_
 
     updateMqttConfig(newConfig);
 
-    Response::success(request, 200, "OK");
+    Response::success(request, 202, "OK");
 }

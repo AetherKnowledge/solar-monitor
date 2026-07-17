@@ -43,9 +43,9 @@ struct MqttDiscoveryDevice
             identifier = "";
         }
 
-        manufacturer = json["manufacturer"].as<String>();
-        model = json["model"].as<String>();
-        name = json["name"].as<String>();
+        manufacturer = json["manufacturer"] | "";
+        model = json["model"] | "";
+        name = json["name"] | "";
     }
 };
 
@@ -53,7 +53,6 @@ struct MqttDiscoveryConfig
 {
     String name;
     String uniqueId;
-    String stateTopic;
 
     String deviceClass;
     String stateClass;
@@ -64,7 +63,6 @@ struct MqttDiscoveryConfig
     {
         json["name"] = name;
         json["unique_id"] = uniqueId;
-        json["state_topic"] = stateTopic;
 
         if (!stateClass.isEmpty())
             json["state_class"] = stateClass;
@@ -81,13 +79,12 @@ struct MqttDiscoveryConfig
 
     void fromJson(JsonObject json)
     {
-        name = json["name"].as<String>();
-        uniqueId = json["unique_id"].as<String>();
-        stateTopic = json["state_topic"].as<String>();
+        uniqueId = json["unique_id"] | "";
+        name = json["name"] | uniqueId;
 
-        deviceClass = json["device_class"].as<String>();
-        stateClass = json["state_class"].as<String>();
-        unitOfMeasurement = json["unit_of_measurement"].as<String>();
-        icon = json["icon"].as<String>();
+        deviceClass = json["device_class"] | "";
+        stateClass = json["state_class"] | "";
+        unitOfMeasurement = json["unit_of_measurement"] | "";
+        icon = json["icon"] | "";
     }
 };

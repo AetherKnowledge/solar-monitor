@@ -51,7 +51,7 @@ void loop()
     if (MqttManager::isConnected() && millis() - lastPublish >= 10000)
     {
         lastPublish = millis();
-        MqttManager::publish("solar-monitor/uptime", millis() / 1000UL);
+        MqttManager::publish("solar-monitor/uptime", millis() / 1000UL, true);
     }
 
     delay(10);
