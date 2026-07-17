@@ -23,7 +23,7 @@
       "baudrate": 2400,
       "port": 2,
       "swapBytes": true,
-      "mqttEnabled": false,
+      "mqttEnabled": true,
       "discoveryDevice": {
         "manufacturer": "YH",
         "model": "YH 4K2"
