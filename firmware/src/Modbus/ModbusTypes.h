@@ -9,16 +9,29 @@
 #include <ModbusMaster.h>
 #include <tinyexpr.h>
 
-struct ReadRegister
+struct Register
+{
+    double value = 0.0;
+    MqttSensorDiscoveryConfig discoveryConfig;
+
+    String &getName()
+    {
+        return discoveryConfig.name;
+    }
+
+    String &getId()
+    {
+        return discoveryConfig.uniqueId;
+    }
+};
+
+struct ReadRegister : Register
 {
     uint16_t address;
     uint8_t rounding = 0;
     RegisterTransform transform = RegisterTransform::None;
     float transformArgument = 0.0f;
-    double value = 0.0;
     bool signedValue = false;
-
-    MqttSensorDiscoveryConfig discoveryConfig;
 
     void toJson(JsonObject json) const
     {
@@ -53,13 +66,10 @@ struct ReadGroup
     std::vector<ReadRegister *> registers;
 };
 
-struct CalculatedRegister
+struct CalculatedRegister : Register
 {
     String expression;
     te_expr *compiledExpression = nullptr;
-
-    double value = 0.0;
-    MqttSensorDiscoveryConfig discoveryConfig;
 
     void toJson(JsonObject json) const
     {

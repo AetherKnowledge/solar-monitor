@@ -4,6 +4,8 @@
 
 namespace CalculatedRegisterManager
 {
+    using unordered_set_t = std::unordered_set<std::string>;
+
     void setupDevice(ModbusDevice &device)
     {
         Serial.printf(
@@ -13,41 +15,83 @@ namespace CalculatedRegisterManager
 
         resetDevice(device);
 
+        device.vars.clear();
         device.vars.reserve(device.readRegisters.size());
 
-        std::unordered_set<std::string> usedIds;
+        unordered_set_t usedIds;
         for (auto &readRegister : device.readRegisters)
         {
-            if (readRegister.discoveryConfig.uniqueId.isEmpty())
-            {
-                Serial.printf("Read register at address %u has no unique ID. Skipping for calculated registers.\n", readRegister.address);
-                continue;
-            }
+            addVariable(device, readRegister, usedIds);
+        }
 
-            auto [_, inserted] = usedIds.insert(
-                readRegister.discoveryConfig.uniqueId.c_str());
-
-            if (!inserted)
-            {
-                Serial.printf("Duplicate unique ID '%s' found for read register at address %u. Skipping for calculated registers.\n", readRegister.discoveryConfig.uniqueId.c_str(), readRegister.address);
-                continue;
-            }
-
-            te_variable var;
-            var.name = readRegister.discoveryConfig.uniqueId.c_str();
-            var.address = &readRegister.value;
-            var.type = TE_VARIABLE;
-            var.context = nullptr;
-
-            device.vars.push_back(var);
-
-            Serial.printf(
-                "Added variable for calculated registers: %s (address: %d)\n",
-                var.name,
-                readRegister.address);
+        // calculated registers are evaluated in order
+        for (auto &calculatedRegister : device.calculatedRegisters)
+        {
+            addVariable(device, calculatedRegister, usedIds);
         }
 
         compileExpressions(device);
+    }
+
+    void addVariable(ModbusDevice &device, Register &reg, unordered_set_t &usedIds)
+    {
+        if (reg.getId().isEmpty())
+        {
+            Serial.printf(
+                "Register '%s' has no unique ID.\n",
+                reg.getName().c_str());
+            return;
+        }
+
+        auto [_, inserted] = usedIds.insert(
+            reg.getId().c_str());
+
+        if (!inserted)
+        {
+            Serial.printf(
+                "Duplicate unique ID '%s' found for register '%s'.\n",
+                reg.getId().c_str(),
+                reg.getName().c_str());
+            return;
+        }
+
+        te_variable var;
+        var.name = reg.getId().c_str();
+        var.address = &reg.value;
+        var.type = TE_VARIABLE;
+        var.context = nullptr;
+
+        device.vars.push_back({reg.getId().c_str(),
+                               &reg.value,
+                               TE_VARIABLE,
+                               nullptr});
+
+        Serial.printf(
+            "Added variable for calculated registers: %s (name: %s)\n",
+            reg.getId(),
+            reg.getName());
+    }
+
+    void compileExpressions(ModbusDevice &device)
+    {
+        Serial.printf("Compiling expressions for device %s (%s)\n", device.name.c_str(), device.identifier.c_str());
+        for (auto &reg : device.calculatedRegisters)
+        {
+            int err;
+            reg.compiledExpression = te_compile(reg.expression.c_str(),
+                                                device.vars.data(),
+                                                device.vars.size(),
+                                                &err);
+
+            if (!reg.compiledExpression)
+            {
+                Serial.printf(
+                    "Failed to compile '%s': %s (position %d)\n",
+                    reg.getName().c_str(),
+                    reg.expression.c_str(),
+                    err);
+            }
+        }
     }
 
     // Returns true if the value of the calculated register has changed, false otherwise
@@ -68,7 +112,6 @@ namespace CalculatedRegisterManager
     void resetDevice(ModbusDevice &device)
     {
         device.vars.clear();
-        device.vars.shrink_to_fit();
 
         for (auto &calculatedRegister : device.calculatedRegisters)
         {
@@ -77,27 +120,6 @@ namespace CalculatedRegisterManager
                 te_free(calculatedRegister.compiledExpression);
                 calculatedRegister.compiledExpression = nullptr;
             }
-        }
-    }
-
-    void compileExpressions(ModbusDevice &device)
-    {
-        Serial.printf("Compiling expressions for device %s (%s)\n", device.name.c_str(), device.identifier.c_str());
-        for (auto &calculatedRegister : device.calculatedRegisters)
-        {
-            int err;
-            te_expr *expr = te_compile(calculatedRegister.expression.c_str(),
-                                       device.vars.data(),
-                                       device.vars.size(),
-                                       &err);
-
-            if (!expr)
-            {
-                Serial.printf("Failed to compile expression: %s, error at position: %d\n", calculatedRegister.expression.c_str(), err);
-                continue;
-            }
-
-            calculatedRegister.compiledExpression = expr;
         }
     }
 
