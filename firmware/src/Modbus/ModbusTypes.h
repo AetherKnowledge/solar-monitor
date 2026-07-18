@@ -71,9 +71,14 @@ struct CalculatedRegister : Register
     String expression;
     te_expr *compiledExpression = nullptr;
 
+    bool isPersistent = false;
+    // only updates if persistence is true
+    bool isDirty = false;
+
     void toJson(JsonObject json) const
     {
         json["expression"] = expression;
+        json["isPersistent"] = false;
 
         JsonObject discoveryJson = json["discoveryConfig"].to<JsonObject>();
         discoveryConfig.toJson(discoveryJson);
@@ -82,6 +87,7 @@ struct CalculatedRegister : Register
     void fromJson(JsonObject json)
     {
         expression = json["expression"].as<String>();
+        isPersistent = json["isPersistent"] | false;
 
         JsonObject discoveryJson = json["discoveryConfig"].as<JsonObject>();
         discoveryConfig.fromJson(discoveryJson);

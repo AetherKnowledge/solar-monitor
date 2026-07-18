@@ -1,6 +1,5 @@
 #include "Config.h"
 #include <ArduinoJson.h>
-#include <LittleFS.h>
 #include <Networking/Networking.h>
 #include <Mqtt/MqttManager.h>
 
@@ -10,35 +9,16 @@ bool configLoaded = false;
 volatile bool networkUpdateRequested = false;
 NetworkConfig pendingNetworkConfig;
 
-bool loadConfig()
+bool loadConfigFile(File &file)
 {
-    Serial.println();
-    Serial.println("Loading config");
-
-    if (!LittleFS.begin())
-    {
-        Serial.println("LittleFS Mount Failed");
-        return false;
-    }
-
-    // incase the config file does not exist or is invalid, reset to default values
-    resetConfig();
-
-    File file = LittleFS.open("/config.json", "r");
-    if (!file)
-    {
-        Serial.println("Failed to open config file");
-        return false;
-    }
-
     JsonDocument doc;
     DeserializationError error = deserializeJson(doc, file);
     file.close();
 
     if (error)
     {
-        Serial.println("Failed to deserialize JSON");
-        file.close();
+        Serial.printf("Failed to deserialize config: %s\n",
+                      error.c_str());
         return false;
     }
 
@@ -51,20 +31,70 @@ bool loadConfig()
     return true;
 }
 
+bool loadConfig()
+{
+    Serial.println();
+    Serial.println("Loading config");
+
+    if (!LittleFS.begin())
+    {
+        Serial.println("LittleFS not mounted");
+        return false;
+    }
+
+    File config = LittleFS.open(CONFIG_LOCATION, "r");
+    File backup = LittleFS.open(CONFIG_BAK_LOCATION, "r");
+
+    if (config && loadConfigFile(config))
+    {
+        backup.close();
+        Serial.println("Loaded default config successfully");
+        return true;
+    }
+    else if (backup && loadConfigFile(backup))
+    {
+        config.close();
+
+        Serial.println("Loaded backup config successfully");
+        if (!copyFile(CONFIG_BAK_LOCATION, CONFIG_LOCATION))
+        {
+            Serial.println("Failed to restore config from backup.");
+        }
+        return true;
+    }
+
+    backup.close();
+    config.close();
+
+    Serial.println("Failed to load default and backup config!");
+    return false;
+}
+
 bool saveConfig()
 {
     JsonDocument doc;
     config.toJson(doc.to<JsonObject>());
 
-    File file = LittleFS.open("/config.json", "w");
-    if (!file)
+    if (LittleFS.exists(CONFIG_LOCATION) && !copyFile(CONFIG_LOCATION, CONFIG_BAK_LOCATION))
     {
-        Serial.println("Failed to open config file for writing");
+        Serial.println("Backing up config failed!");
+    }
+
+    File config = LittleFS.open(CONFIG_LOCATION, "w");
+    if (!config)
+    {
+        Serial.println("Failed to open config for writing.");
         return false;
     }
 
-    serializeJsonPretty(doc, file);
-    file.close();
+    if (serializeJson(doc, config) == 0)
+    {
+        Serial.println("Failed to write config.");
+        config.close();
+        return false;
+    }
+
+    config.close();
 
     Serial.println();
     Serial.println("Config saved");

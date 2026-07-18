@@ -13,6 +13,7 @@ namespace ReadRegisterManager
         std::vector<ReadRegister *> changedRegisters;
     };
 
+    void setup(std::vector<ModbusDevice> &devices);
     Result readGroup(ModbusDevice &device, ReadGroup &group);
 
     bool processRegister(ModbusDevice &device, ReadRegister &reg, uint16_t rawValue);

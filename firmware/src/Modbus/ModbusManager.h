@@ -12,7 +12,7 @@ namespace ModbusManager
     void setup();
     void loop();
     void pollDevice(ModbusDevice &device);
-    void setupDevice(ModbusDevice &device);
+    void setupDevices(std::vector<ModbusDevice> &devices);
 
     void processReadRegisters(ModbusDevice &device, ReadGroup &group);
     void updateCalculatedRegisters(ModbusDevice &device);

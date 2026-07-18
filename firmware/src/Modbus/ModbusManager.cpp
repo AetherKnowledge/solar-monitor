@@ -17,76 +17,65 @@ namespace ModbusManager
         Serial.println();
         Serial.println("Setting up Modbus Manager");
 
-        for (auto &device : config.modbusDevices)
-        {
-            ReadRegisterManager::createGroups(device);
-            for (const auto &group : device.readGroups)
-            {
-                Serial.printf(
-                    "Read group for device %s: %u-%u (%u registers)\n",
-                    device.name.c_str(),
-                    group.startAddress,
-                    group.startAddress + group.count - 1,
-                    group.count);
-            }
-
-            setupDevice(device);
-        }
+        ReadRegisterManager::setup(config.modbusDevices);
+        CalculatedRegisterManager::setup(config.modbusDevices);
+        setupDevices(config.modbusDevices);
 
         hasStarted = true;
     }
 
-    void setupDevice(ModbusDevice &device)
+    void setupDevices(std::vector<ModbusDevice> &devices)
     {
-        if (device.port != 1 && device.port != 2)
+        for (auto &device : devices)
         {
-            device.initialized = false;
+            if (device.port != 1 && device.port != 2)
+            {
+                device.initialized = false;
 
+                Serial.printf(
+                    "Invalid port number %d for Modbus device %s\n",
+                    device.port,
+                    device.name.c_str());
+                return;
+            }
+
+            const auto [_, inserted] = portsInUse.insert(device.port);
+
+            if (!inserted)
+            {
+                device.initialized = false;
+
+                Serial.printf(
+                    "Port %d already in use. Skipping %s\n",
+                    device.port,
+                    device.name.c_str());
+                return;
+            }
+
+            switch (device.port)
+            {
+            case 1:
+                Serial1.end(); // Ensure Serial1 is not already in use
+                Serial1.begin(device.baudrate, SERIAL_8N1, 16, 17);
+
+                device.modbus.begin(device.slaveId, Serial1);
+
+                break;
+            case 2:
+                Serial2.end(); // Ensure Serial2 is not already in use
+                Serial2.begin(device.baudrate, SERIAL_8N1, 18, 19);
+
+                device.modbus.begin(device.slaveId, Serial2);
+                break;
+            }
+
+            device.initialized = true;
             Serial.printf(
-                "Invalid port number %d for Modbus device %s\n",
+                "Initialized Modbus device %s on port %d with baudrate %d\n",
+                device.name.c_str(),
                 device.port,
-                device.name.c_str());
-            return;
+                device.baudrate);
         }
-
-        const auto [_, inserted] = portsInUse.insert(device.port);
-
-        if (!inserted)
-        {
-            device.initialized = false;
-
-            Serial.printf(
-                "Port %d already in use. Skipping %s\n",
-                device.port,
-                device.name.c_str());
-            return;
-        }
-
-        switch (device.port)
-        {
-        case 1:
-            Serial1.end(); // Ensure Serial1 is not already in use
-            Serial1.begin(device.baudrate, SERIAL_8N1, 16, 17);
-
-            device.modbus.begin(device.slaveId, Serial1);
-
-            break;
-        case 2:
-            Serial2.end(); // Ensure Serial2 is not already in use
-            Serial2.begin(device.baudrate, SERIAL_8N1, 18, 19);
-
-            device.modbus.begin(device.slaveId, Serial2);
-            break;
-        }
-
-        CalculatedRegisterManager::setupDevice(device);
-
-        device.initialized = true;
-        Serial.printf(
-            "Initialized Modbus device %s on port %d with baudrate %d\n",
-            device.name.c_str(),
-            device.port,
-            device.baudrate);
     }
 
     void reset()
@@ -126,6 +115,8 @@ namespace ModbusManager
 
             pollDevice(device);
         }
+
+        CalculatedRegisterManager::loopPersistence();
     }
 
     void pollDevice(ModbusDevice &device)

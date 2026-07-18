@@ -4,6 +4,7 @@
 #include <Config/Config.h>
 #include <Mqtt/MqttManager.h>
 #include <Modbus/ModbusManager.h>
+#include <LittleFS.h>
 
 #define LED_PIN 2
 
@@ -13,6 +14,11 @@ void setup()
     // put your setup code here, to run once:
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
+
+    if (!LittleFS.begin())
+    {
+        Serial.println("LittleFS failed to mount");
+    }
 
     loadConfig();
 

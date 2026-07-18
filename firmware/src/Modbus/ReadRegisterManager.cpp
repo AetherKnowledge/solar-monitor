@@ -2,6 +2,14 @@
 
 namespace ReadRegisterManager
 {
+    void setup(std::vector<ModbusDevice> &devices)
+    {
+        for (auto &device : devices)
+        {
+            ReadRegisterManager::createGroups(device);
+        }
+    }
+
     Result readGroup(ModbusDevice &device, ReadGroup &group)
     {
         auto result =
@@ -123,6 +131,13 @@ namespace ReadRegisterManager
             }
             else
             {
+                Serial.printf(
+                    "Read group for device %s: %u-%u (%u registers)\n",
+                    device.name.c_str(),
+                    lastGroup.startAddress,
+                    lastGroup.startAddress + lastGroup.count - 1,
+                    lastGroup.count);
+
                 createNewGroup(device, reg);
             }
 
