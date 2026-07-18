@@ -20,7 +20,7 @@ export interface ReadRegister {
 	transformArgument: number;
 	signedValue: boolean;
 
-	discoveryConfig: MqttDiscoveryConfig;
+	discoveryConfig: MqttSensorDiscoveryConfig;
 }
 
 export interface ModbusDevice {
@@ -44,7 +44,7 @@ export interface MqttDiscoveryDevice {
 	name: string;
 }
 
-export interface MqttDiscoveryConfig {
+export interface MqttSensorDiscoveryConfig {
 	name: string;
 	uniqueId: string;
 

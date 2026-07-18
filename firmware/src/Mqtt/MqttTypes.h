@@ -49,7 +49,7 @@ struct MqttDiscoveryDevice
     }
 };
 
-struct MqttDiscoveryConfig
+struct MqttSensorDiscoveryConfig
 {
     String name;
     String uniqueId;

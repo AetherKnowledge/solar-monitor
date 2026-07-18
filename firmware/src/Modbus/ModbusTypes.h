@@ -7,6 +7,7 @@
 #include "RegisterTransform.h"
 #include "WordOrder.h"
 #include <ModbusMaster.h>
+#include <tinyexpr.h>
 
 struct ReadRegister
 {
@@ -14,10 +15,10 @@ struct ReadRegister
     uint8_t rounding = 0;
     RegisterTransform transform = RegisterTransform::None;
     float transformArgument = 0.0f;
-    float value = 0.0f;
+    double value = 0.0;
     bool signedValue = false;
 
-    MqttDiscoveryConfig discoveryConfig;
+    MqttSensorDiscoveryConfig discoveryConfig;
 
     void toJson(JsonObject json) const
     {
@@ -52,6 +53,31 @@ struct ReadGroup
     std::vector<ReadRegister *> registers;
 };
 
+struct CalculatedRegister
+{
+    String expression;
+    te_expr *compiledExpression = nullptr;
+
+    double value = 0.0;
+    MqttSensorDiscoveryConfig discoveryConfig;
+
+    void toJson(JsonObject json) const
+    {
+        json["expression"] = expression;
+
+        JsonObject discoveryJson = json["discoveryConfig"].to<JsonObject>();
+        discoveryConfig.toJson(discoveryJson);
+    }
+
+    void fromJson(JsonObject json)
+    {
+        expression = json["expression"].as<String>();
+
+        JsonObject discoveryJson = json["discoveryConfig"].as<JsonObject>();
+        discoveryConfig.fromJson(discoveryJson);
+    }
+};
+
 struct ModbusDevice
 {
     String name;
@@ -71,6 +97,9 @@ struct ModbusDevice
     std::vector<ReadRegister> readRegisters;
     std::vector<ReadGroup> readGroups;
 
+    std::vector<CalculatedRegister> calculatedRegisters;
+    std::vector<te_variable> vars;
+
     void toJson(JsonObject json) const
     {
         json["name"] = name;
@@ -87,6 +116,13 @@ struct ModbusDevice
         {
             JsonObject readRegisterJson = readRegistersArray.add<JsonObject>();
             readRegister.toJson(readRegisterJson);
+        }
+
+        JsonArray calculatedRegistersArray = json["calculatedRegisters"].to<JsonArray>();
+        for (const auto &calculatedRegister : calculatedRegisters)
+        {
+            JsonObject calculatedRegisterJson = calculatedRegistersArray.add<JsonObject>();
+            calculatedRegister.toJson(calculatedRegisterJson);
         }
 
         auto device = discoveryDevice;
@@ -119,6 +155,15 @@ struct ModbusDevice
             readRegister.fromJson(readRegisterJson);
             readRegisters.push_back(readRegister);
         }
+
+        JsonArray calculatedRegistersArray = json["calculatedRegisters"].as<JsonArray>();
+        calculatedRegisters.clear();
+        for (const auto &calculatedRegisterJson : calculatedRegistersArray)
+        {
+            CalculatedRegister calculatedRegister;
+            calculatedRegister.fromJson(calculatedRegisterJson);
+            calculatedRegisters.push_back(calculatedRegister);
+        }
     }
 
     String toString() const
@@ -131,6 +176,7 @@ struct ModbusDevice
         result += "Port: " + String(port) + "\n";
         result += "Swap Bytes: " + String(swapBytes ? "true" : "false") + "\n";
         result += "Read Registers Count: " + String(readRegisters.size()) + "\n";
+        result += "Calculated Registers Count: " + String(calculatedRegisters.size()) + "\n";
         return result;
     }
 };

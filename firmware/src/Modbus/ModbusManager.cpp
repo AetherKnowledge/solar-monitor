@@ -2,14 +2,13 @@
 #include <Config/Config.h>
 #include <Mqtt/MqttManager.h>
 #include <Mqtt/MqttDiscovery.h>
+#include "ReadRegisterManager.h"
+#include "CalculatedRegisterManager.h"
 
 namespace ModbusManager
 {
     bool hasStarted = false;
     std::set<int> portsInUse;
-
-    constexpr uint16_t MAX_GAP = 2;
-    constexpr uint16_t MAX_REGISTERS_PER_REQUEST = 125;
 
     void setup()
     {
@@ -20,7 +19,7 @@ namespace ModbusManager
 
         for (auto &device : config.modbusDevices)
         {
-            createReadGroups(device);
+            ReadRegisterManager::createGroups(device);
             for (const auto &group : device.readGroups)
             {
                 Serial.printf(
@@ -80,6 +79,8 @@ namespace ModbusManager
             break;
         }
 
+        CalculatedRegisterManager::setupDevice(device);
+
         device.initialized = true;
         Serial.printf(
             "Initialized Modbus device %s on port %d with baudrate %d\n",
@@ -102,6 +103,7 @@ namespace ModbusManager
         {
             device.initialized = false;
             device.readGroups.clear();
+            CalculatedRegisterManager::resetDevice(device);
         }
     }
 
@@ -128,189 +130,63 @@ namespace ModbusManager
 
     void pollDevice(ModbusDevice &device)
     {
-        Serial.println("Polling Modbus device " + device.name + " (" + device.identifier + ")");
+        // Serial.println("Polling Modbus device " + device.name + " (" + device.identifier + ")");
 
         for (auto &group : device.readGroups)
         {
-            ReadResultGrouped result = readGroupedRegisters(device, group);
-
-            if (!result.success)
-            {
-                Serial.printf(
-                    "Failed to read register group %u-%u\n",
-                    group.startAddress,
-                    group.startAddress + group.count - 1);
-                continue;
-            }
-
-            if (!result.changedRegisters.empty() && device.mqttEnabled)
-            {
-                for (const auto &reg : result.changedRegisters)
-                {
-                    MqttManager::publish(
-                        MqttDiscovery::getStateTopic(device.identifier, reg->discoveryConfig.uniqueId),
-                        String(reg->value));
-                }
-            }
+            processReadRegisters(device, group);
+            updateCalculatedRegisters(device);
         }
     }
 
-    ReadResultSingle readSingleRegister(ModbusDevice &device, ReadRegister &reg)
+    void processReadRegisters(ModbusDevice &device, ReadGroup &group)
     {
-        auto result =
-            device.modbus.readHoldingRegisters(reg.address, 1);
+        ReadRegisterManager::Result result = ReadRegisterManager::readGroup(device, group);
 
-        if (result != device.modbus.ku8MBSuccess)
-        {
-            Serial.printf("Modbus error: %02X\n", result);
-            return ReadResultSingle::Error;
-        }
-
-        bool changed = processRegister(device, reg, device.modbus.getResponseBuffer(0));
-        return changed ? ReadResultSingle::Changed : ReadResultSingle::Unchanged;
-    }
-
-    ReadResultGrouped readGroupedRegisters(ModbusDevice &device, ReadGroup &group)
-    {
-        auto result =
-            device.modbus.readHoldingRegisters(group.startAddress, group.count);
-
-        if (result != device.modbus.ku8MBSuccess)
-        {
-            Serial.printf("Modbus error: %02X\n", result);
-            return ReadResultGrouped{false, {}};
-        }
-
-        std::vector<ReadRegister *> changedRegisters;
-
-        for (ReadRegister *reg : group.registers)
-        {
-            uint16_t offset = reg->address - group.startAddress;
-
-            bool changed = processRegister(device, *reg, device.modbus.getResponseBuffer(offset));
-
-            if (changed)
-            {
-                changedRegisters.push_back(reg);
-            }
-        }
-        return ReadResultGrouped{true, changedRegisters};
-    }
-
-    bool processRegister(ModbusDevice &device, ReadRegister &reg, uint16_t raw)
-    {
-        if (device.swapBytes)
-        {
-            raw = __builtin_bswap16(raw);
-        }
-
-        float value = reg.signedValue
-                          ? static_cast<float>(static_cast<int16_t>(raw))
-                          : static_cast<float>(raw);
-
-        value = transformRegisterValue(reg, value);
-
-        if (reg.rounding > 0)
-        {
-            value = applyRounding(value, reg.rounding);
-        }
-
-        if (value != reg.value)
+        if (!result.success)
         {
             Serial.printf(
-                "Register %s (address: %d) value changed from %.2f to %.2f\n",
-                reg.discoveryConfig.name.c_str(),
-                reg.address,
-                reg.value,
-                value);
-
-            reg.value = value;
-            return true;
+                "Failed to read register group %u-%u\n",
+                group.startAddress,
+                group.startAddress + group.count - 1);
+            return;
         }
-        return false;
-    }
 
-    float transformRegisterValue(const ReadRegister &reg, float value)
-    {
-        switch (reg.transform)
+        if (!result.changedRegisters.empty() && device.mqttEnabled && MqttManager::isConnected())
         {
-        case RegisterTransform::None:
-            return value;
-        case RegisterTransform::Multiply:
-            return value * reg.transformArgument;
-        case RegisterTransform::Divide:
-            return value / reg.transformArgument;
-        default:
-            return value;
-        }
-    }
-
-    float applyRounding(float value, uint8_t decimals)
-    {
-        static constexpr float factors[] =
-            {
-                1.0f,
-                10.0f,
-                100.0f,
-                1000.0f};
-
-        if (decimals >= std::size(factors))
-            return value;
-
-        return roundf(value * factors[decimals]) / factors[decimals];
-    }
-
-    void createReadGroups(ModbusDevice &device)
-    {
-        device.readGroups.clear();
-
-        std::sort(device.readRegisters.begin(), device.readRegisters.end(),
-                  [](const ReadRegister &a, const ReadRegister &b)
-                  {
-                      return a.address < b.address;
-                  });
-
-        ReadRegister *previousRegister = nullptr;
-        for (auto &reg : device.readRegisters)
-        {
-            if (device.readGroups.empty())
-            {
-                createNewGroup(device, reg);
-                previousRegister = &reg;
-                continue;
-            }
-
-            if (previousRegister && reg.address == previousRegister->address)
+            for (const auto &reg : result.changedRegisters)
             {
                 Serial.printf(
-                    "Duplicate register %u found in device %s. Only the first occurrence will be used.\n",
-                    reg.address,
-                    device.name.c_str());
-                continue;
-            }
+                    "Register %s (address: %d) value changed to %.2f\n",
+                    reg->discoveryConfig.name.c_str(),
+                    reg->address,
+                    reg->value);
 
-            ReadGroup &lastGroup = device.readGroups.back();
-
-            uint16_t newCount = reg.address - lastGroup.startAddress + 1;
-            if (reg.address <= lastGroup.startAddress + lastGroup.count + MAX_GAP && newCount < MAX_REGISTERS_PER_REQUEST)
-            {
-                lastGroup.registers.push_back(&reg);
-                lastGroup.count = newCount;
+                MqttManager::publish(
+                    MqttDiscovery::getStateTopic(device.identifier, reg->discoveryConfig.uniqueId),
+                    String(reg->value));
             }
-            else
-            {
-                createNewGroup(device, reg);
-            }
-
-            previousRegister = &reg;
         }
     }
 
-    void createNewGroup(ModbusDevice &device, ReadRegister &reg)
+    void updateCalculatedRegisters(ModbusDevice &device)
     {
-        device.readGroups.push_back({.startAddress = reg.address,
-                                     .count = 1,
-                                     .registers = {&reg}});
+        for (auto &calculatedRegister : device.calculatedRegisters)
+        {
+            bool result = CalculatedRegisterManager::updateRegister(calculatedRegister);
+
+            if (result && device.mqttEnabled && MqttManager::isConnected())
+            {
+                Serial.printf(
+                    "Calculated Register %s value changed to %.2f\n",
+                    calculatedRegister.discoveryConfig.name.c_str(),
+                    calculatedRegister.value);
+
+                MqttManager::publish(
+                    MqttDiscovery::getStateTopic(device.identifier, calculatedRegister.discoveryConfig.uniqueId),
+                    String(calculatedRegister.value));
+            }
+        }
     }
 
 }

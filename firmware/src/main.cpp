@@ -19,9 +19,9 @@ void setup()
     if (configLoaded)
     {
         connectToWiFi(config.network.ssid, config.network.password, config.network.mode);
+        ModbusManager::setup();
         MqttManager::setup();
         MqttManager::connect();
-        ModbusManager::setup();
     }
 
     startWebServer();
@@ -46,8 +46,8 @@ void loop()
         networkUpdateRequested = false;
     }
 
-    MqttManager::loop();
     ModbusManager::loop();
+    MqttManager::loop();
 
     static unsigned long lastPublish = 0;
     delay(10);

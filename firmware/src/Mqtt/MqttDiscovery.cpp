@@ -7,7 +7,7 @@ namespace MqttDiscovery
 {
     void start()
     {
-        MqttDiscoveryConfig discoveryConfig;
+        MqttSensorDiscoveryConfig discoveryConfig;
         discoveryConfig.name = "Solar Monitor Uptime";
         discoveryConfig.uniqueId = "solar-monitor-uptime";
         discoveryConfig.unitOfMeasurement = "s";
