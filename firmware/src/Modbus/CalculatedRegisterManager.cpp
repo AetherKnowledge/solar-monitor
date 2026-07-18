@@ -1,11 +1,8 @@
 #include "CalculatedRegisterManager.h"
 #include <tinyexpr.h>
-#include <unordered_set>
 
 namespace CalculatedRegisterManager
 {
-    using unordered_set_t = std::unordered_set<std::string>;
-
     void setupDevice(ModbusDevice &device)
     {
         Serial.printf(
@@ -68,8 +65,8 @@ namespace CalculatedRegisterManager
 
         Serial.printf(
             "Added variable for calculated registers: %s (name: %s)\n",
-            reg.getId(),
-            reg.getName());
+            reg.getId().c_str(),
+            reg.getName().c_str());
     }
 
     void compileExpressions(ModbusDevice &device)
