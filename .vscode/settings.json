@@ -15,5 +15,6 @@
     "--compile-commands-dir=${workspaceFolder}",
     "--query-driver=${env:USERPROFILE}/.platformio/packages/**/bin/*",
     "--background-index"
-  ]
+  ],
+  "platformio-ide.disablePIOHomeStartup": true
 }

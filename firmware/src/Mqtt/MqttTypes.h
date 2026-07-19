@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <vector>
+#include <Common/Json.h>
 
 struct DeviceDiscovery {
     String identifier;
@@ -46,10 +47,13 @@ struct SensorDiscovery {
     String name;
     String uniqueId;
 
+    String stateTopic;
     String deviceClass;
     String stateClass;
     String unitOfMeasurement;
     String icon;
+
+    static constexpr const char* Component = "sensor";
 
     void toJson(JsonObject json) const {
         json["name"] = name;
@@ -57,6 +61,9 @@ struct SensorDiscovery {
 
         if (!stateClass.isEmpty())
             json["state_class"] = stateClass;
+
+        if (!stateTopic.isEmpty())
+            json["state_topic"] = stateTopic;
 
         if (!unitOfMeasurement.isEmpty())
             json["unit_of_measurement"] = unitOfMeasurement;
@@ -80,22 +87,27 @@ struct SensorDiscovery {
 };
 
 struct WriteDiscovery : SensorDiscovery {
-    String commandTopic;
     String commandTemplate;
+    String commandTopic;
+    String valueTemplate;
     uint8_t qos = 0;
 
     void toJson(JsonObject json) const {
         SensorDiscovery::toJson(json);
 
+        if (!valueTemplate.isEmpty())
+            json["value_template"] = valueTemplate;
+
+        if (!commandTemplate.isEmpty())
+            json["command_template"] = commandTemplate;
+
         json["command_topic"] = commandTopic;
-        json["command_template"] = commandTemplate;
         json["qos"] = qos;
     }
 
     void fromJson(JsonObject json) {
         SensorDiscovery::fromJson(json);
 
-        commandTopic = json["command_topic"] | "";
         commandTemplate = json["command_template"] | "";
         qos = json["qos"] | 0;
     }
@@ -104,24 +116,16 @@ struct WriteDiscovery : SensorDiscovery {
 struct SelectDiscovery : WriteDiscovery {
     std::vector<String> options;
 
+    static constexpr const char* Component = "select";
+
     void toJson(JsonObject json) const {
         WriteDiscovery::toJson(json);
-
-        JsonArray optionsArray = json["options"].to<JsonArray>();
-        for (const auto& option : options) {
-            optionsArray.add(option);
-        }
+        serializeVector(json, "options", options);
     }
 
     void fromJson(JsonObject json) {
         WriteDiscovery::fromJson(json);
-
-        JsonArray optionsArray = json["options"].as<JsonArray>();
-        options.clear();
-        for (const auto& optionJson : optionsArray) {
-            String option = optionJson.as<String>();
-            options.push_back(option);
-        }
+        deserializeVector(json, "options", options);
     }
 };
 
@@ -129,6 +133,8 @@ struct NumberDiscovery : WriteDiscovery {
     double min = 0;
     double max = 100;
     double step = 1;
+
+    static constexpr const char* Component = "number";
 
     void toJson(JsonObject json) const {
         WriteDiscovery::toJson(json);

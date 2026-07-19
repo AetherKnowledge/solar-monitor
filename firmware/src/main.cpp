@@ -24,7 +24,6 @@ void setup() {
         connectToWiFi(config.network.ssid, config.network.password, config.network.mode);
         ModbusManager::setup();
         MqttManager::setup();
-        MqttManager::connect();
     }
 
     startWebServer();

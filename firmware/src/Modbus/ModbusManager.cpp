@@ -118,22 +118,20 @@ namespace ModbusManager {
         ReadRegisterManager::Result result = ReadRegisterManager::readGroup(device, group);
 
         if (!result.success) {
-            Serial.printf("Failed to read register group %u-%u\n",
-                          group.startAddress,
-                          group.startAddress + group.count - 1);
+            // Serial.printf("Failed to read register group %u-%u\n",
+            //               group.startAddress,
+            //               group.startAddress + group.count - 1);
             return;
         }
 
         if (!result.changedRegisters.empty() && device.mqttEnabled && MqttManager::isConnected()) {
             for (const auto& reg : result.changedRegisters) {
-                Serial.printf("Register %s (address: %d) value changed to %.2f\n",
-                              reg->discovery.name.c_str(),
-                              reg->address,
-                              reg->value);
+                // Serial.printf("Register %s (address: %d) value changed to %.2f\n",
+                //               reg->discovery.name.c_str(),
+                //               reg->address,
+                //               reg->value);
 
-                MqttManager::publish(
-                    MqttDiscovery::getStateTopic(device.identifier, reg->discovery.uniqueId),
-                    String(reg->value));
+                MqttManager::publish(reg->discovery.stateTopic, String(reg->value), true);
             }
         }
     }
@@ -143,13 +141,12 @@ namespace ModbusManager {
             bool result = VirtualSensorManager::updateRegister(virtualSensor);
 
             if (result && device.mqttEnabled && MqttManager::isConnected()) {
-                Serial.printf("Virtual Sensor %s value changed to %.2f\n",
-                              virtualSensor.discovery.name.c_str(),
-                              virtualSensor.value);
+                // Serial.printf("Virtual Sensor %s value changed to %.2f\n",
+                //               virtualSensor.discovery.name.c_str(),
+                //               virtualSensor.value);
 
-                MqttManager::publish(MqttDiscovery::getStateTopic(device.identifier,
-                                                                  virtualSensor.discovery.uniqueId),
-                                     String(virtualSensor.value));
+                MqttManager::publish(
+                    virtualSensor.discovery.stateTopic, String(virtualSensor.value), true);
             }
         }
     }

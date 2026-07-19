@@ -11,7 +11,7 @@ namespace ReadRegisterManager {
         auto result = device.modbus.readHoldingRegisters(group.startAddress, group.count);
 
         if (result != device.modbus.ku8MBSuccess) {
-            Serial.printf("Modbus error: %02X\n", result);
+            // Serial.printf("Modbus error: %02X\n", result);
             return Result{false, {}};
         }
 

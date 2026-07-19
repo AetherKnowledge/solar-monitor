@@ -2,12 +2,13 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --dir web dev",
+    "monitor": "pio device monitor -b 115200",
     "build:web": "pnpm --dir web build",
     "build:firmware": "pio run",
     "build": "pnpm build:web && pnpm build:firmware",
     "buildfs": "pio run --target buildfs",
     "upload": "pio run -t upload",
-    "uploadfs": "pnpm buildfs && pio run -t uploadfs",
-    "flash": "pnpm build:web && pnpm upload && pnpm uploadfs"
+    "uploadfs": "pio run -t uploadfs",
+    "flash": "pnpm build:web && pnpm upload && pnpm uploadfs && pnpm monitor"
   }
 }

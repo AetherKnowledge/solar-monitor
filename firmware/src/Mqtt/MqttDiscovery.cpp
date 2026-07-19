@@ -58,9 +58,7 @@ namespace MqttDiscovery {
     }
 
     template <std::derived_from<SensorDiscovery> TDiscovery>
-    bool publishDiscovery(const ModbusDevice& device,
-                          const TDiscovery& discovery,
-                          bool read = true) {
+    bool publishDiscovery(const ModbusDevice& device, const TDiscovery& discovery) {
         JsonDocument doc;
         JsonObject json = doc.to<JsonObject>();
 
@@ -69,18 +67,35 @@ namespace MqttDiscovery {
         JsonObject deviceJson = json["device"].to<JsonObject>();
         device.discovery.toJson(deviceJson);
 
-        json["state_topic"] = getStateTopic(device.identifier, discovery.uniqueId);
+        bool result = MqttManager::publish(
+            generateDiscoveryTopic(device.identifier, discovery.uniqueId, TDiscovery::Component),
+            doc,
+            true);
 
-        return MqttManager::publish(
-            getDiscoveryTopic(device.identifier, discovery.uniqueId), doc, true);
+        Serial.printf("%s to publish discovery for %s (%s) of device %s (%s)\n",
+                      result ? "Successfully" : "Failed",
+                      discovery.name.c_str(),
+                      discovery.uniqueId.c_str(),
+                      device.name.c_str(),
+                      device.identifier.c_str());
+        Serial.printf("Discovery JSON: %s\n", doc.as<String>().c_str());
+
+        return result;
     }
 
-    String getDiscoveryTopic(const String& deviceIdentifier, const String& uniqueId) {
-        return config.mqtt.autoDiscoveryPrefix + "/sensor/" + deviceIdentifier + "/" + uniqueId +
-               "/config";
+    String generateDiscoveryTopic(const String& deviceIdentifier,
+                                  const String& uniqueId,
+                                  const String& component) {
+        return config.mqtt.autoDiscoveryPrefix + "/" + component + "/" + deviceIdentifier + "/" +
+               uniqueId + "/config";
     }
 
-    String getStateTopic(const String& deviceTopicPrefix, const String& uniqueId) {
+    String generateStateTopic(const String& deviceTopicPrefix, const String& uniqueId) {
         return deviceTopicPrefix + "/" + uniqueId;
     }
+
+    String generateCommandTopic(const String& deviceTopicPrefix, const String& uniqueId) {
+        return deviceTopicPrefix + "/" + uniqueId + "/set";
+    }
+
 }  // namespace MqttDiscovery
