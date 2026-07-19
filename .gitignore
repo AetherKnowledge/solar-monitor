@@ -5,7 +5,7 @@
 .vscode/launch.json
 .vscode/ipch
 .mypy_cache
-firmware/data/website
+firmware/data
 
 web/src/routes/test
 
