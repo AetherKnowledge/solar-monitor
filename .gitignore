@@ -11,3 +11,5 @@ web/src/routes/test
 
 node_modules
 logs
+.cache
+compile_commands.json

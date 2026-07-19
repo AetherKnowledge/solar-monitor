@@ -2,5 +2,18 @@
   "files.associations": {
     "*.css": "tailwindcss"
   },
-  "js/ts.experimental.useTsgo": false
+  "[cpp]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
+  "[c]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
+  "editor.formatOnSave": true,
+  "js/ts.experimental.useTsgo": false,
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "clangd.arguments": [
+    "--compile-commands-dir=${workspaceFolder}",
+    "--query-driver=${env:USERPROFILE}/.platformio/packages/**/bin/*",
+    "--background-index"
+  ]
 }

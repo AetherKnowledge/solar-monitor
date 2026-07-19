@@ -7,7 +7,7 @@
     "build": "pnpm build:web && pnpm build:firmware",
     "buildfs": "pio run --target buildfs",
     "upload": "pio run -t upload",
-    "uploadfs": "pio run -t uploadfs",
-    "flash": "pnpm build:web && pnpm uploadfs && pnpm upload"
+    "uploadfs": "pnpm buildfs && pio run -t uploadfs",
+    "flash": "pnpm build:web && pnpm upload && pnpm uploadfs"
   }
 }

@@ -12,9 +12,9 @@ extern bool configLoaded;
 extern volatile bool networkUpdateRequested;
 extern NetworkConfig pendingNetworkConfig;
 
-bool loadConfigFile(File &file);
+bool loadConfigFile(File& file);
 bool loadConfig();
 bool saveConfig();
-bool updateNetworkConfig(const NetworkConfig &newConfig);
-bool updateMqttConfig(const MQTTConfig &newConfig);
+bool updateNetworkConfig(const NetworkConfig& newConfig);
+bool updateMqttConfig(const MQTTConfig& newConfig);
 void resetConfig();

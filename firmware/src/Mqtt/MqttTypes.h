@@ -1,24 +1,21 @@
 #pragma once
 
-#include <ArduinoJson.h>
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <vector>
 
-struct DeviceDiscovery
-{
+struct DeviceDiscovery {
     String identifier;
     String manufacturer;
     String model;
     String name;
 
-    void setDeviceInfo(const String &deviceName, const String &deviceIdentifier)
-    {
+    void setDeviceInfo(const String& deviceName, const String& deviceIdentifier) {
         name = deviceName;
         identifier = deviceIdentifier;
     }
 
-    void toJson(JsonObject json) const
-    {
+    void toJson(JsonObject json) const {
         JsonArray identifiers = json["identifiers"].to<JsonArray>();
         identifiers.add(identifier);
 
@@ -31,15 +28,11 @@ struct DeviceDiscovery
             json["name"] = name;
     }
 
-    void fromJson(JsonObject json)
-    {
+    void fromJson(JsonObject json) {
         JsonArray identifiers = json["identifiers"].as<JsonArray>();
-        if (!identifiers.isNull() && identifiers.size() > 0)
-        {
+        if (!identifiers.isNull() && identifiers.size() > 0) {
             identifier = identifiers[0].as<String>();
-        }
-        else
-        {
+        } else {
             identifier = "";
         }
 
@@ -49,8 +42,7 @@ struct DeviceDiscovery
     }
 };
 
-struct SensorDiscovery
-{
+struct SensorDiscovery {
     String name;
     String uniqueId;
 
@@ -59,8 +51,7 @@ struct SensorDiscovery
     String unitOfMeasurement;
     String icon;
 
-    void toJson(JsonObject json) const
-    {
+    void toJson(JsonObject json) const {
         json["name"] = name;
         json["unique_id"] = uniqueId;
 
@@ -77,8 +68,7 @@ struct SensorDiscovery
             json["icon"] = icon;
     }
 
-    void fromJson(JsonObject json)
-    {
+    void fromJson(JsonObject json) {
         uniqueId = json["unique_id"] | "";
         name = json["name"] | uniqueId;
 
@@ -89,14 +79,12 @@ struct SensorDiscovery
     }
 };
 
-struct WriteDiscovery : SensorDiscovery
-{
+struct WriteDiscovery : SensorDiscovery {
     String commandTopic;
     String commandTemplate;
     uint8_t qos = 0;
 
-    void toJson(JsonObject json) const
-    {
+    void toJson(JsonObject json) const {
         SensorDiscovery::toJson(json);
 
         json["command_topic"] = commandTopic;
@@ -104,8 +92,7 @@ struct WriteDiscovery : SensorDiscovery
         json["qos"] = qos;
     }
 
-    void fromJson(JsonObject json)
-    {
+    void fromJson(JsonObject json) {
         SensorDiscovery::fromJson(json);
 
         commandTopic = json["command_topic"] | "";
@@ -114,43 +101,36 @@ struct WriteDiscovery : SensorDiscovery
     }
 };
 
-struct SelectDiscovery : WriteDiscovery
-{
+struct SelectDiscovery : WriteDiscovery {
     std::vector<String> options;
 
-    void toJson(JsonObject json) const
-    {
+    void toJson(JsonObject json) const {
         WriteDiscovery::toJson(json);
 
         JsonArray optionsArray = json["options"].to<JsonArray>();
-        for (const auto &option : options)
-        {
+        for (const auto& option : options) {
             optionsArray.add(option);
         }
     }
 
-    void fromJson(JsonObject json)
-    {
+    void fromJson(JsonObject json) {
         WriteDiscovery::fromJson(json);
 
         JsonArray optionsArray = json["options"].as<JsonArray>();
         options.clear();
-        for (const auto &optionJson : optionsArray)
-        {
+        for (const auto& optionJson : optionsArray) {
             String option = optionJson.as<String>();
             options.push_back(option);
         }
     }
 };
 
-struct NumberDiscovery : WriteDiscovery
-{
+struct NumberDiscovery : WriteDiscovery {
     double min = 0;
     double max = 100;
     double step = 1;
 
-    void toJson(JsonObject json) const
-    {
+    void toJson(JsonObject json) const {
         WriteDiscovery::toJson(json);
 
         json["min"] = min;
@@ -158,8 +138,7 @@ struct NumberDiscovery : WriteDiscovery
         json["step"] = step;
     }
 
-    void fromJson(JsonObject json)
-    {
+    void fromJson(JsonObject json) {
         WriteDiscovery::fromJson(json);
 
         min = json["min"] | 0;

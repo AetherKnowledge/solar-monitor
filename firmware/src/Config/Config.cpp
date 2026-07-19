@@ -1,7 +1,7 @@
 #include "Config.h"
 #include <ArduinoJson.h>
-#include <Networking/Networking.h>
 #include <Mqtt/MqttManager.h>
+#include <Networking/Networking.h>
 
 Config config;
 bool configLoaded = false;
@@ -9,16 +9,13 @@ bool configLoaded = false;
 volatile bool networkUpdateRequested = false;
 NetworkConfig pendingNetworkConfig;
 
-bool loadConfigFile(File &file)
-{
+bool loadConfigFile(File& file) {
     JsonDocument doc;
     DeserializationError error = deserializeJson(doc, file);
     file.close();
 
-    if (error)
-    {
-        Serial.printf("Failed to deserialize config: %s\n",
-                      error.c_str());
+    if (error) {
+        Serial.printf("Failed to deserialize config: %s\n", error.c_str());
         return false;
     }
 
@@ -31,13 +28,11 @@ bool loadConfigFile(File &file)
     return true;
 }
 
-bool loadConfig()
-{
+bool loadConfig() {
     Serial.println();
     Serial.println("Loading config");
 
-    if (!LittleFS.begin())
-    {
+    if (!LittleFS.begin()) {
         Serial.println("LittleFS not mounted");
         return false;
     }
@@ -45,19 +40,15 @@ bool loadConfig()
     File config = LittleFS.open(CONFIG_LOCATION, "r");
     File backup = LittleFS.open(CONFIG_BAK_LOCATION, "r");
 
-    if (config && loadConfigFile(config))
-    {
+    if (config && loadConfigFile(config)) {
         backup.close();
         Serial.println("Loaded default config successfully");
         return true;
-    }
-    else if (backup && loadConfigFile(backup))
-    {
+    } else if (backup && loadConfigFile(backup)) {
         config.close();
 
         Serial.println("Loaded backup config successfully");
-        if (!copyFile(CONFIG_BAK_LOCATION, CONFIG_LOCATION))
-        {
+        if (!copyFile(CONFIG_BAK_LOCATION, CONFIG_LOCATION)) {
             Serial.println("Failed to restore config from backup.");
         }
         return true;
@@ -70,25 +61,21 @@ bool loadConfig()
     return false;
 }
 
-bool saveConfig()
-{
+bool saveConfig() {
     JsonDocument doc;
     config.toJson(doc.to<JsonObject>());
 
-    if (LittleFS.exists(CONFIG_LOCATION) && !copyFile(CONFIG_LOCATION, CONFIG_BAK_LOCATION))
-    {
+    if (LittleFS.exists(CONFIG_LOCATION) && !copyFile(CONFIG_LOCATION, CONFIG_BAK_LOCATION)) {
         Serial.println("Backing up config failed!");
     }
 
     File config = LittleFS.open(CONFIG_LOCATION, "w");
-    if (!config)
-    {
+    if (!config) {
         Serial.println("Failed to open config for writing.");
         return false;
     }
 
-    if (serializeJson(doc, config) == 0)
-    {
+    if (serializeJson(doc, config) == 0) {
         Serial.println("Failed to write config.");
         config.close();
         return false;
@@ -102,8 +89,7 @@ bool saveConfig()
     return true;
 }
 
-void resetConfig()
-{
+void resetConfig() {
     config.network.mode = WiFiMode_t::WIFI_AP_STA;
     config.network.ssid = "";
     config.network.password = "";
@@ -118,11 +104,9 @@ void resetConfig()
     config.mqtt.clientId = "solar-monitor";
 }
 
-bool updateNetworkConfig(const NetworkConfig &newConfig)
-{
+bool updateNetworkConfig(const NetworkConfig& newConfig) {
     bool isValidConnection = connectToWiFi(newConfig.ssid, newConfig.password, newConfig.mode);
-    if (!isValidConnection)
-    {
+    if (!isValidConnection) {
         Serial.println();
         Serial.println("Failed to connect to the new network. Keeping the old configuration.");
 
@@ -144,8 +128,7 @@ bool updateNetworkConfig(const NetworkConfig &newConfig)
     return true;
 }
 
-bool updateMqttConfig(const MQTTConfig &newConfig)
-{
+bool updateMqttConfig(const MQTTConfig& newConfig) {
     config.mqtt = newConfig;
     saveConfig();
 

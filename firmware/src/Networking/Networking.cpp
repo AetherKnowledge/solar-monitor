@@ -6,34 +6,28 @@ UpdateStatus wifiScanStatus = UpdateStatus::NotStarted;
 
 volatile bool wifiScanRequested = false;
 
-void startScanning()
-{
+void startScanning() {
     Serial.println("Starting WiFi scan");
 
-    if (wifiScanStatus != UpdateStatus::InProgress)
-    {
+    if (wifiScanStatus != UpdateStatus::InProgress) {
         wifiScanStatus = UpdateStatus::InProgress;
         int r = WiFi.scanNetworks(true);
     }
 }
 
-void scanNetworks()
-{
+void scanNetworks() {
     int n = WiFi.scanComplete();
 
-    if (n == WIFI_SCAN_FAILED)
-    {
+    if (n == WIFI_SCAN_FAILED) {
         Serial.println("WiFi scan failed");
         wifiScanStatus = UpdateStatus::UpdateFailed;
         return;
     }
 
-    if (n >= 0)
-    {
+    if (n >= 0) {
         Serial.println("WiFi scan complete");
         cachedWifiNetworks.clear();
-        for (int i = 0; i < n; ++i)
-        {
+        for (int i = 0; i < n; ++i) {
             WiFiNetwork network;
             network.ssid = WiFi.SSID(i);
             network.rssi = WiFi.RSSI(i);
@@ -48,8 +42,7 @@ void scanNetworks()
     }
 }
 
-bool connectToWiFi(const String &ssid, const String &password, WiFiMode_t mode)
-{
+bool connectToWiFi(const String& ssid, const String& password, WiFiMode_t mode) {
     Serial.printf("Connecting to WiFi network: %s\n", ssid.c_str());
     WiFi.begin(ssid.c_str(), password.c_str());
     WiFi.mode(mode);
@@ -58,25 +51,21 @@ bool connectToWiFi(const String &ssid, const String &password, WiFiMode_t mode)
     unsigned long startAttemptTime = millis();
 
     // Keep trying to connect for 10 seconds
-    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 10000)
-    {
+    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 10000) {
         delay(100);
         Serial.print(".");
     }
     Serial.println();
 
-    if (WiFi.status() == WL_CONNECTED)
-    {
+    if (WiFi.status() == WL_CONNECTED) {
         Serial.println("Connected!");
 
         Serial.print("IP Address: ");
         Serial.println(WiFi.localIP());
         return true;
-    }
-    else
-    {
+    } else {
         Serial.println("Failed to connect to WiFi.");
-        WiFi.mode(WIFI_AP_STA); // Reset to default mode
+        WiFi.mode(WIFI_AP_STA);  // Reset to default mode
         return false;
     }
 }

@@ -1,35 +1,25 @@
 #include "Common/Enum.h"
-#include "Modbus/ModbusTypes.h"
 
-enum class WordOrder : uint8_t
-{
-    ABCD,
-    BADC,
-    CDAB,
-    DCBA
-};
+enum class WordOrder : uint8_t { ABCD, BADC, CDAB, DCBA };
 
 template <>
-inline const char *Enum::toString(WordOrder value)
-{
-    switch (value)
-    {
-    case WordOrder::ABCD:
-        return "ABCD";
-    case WordOrder::BADC:
-        return "BADC";
-    case WordOrder::CDAB:
-        return "CDAB";
-    case WordOrder::DCBA:
-        return "DCBA";
+inline const char* Enum::toString(WordOrder value) {
+    switch (value) {
+        case WordOrder::ABCD:
+            return "ABCD";
+        case WordOrder::BADC:
+            return "BADC";
+        case WordOrder::CDAB:
+            return "CDAB";
+        case WordOrder::DCBA:
+            return "DCBA";
     }
 
     return "ABCD";
 }
 
 template <>
-inline WordOrder Enum::fromString<WordOrder>(const char *value)
-{
+inline WordOrder Enum::fromString<WordOrder>(const char* value) {
     if (strcmp(value, "ABCD") == 0)
         return WordOrder::ABCD;
     if (strcmp(value, "BADC") == 0)

@@ -1,42 +1,38 @@
 #include "ConfigApi.h"
-#include <Config/Config.h>
 #include <Common/Response.h>
+#include <Config/Config.h>
 
-void registerConfigApi(AsyncWebServer &server)
-{
-    server.on("/api/config/network", HTTP_GET,
-              [](AsyncWebServerRequest *request)
-              { handleGetNetworkConfig(request); });
+void registerConfigApi(AsyncWebServer& server) {
+    server.on("/api/config/network", HTTP_GET, [](AsyncWebServerRequest* request) {
+        handleGetNetworkConfig(request);
+    });
 
     server.on(
         "/api/config/network",
         HTTP_POST,
-        [](AsyncWebServerRequest *) {},
+        [](AsyncWebServerRequest*) {},
         nullptr,
-        [](AsyncWebServerRequest *request,
-           uint8_t *data,
-           size_t len,
-           size_t,
-           size_t)
-        { handleUpdateNetworkConfig(request, data, len); });
+        [](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t, size_t) {
+            handleUpdateNetworkConfig(request, data, len);
+        });
 
-    server.on("/api/config/mqtt", HTTP_GET, [](AsyncWebServerRequest *request)
-              { handleGetMqttConfig(request); });
+    server.on("/api/config/mqtt", HTTP_GET, [](AsyncWebServerRequest* request) {
+        handleGetMqttConfig(request);
+    });
 
     server.on(
         "/api/config/mqtt",
         HTTP_POST,
-        [](AsyncWebServerRequest *request) {},
+        [](AsyncWebServerRequest* request) {},
         nullptr,
-        [](AsyncWebServerRequest *request, uint8_t *data, size_t len,
-           size_t index, size_t total)
-        { handleUpdateMqttConfig(request, data, len); });
+        [](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
+            handleUpdateMqttConfig(request, data, len);
+        });
 
     Serial.println("Config API registered");
 }
 
-void handleGetNetworkConfig(AsyncWebServerRequest *request)
-{
+void handleGetNetworkConfig(AsyncWebServerRequest* request) {
     JsonDocument doc;
     config.network.toJson(doc.to<JsonObject>());
 
@@ -48,12 +44,10 @@ void handleGetNetworkConfig(AsyncWebServerRequest *request)
     request->send(200, "application/json", response);
 }
 
-void handleUpdateNetworkConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len)
-{
+void handleUpdateNetworkConfig(AsyncWebServerRequest* request, uint8_t* data, size_t len) {
     JsonDocument doc;
 
-    if (deserializeJson(doc, data, len))
-    {
+    if (deserializeJson(doc, data, len)) {
         Response::error(request, 400, "Invalid JSON");
         return;
     }
@@ -66,8 +60,7 @@ void handleUpdateNetworkConfig(AsyncWebServerRequest *request, uint8_t *data, si
     Response::success(request, 202, "OK");
 }
 
-void handleGetMqttConfig(AsyncWebServerRequest *request)
-{
+void handleGetMqttConfig(AsyncWebServerRequest* request) {
     JsonDocument doc;
     config.mqtt.toJson(doc.to<JsonObject>());
 
@@ -79,12 +72,10 @@ void handleGetMqttConfig(AsyncWebServerRequest *request)
     request->send(200, "application/json", response);
 }
 
-void handleUpdateMqttConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len)
-{
+void handleUpdateMqttConfig(AsyncWebServerRequest* request, uint8_t* data, size_t len) {
     JsonDocument doc;
 
-    if (deserializeJson(doc, data, len))
-    {
+    if (deserializeJson(doc, data, len)) {
         Response::error(request, 400, "Invalid JSON");
         return;
     }

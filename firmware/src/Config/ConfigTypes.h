@@ -1,40 +1,35 @@
 #pragma once
 
-#include <ArduinoJson.h>
 #include <Arduino.h>
-#include <WiFiType.h>
-#include <Networking/WifiMode.h>
+#include <ArduinoJson.h>
 #include <Modbus/ModbusTypes.h>
+#include <Networking/WifiMode.h>
+#include <WiFiType.h>
 #include <vector>
 
-struct NetworkConfig
-{
+struct NetworkConfig {
     WiFiMode_t mode;
     String ssid;
     String password;
 
-    String toString() const
-    {
+    String toString() const {
         return "Mode: " + String(mode) + "\nSSID: " + ssid + "\nPassword: ***";
     }
 
-    void toJson(JsonObject json) const
-    {
+    void toJson(JsonObject json) const {
         json["ssid"] = ssid;
         json["mode"] = Enum::toString(mode);
         json["password"] = password;
     }
 
-    void fromJson(JsonObjectConst json)
-    {
+    void fromJson(JsonObjectConst json) {
         mode = Enum::fromString<WiFiMode_t>(json["mode"] | "ap+sta");
         ssid = json["ssid"] | "";
         password = json["password"] | "";
     }
 };
 
-struct MQTTConfig
-{
+struct MQTTConfig {
     bool enabled;
     String host;
     uint16_t port;
@@ -44,13 +39,14 @@ struct MQTTConfig
     String autoDiscoveryPrefix;
     String clientId;
 
-    String toString() const
-    {
-        return "Enabled: " + String(enabled) + "\nHost: " + host + "\nPort: " + String(port) + "\nUsername: " + username + "\nPassword: ***" + "\nAuto Discovery Enabled: " + String(autoDiscoveryEnabled) + "\nAuto Discovery Prefix: " + autoDiscoveryPrefix + "\nClient ID: " + clientId;
+    String toString() const {
+        return "Enabled: " + String(enabled) + "\nHost: " + host + "\nPort: " + String(port) +
+               "\nUsername: " + username + "\nPassword: ***" +
+               "\nAuto Discovery Enabled: " + String(autoDiscoveryEnabled) +
+               "\nAuto Discovery Prefix: " + autoDiscoveryPrefix + "\nClient ID: " + clientId;
     }
 
-    void toJson(JsonObject json) const
-    {
+    void toJson(JsonObject json) const {
         json["enabled"] = enabled;
         json["host"] = host;
         json["port"] = port;
@@ -61,8 +57,7 @@ struct MQTTConfig
         json["clientId"] = clientId;
     }
 
-    void fromJson(JsonObjectConst json)
-    {
+    void fromJson(JsonObjectConst json) {
         enabled = json["enabled"] | false;
         host = json["host"] | "";
         port = json["port"] | 1883;
@@ -74,37 +69,32 @@ struct MQTTConfig
     }
 };
 
-struct Config
-{
+struct Config {
     NetworkConfig network;
     MQTTConfig mqtt;
     std::vector<ModbusDevice> modbusDevices;
 
-    String toString() const
-    {
-        return "Network Config:\n" + String(network.toString()) + "\nMQTT Config:\n" + String(mqtt.toString()) + "\nModbus Devices:\n" + String(modbusDevices.size());
+    String toString() const {
+        return "Network Config:\n" + String(network.toString()) + "\nMQTT Config:\n" +
+               String(mqtt.toString()) + "\nModbus Devices:\n" + String(modbusDevices.size());
     }
 
-    void toJson(JsonObject json) const
-    {
+    void toJson(JsonObject json) const {
         network.toJson(json["network"].to<JsonObject>());
         mqtt.toJson(json["mqtt"].to<JsonObject>());
 
         JsonArray modbusArray = json["modbusDevices"].to<JsonArray>();
-        for (const auto &device : modbusDevices)
-        {
+        for (const auto& device : modbusDevices) {
             JsonObject deviceJson = modbusArray.add<JsonObject>();
             device.toJson(deviceJson);
         }
     }
 
-    void fromJson(JsonObject json)
-    {
+    void fromJson(JsonObject json) {
         network.fromJson(json["network"].as<JsonObject>());
         mqtt.fromJson(json["mqtt"].as<JsonObject>());
 
-        for (JsonObject deviceJson : json["modbusDevices"].as<JsonArray>())
-        {
+        for (JsonObject deviceJson : json["modbusDevices"].as<JsonArray>()) {
             ModbusDevice device;
             device.fromJson(deviceJson);
             modbusDevices.push_back(device);

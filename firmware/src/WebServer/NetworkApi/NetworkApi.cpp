@@ -2,31 +2,24 @@
 #include <Networking/Networking.h>
 #include <WiFi.h>
 
-void registerNetworkApi(AsyncWebServer &server)
-{
-    server.on("/api/network/wifinetworks", HTTP_GET,
-              [](AsyncWebServerRequest *request)
-              { handleGetWifiNetworks(request); });
+void registerNetworkApi(AsyncWebServer& server) {
+    server.on("/api/network/wifinetworks", HTTP_GET, [](AsyncWebServerRequest* request) {
+        handleGetWifiNetworks(request);
+    });
 
-    server.on(
-        "/api/network/wifinetworks/scan",
-        HTTP_POST,
-        [](AsyncWebServerRequest *request)
-        {
-            handleScanWifiNetworks(request);
-        });
+    server.on("/api/network/wifinetworks/scan", HTTP_POST, [](AsyncWebServerRequest* request) {
+        handleScanWifiNetworks(request);
+    });
 
     Serial.println("Network API registered");
 }
 
-void handleGetWifiNetworks(AsyncWebServerRequest *request)
-{
+void handleGetWifiNetworks(AsyncWebServerRequest* request) {
     JsonDocument doc;
     doc["status"] = Enum::toString(wifiScanStatus);
     JsonArray networks = doc["networks"].to<JsonArray>();
 
-    for (const auto &network : cachedWifiNetworks)
-    {
+    for (const auto& network : cachedWifiNetworks) {
         JsonObject json = networks.add<JsonObject>();
         network.toJson(json);
     }
@@ -39,10 +32,8 @@ void handleGetWifiNetworks(AsyncWebServerRequest *request)
     request->send(200, "application/json", response);
 }
 
-void handleScanWifiNetworks(AsyncWebServerRequest *request)
-{
-    if (wifiScanStatus != UpdateStatus::InProgress)
-    {
+void handleScanWifiNetworks(AsyncWebServerRequest* request) {
+    if (wifiScanStatus != UpdateStatus::InProgress) {
         wifiScanRequested = true;
     }
 

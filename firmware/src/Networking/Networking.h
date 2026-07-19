@@ -1,9 +1,10 @@
 #pragma once
 
-#include <vector>
 #include "NetworkingTypes.h"
 #include "UpdateStatus.h"
 #include <WiFiType.h>
+#include <vector>
+
 
 extern std::vector<WiFiNetwork> cachedWifiNetworks;
 extern UpdateStatus wifiScanStatus;

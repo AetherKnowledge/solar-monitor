@@ -1,33 +1,33 @@
 #pragma once
 
-#include <Arduino.h>
 #include "ModbusTypes.h"
+#include <Arduino.h>
+#include <Common/File.h>
 #include <unordered_set>
 #include <vector>
-#include <Common/File.h>
+#include <concepts>
 
-namespace VirtualSensorManager
-{
-    using unordered_set_t = std::unordered_set<std::string>;
+namespace VirtualSensorManager {
+using unordered_set_t = std::unordered_set<std::string>;
 
-    inline constexpr char PERSISTENCE_LOCATION[] = "/persistence.json";
-    inline constexpr char PERSISTENCE_BAK_LOCATION[] = "/persistence.json.bak";
+inline constexpr char PERSISTENCE_LOCATION[] = "/persistence.json";
+inline constexpr char PERSISTENCE_BAK_LOCATION[] = "/persistence.json.bak";
 
-    void setup(std::vector<ModbusDevice> &devices);
-    void setupDevice(ModbusDevice &device);
-    bool updateRegister(VirtualSensor &virtualSensor);
+void setup(std::vector<ModbusDevice>& devices);
+void setupDevice(ModbusDevice& device);
+bool updateRegister(VirtualSensor& virtualSensor);
 
-    template <typename TRegister>
-    void addVariable(ModbusDevice &device, TRegister &reg, unordered_set_t &usedIds);
+template <std::derived_from<Entity<SensorDiscovery>> TRegister>
+void addVariable(ModbusDevice& device, TRegister& reg, unordered_set_t& usedIds);
 
-    void resetDevice(ModbusDevice &device);
-    void compileExpressions(ModbusDevice &device);
+void resetDevice(ModbusDevice& device);
+void compileExpressions(ModbusDevice& device);
 
-    bool loadFile(File &file, std::vector<ModbusDevice> &devices);
-    bool loadPersistence(std::vector<ModbusDevice> &devices);
-    bool savePersistence(std::vector<ModbusDevice> &devices);
-    void loopPersistence();
+bool loadFile(File& file, std::vector<ModbusDevice>& devices);
+bool loadPersistence(std::vector<ModbusDevice>& devices);
+bool savePersistence(std::vector<ModbusDevice>& devices);
+void loopPersistence();
 
-    void clearDirty(std::vector<ModbusDevice> &devices);
-    bool findDirty(const std::vector<ModbusDevice> &devices);
-}
+void clearDirty(std::vector<ModbusDevice>& devices);
+bool findDirty(const std::vector<ModbusDevice>& devices);
+}  // namespace VirtualSensorManager

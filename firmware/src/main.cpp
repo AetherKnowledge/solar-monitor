@@ -8,22 +8,19 @@
 
 #define LED_PIN 2
 
-void setup()
-{
+void setup() {
     Serial.begin(115200);
     // put your setup code here, to run once:
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
 
-    if (!LittleFS.begin())
-    {
-        Serial.println("LittleFS failed to mount");
+    if (!LittleFS.begin()) {
+        Serial.println("Mount failed");
     }
 
     loadConfig();
 
-    if (configLoaded)
-    {
+    if (configLoaded) {
         connectToWiFi(config.network.ssid, config.network.password, config.network.mode);
         ModbusManager::setup();
         MqttManager::setup();
@@ -33,21 +30,17 @@ void setup()
     startWebServer();
 }
 
-void loop()
-{
-    if (wifiScanRequested)
-    {
+void loop() {
+    if (wifiScanRequested) {
         startScanning();
         wifiScanRequested = false;
     }
 
-    if (wifiScanStatus == UpdateStatus::InProgress)
-    {
+    if (wifiScanStatus == UpdateStatus::InProgress) {
         scanNetworks();
     }
 
-    if (networkUpdateRequested)
-    {
+    if (networkUpdateRequested) {
         updateNetworkConfig(pendingNetworkConfig);
         networkUpdateRequested = false;
     }

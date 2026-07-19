@@ -8,12 +8,10 @@
 
 AsyncWebServer server(80);
 
-bool startWebServer()
-{
+bool startWebServer() {
     Serial.println("Starting web server");
 
-    if (!LittleFS.begin())
-    {
+    if (!LittleFS.begin()) {
         Serial.println("LittleFS Mount Failed");
         return false;
     }
@@ -33,23 +31,20 @@ bool startWebServer()
         .setCacheControl("no-cache")
         .setTryGzipFirst(true);
 
-    server.onNotFound([](AsyncWebServerRequest *request)
-                      {
-    if (request->url().startsWith("/api/"))
-    {
-        request->send(404);
-        return;
-    }
+    server.onNotFound([](AsyncWebServerRequest* request) {
+        if (request->url().startsWith("/api/")) {
+            request->send(404);
+            return;
+        }
 
-    AsyncWebServerResponse *response =
-        request->beginResponse(LittleFS,
-                               "/website/index.html.gz",
-                               "text/html");
+        AsyncWebServerResponse* response =
+            request->beginResponse(LittleFS, "/website/index.html.gz", "text/html");
 
-    response->addHeader("Cache-Control", "no-cache");
-    response->addHeader("Content-Encoding", "gzip");
+        response->addHeader("Cache-Control", "no-cache");
+        response->addHeader("Content-Encoding", "gzip");
 
-    request->send(response); });
+        request->send(response);
+    });
 
     server.begin();
 
@@ -57,16 +52,14 @@ bool startWebServer()
     return true;
 }
 
-void registerWebServerApis()
-{
+void registerWebServerApis() {
     registerNetworkApi(server);
     registerMqttApi(server);
     registerConfigApi(server);
     registerModbusApi(server);
 }
 
-bool stopWebServer()
-{
+bool stopWebServer() {
     server.end();
     Serial.println("Web server stopped");
     return true;
