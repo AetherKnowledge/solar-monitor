@@ -105,6 +105,12 @@ struct VirtualSensor : Entity<SensorDiscovery> {
     }
 };
 
+template <typename T>
+concept WriteRegisterType = requires(T reg) {
+    reg.discovery.commandTopic;
+    reg.value;
+};
+
 struct SelectWriteRegister : Register<SelectDiscovery> {};
 
 struct NumberWriteRegister : Register<NumberDiscovery> {};

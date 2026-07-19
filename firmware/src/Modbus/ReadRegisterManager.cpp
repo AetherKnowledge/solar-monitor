@@ -53,6 +53,10 @@ namespace ReadRegisterManager {
         switch (reg.transform) {
             case RegisterTransform::None:
                 return value;
+            case RegisterTransform::Add:
+                return value + reg.transformArgument;
+            case RegisterTransform::Subtract:
+                return value - reg.transformArgument;
             case RegisterTransform::Multiply:
                 return value * reg.transformArgument;
             case RegisterTransform::Divide:

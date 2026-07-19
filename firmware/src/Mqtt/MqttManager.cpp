@@ -4,6 +4,7 @@
 #include <PubSubClient.h>
 #include "MqttManager.h"
 #include <WiFi.h>
+#include <Modbus/WriteRegisterManager.h>
 
 static WiFiClient wifiClient;
 static PubSubClient mqttClient(wifiClient);
@@ -156,19 +157,18 @@ namespace MqttManager {
     }
 
     template <WriteRegister TRegister>
-    bool usePayload(char* topic,
-                    byte* payload,
-                    unsigned int length,
-                    TRegister& reg,
-                    const ModbusDevice& device) {
+    bool usePayload(
+        char* topic, byte* payload, unsigned int length, TRegister& reg, ModbusDevice& device) {
         if (!reg.discovery.commandTopic.equals(topic)) {
             return false;
         }
 
         String value((char*)payload, length);
+        bool result = WriteRegisterManager::writeRegister(device, reg, value.toDouble());
 
-        reg.value = value.toDouble();
-        publish(reg.discovery.stateTopic, reg.value);
+        if (result) {
+            publish(reg.discovery.stateTopic, value, true);
+        }
 
         Serial.printf("Received payload for %s (%s) of device %s (%s): %s\n",
                       reg.discovery.name.c_str(),
@@ -177,7 +177,7 @@ namespace MqttManager {
                       device.identifier.c_str(),
                       value.c_str());
 
-        return true;
+        return result;
     }
 
     void callback(char* topic, byte* payload, unsigned int length) {

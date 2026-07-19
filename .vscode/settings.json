@@ -8,7 +8,6 @@
   "[c]": {
     "editor.defaultFormatter": "xaver.clang-format"
   },
-  "editor.formatOnSave": true,
   "js/ts.experimental.useTsgo": false,
   "C_Cpp.intelliSenseEngine": "disabled",
   "clangd.arguments": [
