@@ -3,21 +3,20 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
-struct WiFiNetwork
-{
+struct WiFiNetwork {
     String ssid;
     int32_t rssi;
     uint8_t encryptionType;
     bool saved;
     bool connected;
 
-    String toString() const
-    {
-        return "SSID: " + ssid + "\nRSSI: " + String(rssi) + "\nEncryption Type: " + String(encryptionType) + "\nSaved: " + String(saved) + "\nConnected: " + String(connected);
+    String toString() const {
+        return "SSID: " + ssid + "\nRSSI: " + String(rssi) +
+               "\nEncryption Type: " + String(encryptionType) + "\nSaved: " + String(saved) +
+               "\nConnected: " + String(connected);
     }
 
-    void toJson(JsonObject json) const
-    {
+    void toJson(JsonObject json) const {
         json["ssid"] = ssid;
         json["rssi"] = rssi;
         json["encryptionType"] = encryptionType;

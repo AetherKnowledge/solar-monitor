@@ -17,6 +17,7 @@ ReferenceAlignment: Left
 SortIncludes: Never
 
 IndentCaseLabels: true
+NamespaceIndentation: All
 
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
