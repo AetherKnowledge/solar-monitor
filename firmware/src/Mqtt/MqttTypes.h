@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <vector>
 
-struct DiscoveryDevice
+struct DeviceDiscovery
 {
     String identifier;
     String manufacturer;
@@ -49,7 +49,7 @@ struct DiscoveryDevice
     }
 };
 
-struct Discovery
+struct SensorDiscovery
 {
     String name;
     String uniqueId;
@@ -89,7 +89,7 @@ struct Discovery
     }
 };
 
-struct WriteDiscovery : Discovery
+struct WriteDiscovery : SensorDiscovery
 {
     String commandTopic;
     String commandTemplate;
@@ -97,7 +97,7 @@ struct WriteDiscovery : Discovery
 
     void toJson(JsonObject json) const
     {
-        Discovery::toJson(json);
+        SensorDiscovery::toJson(json);
 
         json["command_topic"] = commandTopic;
         json["command_template"] = commandTemplate;
@@ -106,7 +106,7 @@ struct WriteDiscovery : Discovery
 
     void fromJson(JsonObject json)
     {
-        Discovery::fromJson(json);
+        SensorDiscovery::fromJson(json);
 
         commandTopic = json["command_topic"] | "";
         commandTemplate = json["command_template"] | "";

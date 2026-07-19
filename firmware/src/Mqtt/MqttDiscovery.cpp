@@ -7,15 +7,15 @@ namespace MqttDiscovery
 {
     void start()
     {
-        Discovery discoveryConfig;
-        discoveryConfig.name = "Solar Monitor Uptime";
-        discoveryConfig.uniqueId = "solar-monitor-uptime";
-        discoveryConfig.unitOfMeasurement = "s";
-        discoveryConfig.stateClass = "measurement";
+        SensorDiscovery discovery;
+        discovery.name = "Solar Monitor Uptime";
+        discovery.uniqueId = "solar-monitor-uptime";
+        discovery.unitOfMeasurement = "s";
+        discovery.stateClass = "measurement";
 
         JsonDocument doc;
         JsonObject json = doc.to<JsonObject>();
-        discoveryConfig.toJson(json);
+        discovery.toJson(json);
         json["state_topic"] = "solar-monitor/uptime";
         JsonObject device = json["device"].to<JsonObject>();
         device["name"] = "Solar Monitor";
@@ -51,19 +51,19 @@ namespace MqttDiscovery
     {
         JsonDocument doc;
         JsonObject json = doc.to<JsonObject>();
-        readRegister.discoveryConfig.toJson(json);
+        readRegister.discovery.toJson(json);
 
         JsonObject deviceJson = json["device"].to<JsonObject>();
-        device.discoveryDevice.toJson(deviceJson);
+        device.discovery.toJson(deviceJson);
 
         json["state_topic"] = getStateTopic(
             device.identifier,
-            readRegister.discoveryConfig.uniqueId);
+            readRegister.discovery.uniqueId);
 
         return MqttManager::publish(
             getDiscoveryTopic(
                 device.identifier,
-                readRegister.discoveryConfig.uniqueId),
+                readRegister.discovery.uniqueId),
             doc,
             true);
     }

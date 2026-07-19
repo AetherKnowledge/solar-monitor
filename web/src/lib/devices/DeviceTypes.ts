@@ -20,7 +20,7 @@ export interface ReadRegister {
 	transformArgument: number;
 	signedValue: boolean;
 
-	discoveryConfig: MqttSensorDiscoveryConfig;
+	discovery: MqttSensorDiscoveryConfig;
 }
 
 export interface ModbusDevice {
@@ -33,7 +33,7 @@ export interface ModbusDevice {
 	swapBytes: boolean;
 	mqttEnabled: boolean;
 
-	discoveryDevice: MqttDiscoveryDevice;
+	discovery: MqttDiscoveryDevice;
 	readRegisters: ReadRegister[];
 }
 

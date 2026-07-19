@@ -24,7 +24,7 @@
       "port": 2,
       "swapBytes": true,
       "mqttEnabled": true,
-      "discoveryDevice": {
+      "discovery": {
         "manufacturer": "Tester",
         "model": "Tester Inverter",
         "sw_version": "1.0.0"
@@ -36,7 +36,7 @@
           "transform": "Divide",
           "transformArgument": 1.0,
           "signedValue": false,
-          "discoveryConfig": {
+          "discovery": {
             "name": "Read Register 1",
             "unique_id": "register_1",
             "device_class": "power",
@@ -50,7 +50,7 @@
           "transform": "Divide",
           "transformArgument": 10.0,
           "signedValue": false,
-          "discoveryConfig": {
+          "discovery": {
             "name": "Read Register 2",
             "unique_id": "register_2",
             "device_class": "voltage",
@@ -63,7 +63,7 @@
         {
           "expression": "virtual_sensor_1 + 1",
           "isPersistent": false,
-          "discoveryConfig": {
+          "discovery": {
             "name": "Virtual Sensor 1",
             "unique_id": "virtual_sensor_1",
             "device_class": "power",

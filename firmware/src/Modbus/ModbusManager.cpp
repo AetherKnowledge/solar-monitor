@@ -149,12 +149,12 @@ namespace ModbusManager
             {
                 Serial.printf(
                     "Register %s (address: %d) value changed to %.2f\n",
-                    reg->discoveryConfig.name.c_str(),
+                    reg->discovery.name.c_str(),
                     reg->address,
                     reg->value);
 
                 MqttManager::publish(
-                    MqttDiscovery::getStateTopic(device.identifier, reg->discoveryConfig.uniqueId),
+                    MqttDiscovery::getStateTopic(device.identifier, reg->discovery.uniqueId),
                     String(reg->value));
             }
         }
@@ -170,11 +170,11 @@ namespace ModbusManager
             {
                 Serial.printf(
                     "Virtual Sensor %s value changed to %.2f\n",
-                    virtualSensor.discoveryConfig.name.c_str(),
+                    virtualSensor.discovery.name.c_str(),
                     virtualSensor.value);
 
                 MqttManager::publish(
-                    MqttDiscovery::getStateTopic(device.identifier, virtualSensor.discoveryConfig.uniqueId),
+                    MqttDiscovery::getStateTopic(device.identifier, virtualSensor.discovery.uniqueId),
                     String(virtualSensor.value));
             }
         }

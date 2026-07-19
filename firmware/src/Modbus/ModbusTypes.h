@@ -12,32 +12,32 @@
 template <typename TDiscovery>
 struct Entity
 {
-    static_assert(std::is_base_of_v<Discovery, TDiscovery>,
-                  "TDiscovery must derive from Discovery");
+    static_assert(std::is_base_of_v<SensorDiscovery, TDiscovery>,
+                  "TDiscovery must derive from SensorDiscovery");
 
     double value = 0.0;
-    TDiscovery discoveryConfig;
+    TDiscovery discovery;
 
     String &getName()
     {
-        return discoveryConfig.name;
+        return discovery.name;
     }
 
     String &getId()
     {
-        return discoveryConfig.uniqueId;
+        return discovery.uniqueId;
     }
 
     void toJson(JsonObject json) const
     {
-        JsonObject discoveryJson = json["discoveryConfig"].to<JsonObject>();
-        discoveryConfig.toJson(discoveryJson);
+        JsonObject discoveryJson = json["discovery"].to<JsonObject>();
+        discovery.toJson(discoveryJson);
     }
 
     void fromJson(JsonObject json)
     {
-        JsonObject discoveryJson = json["discoveryConfig"].as<JsonObject>();
-        discoveryConfig.fromJson(discoveryJson);
+        JsonObject discoveryJson = json["discovery"].as<JsonObject>();
+        discovery.fromJson(discoveryJson);
     }
 };
 
@@ -59,7 +59,7 @@ struct Register : Entity<TDiscovery>
     }
 };
 
-struct ReadRegister : Register<Discovery>
+struct ReadRegister : Register<SensorDiscovery>
 {
     uint8_t rounding = 0;
     RegisterTransform transform = RegisterTransform::None;
@@ -68,7 +68,7 @@ struct ReadRegister : Register<Discovery>
 
     void toJson(JsonObject json) const
     {
-        Register<Discovery>::toJson(json);
+        Register<SensorDiscovery>::toJson(json);
         json["rounding"] = rounding;
         json["transform"] = Enum::toString(transform);
         json["transformArgument"] = transformArgument;
@@ -77,7 +77,7 @@ struct ReadRegister : Register<Discovery>
 
     void fromJson(JsonObject json)
     {
-        Register<Discovery>::fromJson(json);
+        Register<SensorDiscovery>::fromJson(json);
         rounding = json["rounding"].as<uint8_t>();
         transform = Enum::fromString<RegisterTransform>(json["transform"] | "None");
         signedValue = json["signedValue"] | false;
@@ -93,7 +93,7 @@ struct ReadGroup
     std::vector<ReadRegister *> registers;
 };
 
-struct VirtualSensor : Entity<Discovery>
+struct VirtualSensor : Entity<SensorDiscovery>
 {
     String expression;
     te_expr *compiledExpression = nullptr;
@@ -104,7 +104,7 @@ struct VirtualSensor : Entity<Discovery>
 
     void toJson(JsonObject json) const
     {
-        Entity<Discovery>::toJson(json);
+        Entity<SensorDiscovery>::toJson(json);
 
         json["expression"] = expression;
         json["isPersistent"] = false;
@@ -112,7 +112,7 @@ struct VirtualSensor : Entity<Discovery>
 
     void fromJson(JsonObject json)
     {
-        Entity<Discovery>::fromJson(json);
+        Entity<SensorDiscovery>::fromJson(json);
 
         expression = json["expression"].as<String>();
         isPersistent = json["isPersistent"] | false;
@@ -137,7 +137,7 @@ struct ModbusDevice
     uint8_t port = 1;
     bool swapBytes = false;
 
-    DiscoveryDevice discoveryDevice;
+    DeviceDiscovery discovery;
     bool mqttEnabled = true;
 
     ModbusMaster modbus;
@@ -174,11 +174,11 @@ struct ModbusDevice
             virtualSensor.toJson(virtualSensorJson);
         }
 
-        auto device = discoveryDevice;
+        auto device = discovery;
         device.setDeviceInfo(name, identifier);
 
-        JsonObject discoveryDeviceJson = json["discoveryDevice"].to<JsonObject>();
-        device.toJson(discoveryDeviceJson);
+        JsonObject discoveryJson = json["discovery"].to<JsonObject>();
+        device.toJson(discoveryJson);
     }
 
     void fromJson(JsonObject json)
@@ -192,9 +192,9 @@ struct ModbusDevice
         swapBytes = json["swapBytes"] | false;
         mqttEnabled = json["mqttEnabled"] | true;
 
-        JsonObject discoveryDeviceJson = json["discoveryDevice"].as<JsonObject>();
-        discoveryDevice.fromJson(discoveryDeviceJson);
-        discoveryDevice.setDeviceInfo(name, identifier);
+        JsonObject discoveryJson = json["discovery"].as<JsonObject>();
+        discovery.fromJson(discoveryJson);
+        discovery.setDeviceInfo(name, identifier);
 
         JsonArray readRegistersArray = json["readRegisters"].as<JsonArray>();
         readRegisters.clear();

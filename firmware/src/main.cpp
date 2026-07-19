@@ -55,6 +55,5 @@ void loop()
     ModbusManager::loop();
     MqttManager::loop();
 
-    static unsigned long lastPublish = 0;
     delay(10);
 }
