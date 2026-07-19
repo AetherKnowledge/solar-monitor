@@ -15,7 +15,7 @@ namespace ModbusManager
     void setupDevices(std::vector<ModbusDevice> &devices);
 
     void processReadRegisters(ModbusDevice &device, ReadGroup &group);
-    void updateCalculatedRegisters(ModbusDevice &device);
+    void updateVirtualSensors(ModbusDevice &device);
 
     void reset();
 }

@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <vector>
 
-struct MqttDiscoveryDevice
+struct DiscoveryDevice
 {
     String identifier;
     String manufacturer;
@@ -49,7 +49,7 @@ struct MqttDiscoveryDevice
     }
 };
 
-struct MqttSensorDiscoveryConfig
+struct Discovery
 {
     String name;
     String uniqueId;
@@ -86,5 +86,84 @@ struct MqttSensorDiscoveryConfig
         stateClass = json["state_class"] | "";
         unitOfMeasurement = json["unit_of_measurement"] | "";
         icon = json["icon"] | "";
+    }
+};
+
+struct WriteDiscovery : Discovery
+{
+    String commandTopic;
+    String commandTemplate;
+    uint8_t qos = 0;
+
+    void toJson(JsonObject json) const
+    {
+        Discovery::toJson(json);
+
+        json["command_topic"] = commandTopic;
+        json["command_template"] = commandTemplate;
+        json["qos"] = qos;
+    }
+
+    void fromJson(JsonObject json)
+    {
+        Discovery::fromJson(json);
+
+        commandTopic = json["command_topic"] | "";
+        commandTemplate = json["command_template"] | "";
+        qos = json["qos"] | 0;
+    }
+};
+
+struct SelectDiscovery : WriteDiscovery
+{
+    std::vector<String> options;
+
+    void toJson(JsonObject json) const
+    {
+        WriteDiscovery::toJson(json);
+
+        JsonArray optionsArray = json["options"].to<JsonArray>();
+        for (const auto &option : options)
+        {
+            optionsArray.add(option);
+        }
+    }
+
+    void fromJson(JsonObject json)
+    {
+        WriteDiscovery::fromJson(json);
+
+        JsonArray optionsArray = json["options"].as<JsonArray>();
+        options.clear();
+        for (const auto &optionJson : optionsArray)
+        {
+            String option = optionJson.as<String>();
+            options.push_back(option);
+        }
+    }
+};
+
+struct NumberDiscovery : WriteDiscovery
+{
+    double min = 0;
+    double max = 100;
+    double step = 1;
+
+    void toJson(JsonObject json) const
+    {
+        WriteDiscovery::toJson(json);
+
+        json["min"] = min;
+        json["max"] = max;
+        json["step"] = step;
+    }
+
+    void fromJson(JsonObject json)
+    {
+        WriteDiscovery::fromJson(json);
+
+        min = json["min"] | 0;
+        max = json["max"] | 100;
+        step = json["step"] | 1;
     }
 };

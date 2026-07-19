@@ -3,7 +3,7 @@
 #include <Mqtt/MqttManager.h>
 #include <Mqtt/MqttDiscovery.h>
 #include "ReadRegisterManager.h"
-#include "CalculatedRegisterManager.h"
+#include "VirtualSensorManager.h"
 
 namespace ModbusManager
 {
@@ -18,7 +18,7 @@ namespace ModbusManager
         Serial.println("Setting up Modbus Manager");
 
         ReadRegisterManager::setup(config.modbusDevices);
-        CalculatedRegisterManager::setup(config.modbusDevices);
+        VirtualSensorManager::setup(config.modbusDevices);
         setupDevices(config.modbusDevices);
 
         hasStarted = true;
@@ -92,7 +92,7 @@ namespace ModbusManager
         {
             device.initialized = false;
             device.readGroups.clear();
-            CalculatedRegisterManager::resetDevice(device);
+            VirtualSensorManager::resetDevice(device);
         }
     }
 
@@ -116,7 +116,7 @@ namespace ModbusManager
             pollDevice(device);
         }
 
-        CalculatedRegisterManager::loopPersistence();
+        VirtualSensorManager::loopPersistence();
     }
 
     void pollDevice(ModbusDevice &device)
@@ -126,7 +126,7 @@ namespace ModbusManager
         for (auto &group : device.readGroups)
         {
             processReadRegisters(device, group);
-            updateCalculatedRegisters(device);
+            updateVirtualSensors(device);
         }
     }
 
@@ -160,22 +160,22 @@ namespace ModbusManager
         }
     }
 
-    void updateCalculatedRegisters(ModbusDevice &device)
+    void updateVirtualSensors(ModbusDevice &device)
     {
-        for (auto &calculatedRegister : device.calculatedRegisters)
+        for (auto &virtualSensor : device.virtualSensors)
         {
-            bool result = CalculatedRegisterManager::updateRegister(calculatedRegister);
+            bool result = VirtualSensorManager::updateRegister(virtualSensor);
 
             if (result && device.mqttEnabled && MqttManager::isConnected())
             {
                 Serial.printf(
-                    "Calculated Register %s value changed to %.2f\n",
-                    calculatedRegister.discoveryConfig.name.c_str(),
-                    calculatedRegister.value);
+                    "Virtual Sensor %s value changed to %.2f\n",
+                    virtualSensor.discoveryConfig.name.c_str(),
+                    virtualSensor.value);
 
                 MqttManager::publish(
-                    MqttDiscovery::getStateTopic(device.identifier, calculatedRegister.discoveryConfig.uniqueId),
-                    String(calculatedRegister.value));
+                    MqttDiscovery::getStateTopic(device.identifier, virtualSensor.discoveryConfig.uniqueId),
+                    String(virtualSensor.value));
             }
         }
     }

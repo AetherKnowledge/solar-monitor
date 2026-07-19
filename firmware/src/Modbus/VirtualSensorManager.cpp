@@ -1,8 +1,8 @@
-#include "CalculatedRegisterManager.h"
+#include "VirtualSensorManager.h"
 #include <tinyexpr.h>
 #include <Config/Config.h>
 
-namespace CalculatedRegisterManager
+namespace VirtualSensorManager
 {
     bool loadFile(File &file, std::vector<ModbusDevice> &devices)
     {
@@ -24,7 +24,7 @@ namespace CalculatedRegisterManager
             if (deviceJson.isNull())
                 continue;
 
-            for (auto &reg : device.calculatedRegisters)
+            for (auto &reg : device.virtualSensors)
             {
                 if (!reg.isPersistent)
                     continue;
@@ -86,7 +86,7 @@ namespace CalculatedRegisterManager
         {
             JsonObject deviceJson = doc[device.identifier].to<JsonObject>();
 
-            for (auto &reg : device.calculatedRegisters)
+            for (auto &reg : device.virtualSensors)
             {
                 if (reg.isPersistent)
                     deviceJson[reg.getId()] = reg.value;
@@ -124,7 +124,7 @@ namespace CalculatedRegisterManager
     {
         for (auto &device : devices)
         {
-            for (auto &reg : device.calculatedRegisters)
+            for (auto &reg : device.virtualSensors)
             {
                 if (reg.isPersistent && reg.isDirty)
                 {
@@ -138,7 +138,7 @@ namespace CalculatedRegisterManager
     {
         for (const auto &device : devices)
         {
-            for (const auto &reg : device.calculatedRegisters)
+            for (const auto &reg : device.virtualSensors)
             {
                 if (reg.isPersistent && reg.isDirty)
                 {
@@ -179,7 +179,7 @@ namespace CalculatedRegisterManager
     void setupDevice(ModbusDevice &device)
     {
         Serial.printf(
-            "Setting up calculated registers for device %s (%s)\n",
+            "Setting up virtual sensors for device %s (%s)\n",
             device.name.c_str(),
             device.identifier.c_str());
 
@@ -188,7 +188,7 @@ namespace CalculatedRegisterManager
         device.vars.clear();
         device.vars.reserve(
             device.readRegisters.size() +
-            device.calculatedRegisters.size());
+            device.virtualSensors.size());
 
         unordered_set_t usedIds;
         for (auto &readRegister : device.readRegisters)
@@ -196,17 +196,25 @@ namespace CalculatedRegisterManager
             addVariable(device, readRegister, usedIds);
         }
 
-        // calculated registers are evaluated in order
-        for (auto &calculatedRegister : device.calculatedRegisters)
+        // virtual sensors are evaluated in order
+        for (auto &virtualSensor : device.virtualSensors)
         {
-            addVariable(device, calculatedRegister, usedIds);
+            addVariable(device, virtualSensor, usedIds);
         }
 
         compileExpressions(device);
     }
 
-    void addVariable(ModbusDevice &device, Register &reg, unordered_set_t &usedIds)
+    template <typename T>
+    void addVariable(ModbusDevice &device, T &reg, unordered_set_t &usedIds)
     {
+        using RegisterType = std::decay_t<T>;
+
+        static_assert(
+            std::is_same_v<RegisterType, ReadRegister> ||
+                std::is_same_v<RegisterType, VirtualSensor>,
+            "Only ReadRegister and VirtualSensor are supported");
+
         if (reg.getId().isEmpty())
         {
             Serial.printf(
@@ -236,7 +244,7 @@ namespace CalculatedRegisterManager
         device.vars.push_back(var);
 
         Serial.printf(
-            "Added variable for calculated registers: %s (name: %s)\n",
+            "Added variable for virtual sensors: %s (name: %s)\n",
             reg.getId().c_str(),
             reg.getName().c_str());
     }
@@ -244,7 +252,7 @@ namespace CalculatedRegisterManager
     void compileExpressions(ModbusDevice &device)
     {
         Serial.printf("Compiling expressions for device %s (%s)\n", device.name.c_str(), device.identifier.c_str());
-        for (auto &reg : device.calculatedRegisters)
+        for (auto &reg : device.virtualSensors)
         {
             int err;
             reg.compiledExpression = te_compile(reg.expression.c_str(),
@@ -263,8 +271,8 @@ namespace CalculatedRegisterManager
         }
     }
 
-    // Returns true if the value of the calculated register has changed, false otherwise
-    bool updateRegister(CalculatedRegister &reg)
+    // Returns true if the value of the virtual sensor has changed, false otherwise
+    bool updateRegister(VirtualSensor &reg)
     {
         if (!reg.compiledExpression)
         {
@@ -290,12 +298,12 @@ namespace CalculatedRegisterManager
     {
         device.vars.clear();
 
-        for (auto &calculatedRegister : device.calculatedRegisters)
+        for (auto &virtualSensor : device.virtualSensors)
         {
-            if (calculatedRegister.compiledExpression)
+            if (virtualSensor.compiledExpression)
             {
-                te_free(calculatedRegister.compiledExpression);
-                calculatedRegister.compiledExpression = nullptr;
+                te_free(virtualSensor.compiledExpression);
+                virtualSensor.compiledExpression = nullptr;
             }
         }
     }

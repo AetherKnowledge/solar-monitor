@@ -9,10 +9,14 @@
 #include <ModbusMaster.h>
 #include <tinyexpr.h>
 
-struct Register
+template <typename TDiscovery>
+struct Entity
 {
+    static_assert(std::is_base_of_v<Discovery, TDiscovery>,
+                  "TDiscovery must derive from Discovery");
+
     double value = 0.0;
-    MqttSensorDiscoveryConfig discoveryConfig;
+    TDiscovery discoveryConfig;
 
     String &getName()
     {
@@ -23,11 +27,40 @@ struct Register
     {
         return discoveryConfig.uniqueId;
     }
+
+    void toJson(JsonObject json) const
+    {
+        JsonObject discoveryJson = json["discoveryConfig"].to<JsonObject>();
+        discoveryConfig.toJson(discoveryJson);
+    }
+
+    void fromJson(JsonObject json)
+    {
+        JsonObject discoveryJson = json["discoveryConfig"].as<JsonObject>();
+        discoveryConfig.fromJson(discoveryJson);
+    }
 };
 
-struct ReadRegister : Register
+template <typename TDiscovery>
+struct Register : Entity<TDiscovery>
 {
     uint16_t address;
+
+    void toJson(JsonObject json) const
+    {
+        Entity<TDiscovery>::toJson(json);
+        json["address"] = this->address;
+    }
+
+    void fromJson(JsonObject json)
+    {
+        Entity<TDiscovery>::fromJson(json);
+        address = json["address"].as<uint16_t>();
+    }
+};
+
+struct ReadRegister : Register<Discovery>
+{
     uint8_t rounding = 0;
     RegisterTransform transform = RegisterTransform::None;
     float transformArgument = 0.0f;
@@ -35,26 +68,20 @@ struct ReadRegister : Register
 
     void toJson(JsonObject json) const
     {
-        json["address"] = address;
+        Register<Discovery>::toJson(json);
         json["rounding"] = rounding;
         json["transform"] = Enum::toString(transform);
         json["transformArgument"] = transformArgument;
         json["signedValue"] = signedValue;
-
-        JsonObject discoveryJson = json["discoveryConfig"].to<JsonObject>();
-        discoveryConfig.toJson(discoveryJson);
     }
 
     void fromJson(JsonObject json)
     {
-        address = json["address"].as<uint16_t>();
+        Register<Discovery>::fromJson(json);
         rounding = json["rounding"].as<uint8_t>();
         transform = Enum::fromString<RegisterTransform>(json["transform"] | "None");
         signedValue = json["signedValue"] | false;
         transformArgument = json["transformArgument"].as<float>();
-
-        JsonObject discoveryJson = json["discoveryConfig"].as<JsonObject>();
-        discoveryConfig.fromJson(discoveryJson);
     }
 };
 
@@ -66,7 +93,7 @@ struct ReadGroup
     std::vector<ReadRegister *> registers;
 };
 
-struct CalculatedRegister : Register
+struct VirtualSensor : Entity<Discovery>
 {
     String expression;
     te_expr *compiledExpression = nullptr;
@@ -77,21 +104,27 @@ struct CalculatedRegister : Register
 
     void toJson(JsonObject json) const
     {
+        Entity<Discovery>::toJson(json);
+
         json["expression"] = expression;
         json["isPersistent"] = false;
-
-        JsonObject discoveryJson = json["discoveryConfig"].to<JsonObject>();
-        discoveryConfig.toJson(discoveryJson);
     }
 
     void fromJson(JsonObject json)
     {
+        Entity<Discovery>::fromJson(json);
+
         expression = json["expression"].as<String>();
         isPersistent = json["isPersistent"] | false;
-
-        JsonObject discoveryJson = json["discoveryConfig"].as<JsonObject>();
-        discoveryConfig.fromJson(discoveryJson);
     }
+};
+
+struct SelectWriteRegister : Register<SelectDiscovery>
+{
+};
+
+struct NumberWriteRegister : Register<NumberDiscovery>
+{
 };
 
 struct ModbusDevice
@@ -104,7 +137,7 @@ struct ModbusDevice
     uint8_t port = 1;
     bool swapBytes = false;
 
-    MqttDiscoveryDevice discoveryDevice;
+    DiscoveryDevice discoveryDevice;
     bool mqttEnabled = true;
 
     ModbusMaster modbus;
@@ -113,7 +146,7 @@ struct ModbusDevice
     std::vector<ReadRegister> readRegisters;
     std::vector<ReadGroup> readGroups;
 
-    std::vector<CalculatedRegister> calculatedRegisters;
+    std::vector<VirtualSensor> virtualSensors;
     std::vector<te_variable> vars;
 
     void toJson(JsonObject json) const
@@ -134,11 +167,11 @@ struct ModbusDevice
             readRegister.toJson(readRegisterJson);
         }
 
-        JsonArray calculatedRegistersArray = json["calculatedRegisters"].to<JsonArray>();
-        for (const auto &calculatedRegister : calculatedRegisters)
+        JsonArray virtualSensorsArray = json["virtualSensors"].to<JsonArray>();
+        for (const auto &virtualSensor : virtualSensors)
         {
-            JsonObject calculatedRegisterJson = calculatedRegistersArray.add<JsonObject>();
-            calculatedRegister.toJson(calculatedRegisterJson);
+            JsonObject virtualSensorJson = virtualSensorsArray.add<JsonObject>();
+            virtualSensor.toJson(virtualSensorJson);
         }
 
         auto device = discoveryDevice;
@@ -172,13 +205,13 @@ struct ModbusDevice
             readRegisters.push_back(readRegister);
         }
 
-        JsonArray calculatedRegistersArray = json["calculatedRegisters"].as<JsonArray>();
-        calculatedRegisters.clear();
-        for (const auto &calculatedRegisterJson : calculatedRegistersArray)
+        JsonArray virtualSensorsArray = json["virtualSensors"].as<JsonArray>();
+        virtualSensors.clear();
+        for (const auto &virtualSensorJson : virtualSensorsArray)
         {
-            CalculatedRegister calculatedRegister;
-            calculatedRegister.fromJson(calculatedRegisterJson);
-            calculatedRegisters.push_back(calculatedRegister);
+            VirtualSensor virtualSensor;
+            virtualSensor.fromJson(virtualSensorJson);
+            virtualSensors.push_back(virtualSensor);
         }
     }
 
@@ -192,7 +225,7 @@ struct ModbusDevice
         result += "Port: " + String(port) + "\n";
         result += "Swap Bytes: " + String(swapBytes ? "true" : "false") + "\n";
         result += "Read Registers Count: " + String(readRegisters.size()) + "\n";
-        result += "Calculated Registers Count: " + String(calculatedRegisters.size()) + "\n";
+        result += "Virtual Sensors Count: " + String(virtualSensors.size()) + "\n";
         return result;
     }
 };

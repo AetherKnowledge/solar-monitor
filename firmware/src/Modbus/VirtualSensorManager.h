@@ -6,7 +6,7 @@
 #include <vector>
 #include <Common/File.h>
 
-namespace CalculatedRegisterManager
+namespace VirtualSensorManager
 {
     using unordered_set_t = std::unordered_set<std::string>;
 
@@ -15,8 +15,11 @@ namespace CalculatedRegisterManager
 
     void setup(std::vector<ModbusDevice> &devices);
     void setupDevice(ModbusDevice &device);
-    bool updateRegister(CalculatedRegister &calculatedRegister);
-    void addVariable(ModbusDevice &device, Register &reg, unordered_set_t &usedIds);
+    bool updateRegister(VirtualSensor &virtualSensor);
+
+    template <typename TRegister>
+    void addVariable(ModbusDevice &device, TRegister &reg, unordered_set_t &usedIds);
+
     void resetDevice(ModbusDevice &device);
     void compileExpressions(ModbusDevice &device);
 
