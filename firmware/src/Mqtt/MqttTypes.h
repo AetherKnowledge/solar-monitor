@@ -108,6 +108,7 @@ struct WriteDiscovery : SensorDiscovery {
     void fromJson(JsonObject json) {
         SensorDiscovery::fromJson(json);
 
+        valueTemplate = json["value_template"] | "";
         commandTemplate = json["command_template"] | "";
         qos = json["qos"] | 0;
     }

@@ -71,6 +71,33 @@
             "unit_of_measurement": "W"
           }
         }
+      ],
+      "numberWriteRegisters": [
+        {
+          "address": 4503,
+          "discovery": {
+            "name": "Write Register 1",
+            "unique_id": "write_register_1",
+            "device_class": "power",
+            "state_class": "measurement",
+            "unit_of_measurement": "W",
+            "command_topic": "solar-monitor/inverter_test_1/write_register_1/set",
+            "command_template": "{{ value | int }}"
+          }
+        }
+      ],
+      "selectWriteRegisters": [
+        {
+          "address": 4504,
+          "discovery": {
+            "options": ["Option 1", "Option 2", "Option 3"],
+            "command_template": "{{ this.attributes.options.index(value) }}",
+            "value_template": "{{ this.attributes.options[value | int] }}",
+            "name": "Select Write Register 1",
+            "unique_id": "select_write_register_1",
+            "command_topic": "solar-monitor/inverter_test_1/select_write_register_1/set"
+          }
+        }
       ]
     }
   ]
