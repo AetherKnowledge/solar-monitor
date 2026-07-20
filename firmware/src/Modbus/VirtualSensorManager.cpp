@@ -14,7 +14,7 @@ namespace VirtualSensorManager {
         }
 
         for (auto& device : devices) {
-            JsonObject deviceJson = doc[device.identifier].as<JsonObject>();
+            JsonObject deviceJson = doc[device.discovery.identifier].as<JsonObject>();
 
             if (deviceJson.isNull())
                 continue;
@@ -70,7 +70,7 @@ namespace VirtualSensorManager {
         JsonDocument doc;
 
         for (auto& device : devices) {
-            JsonObject deviceJson = doc[device.identifier].to<JsonObject>();
+            JsonObject deviceJson = doc[device.discovery.identifier].to<JsonObject>();
 
             for (auto& reg : device.virtualSensors) {
                 if (reg.isPersistent)
@@ -149,8 +149,8 @@ namespace VirtualSensorManager {
 
     void setupDevice(ModbusDevice& device) {
         Serial.printf("Setting up virtual sensors for device %s (%s)\n",
-                      device.name.c_str(),
-                      device.identifier.c_str());
+                      device.discovery.name.c_str(),
+                      device.discovery.identifier.c_str());
 
         resetDevice(device);
 
@@ -207,8 +207,8 @@ namespace VirtualSensorManager {
 
     void compileExpressions(ModbusDevice& device) {
         Serial.printf("Compiling expressions for device %s (%s)\n",
-                      device.name.c_str(),
-                      device.identifier.c_str());
+                      device.discovery.name.c_str(),
+                      device.discovery.identifier.c_str());
         for (auto& reg : device.virtualSensors) {
             int err;
             reg.compiledExpression =

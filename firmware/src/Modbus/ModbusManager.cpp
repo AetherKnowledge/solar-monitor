@@ -32,7 +32,7 @@ namespace ModbusManager {
 
                 Serial.printf("Invalid port number %d for Modbus device %s\n",
                               device.port,
-                              device.name.c_str());
+                              device.discovery.name.c_str());
                 return;
             }
 
@@ -41,8 +41,9 @@ namespace ModbusManager {
             if (!inserted) {
                 device.initialized = false;
 
-                Serial.printf(
-                    "Port %d already in use. Skipping %s\n", device.port, device.name.c_str());
+                Serial.printf("Port %d already in use. Skipping %s\n",
+                              device.port,
+                              device.discovery.name.c_str());
                 return;
             }
 
@@ -64,7 +65,7 @@ namespace ModbusManager {
 
             device.initialized = true;
             Serial.printf("Initialized Modbus device %s on port %d with baudrate %d\n",
-                          device.name.c_str(),
+                          device.discovery.name.c_str(),
                           device.port,
                           device.baudrate);
         }

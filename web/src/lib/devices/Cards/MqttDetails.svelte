@@ -35,7 +35,7 @@
 
 				<input
 					class="input input-bordered w-full"
-					bind:value={device.name}
+					bind:value={device.discovery.name}
 					placeholder="Solar Inverter"
 				/>
 
@@ -52,7 +52,7 @@
 					</span>
 				</div>
 
-				<input class="input input-bordered w-full font-mono" value={device.identifier} />
+				<input class="input input-bordered w-full font-mono" value={device.discovery.identifier} />
 
 				<div class="label">
 					<span class="label-text-alt"> Unique identifier for the device. </span>

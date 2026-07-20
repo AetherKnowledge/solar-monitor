@@ -116,8 +116,6 @@ struct SelectWriteRegister : Register<SelectDiscovery> {};
 struct NumberWriteRegister : Register<NumberDiscovery> {};
 
 struct ModbusDevice {
-    String name;
-    String identifier;
     uint8_t slaveId = 5;
     uint32_t timeout = 1000;
     uint32_t baudrate = 2400;
@@ -140,8 +138,6 @@ struct ModbusDevice {
     std::vector<NumberWriteRegister> numberWriteRegisters;
 
     void toJson(JsonObject json) const {
-        json["name"] = name;
-        json["identifier"] = identifier;
         json["slaveId"] = slaveId;
         json["timeout"] = timeout;
         json["baudrate"] = baudrate;
@@ -154,16 +150,11 @@ struct ModbusDevice {
         serializeVector(json["selectWriteRegisters"], selectWriteRegisters);
         serializeVector(json["numberWriteRegisters"], numberWriteRegisters);
 
-        auto device = discovery;
-        device.setDeviceInfo(name, identifier);
-
         JsonObject discoveryJson = json["discovery"].to<JsonObject>();
-        device.toJson(discoveryJson);
+        discovery.toJson(discoveryJson);
     }
 
     void fromJson(JsonObject json) {
-        name = json["name"].as<String>();
-        identifier = json["identifier"].as<String>();
         slaveId = json["slaveId"].as<uint8_t>();
         timeout = json["timeout"].as<uint32_t>();
         baudrate = json["baudrate"].as<uint32_t>();
@@ -173,7 +164,6 @@ struct ModbusDevice {
 
         JsonObject discoveryJson = json["discovery"].as<JsonObject>();
         discovery.fromJson(discoveryJson);
-        discovery.setDeviceInfo(name, identifier);
 
         deserializeVector(json["readRegisters"], readRegisters);
         deserializeVector(json["virtualSensors"], virtualSensors);
@@ -182,8 +172,8 @@ struct ModbusDevice {
     }
 
     String toString() const {
-        String result = "Name: " + name + "\n";
-        result += "Identifier: " + identifier + "\n";
+        String result = "Name: " + discovery.name + "\n";
+        result += "Identifier: " + discovery.identifier + "\n";
         result += "Slave ID: " + String(slaveId) + "\n";
         result += "Timeout: " + String(timeout) + "\n";
         result += "Baudrate: " + String(baudrate) + "\n";

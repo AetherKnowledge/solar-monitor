@@ -20,10 +20,42 @@ export enum RegisterType {
 	Number = 'Number'
 }
 
+export interface RegisterListItem {
+	id: string;
+	type: RegisterType;
+
+	name: string;
+	address?: number;
+
+	value?: string;
+	unit?: string;
+
+	data: RegisterItem;
+}
+
+export type RegisterItem =
+	| {
+			register: ReadRegister;
+			type: RegisterType.Read;
+	  }
+	| {
+			register: VirtualSensor;
+			type: RegisterType.Virtual;
+	  }
+	| {
+			register: SelectWriteRegister;
+			type: RegisterType.Select;
+	  }
+	| {
+			register: NumberWriteRegister;
+			type: RegisterType.Number;
+	  };
+
 export interface DeviceDiscovery {
+	name: string;
+	identifier: string;
 	manufacturer: string;
 	model?: string;
-	name?: string;
 }
 
 export interface SensorDiscovery {
@@ -82,8 +114,6 @@ export interface NumberWriteRegister {
 }
 
 export interface ModbusDevice {
-	name: string;
-	identifier: string;
 	mqttEnabled: boolean;
 
 	slaveId: number;

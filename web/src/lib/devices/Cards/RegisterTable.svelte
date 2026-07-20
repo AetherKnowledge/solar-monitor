@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { Plus, Search, TableProperties } from '@lucide/svelte';
-	import { RegisterType } from '../DeviceTypes';
-	import type { RegisterListItem } from './RegisterTableRow.svelte';
+	import { RegisterType, type RegisterListItem } from '../DeviceTypes';
 	import RegisterTableRow from './RegisterTableRow.svelte';
 
 	type Props = {
 		registers: RegisterListItem[];
+		onEdit?: (register: RegisterListItem) => void;
 	};
 
-	let { registers }: Props = $props();
+	let { registers, onEdit }: Props = $props();
 
 	let searchQuery: string = $state('');
 	let selectedType: RegisterType | 'All Types' = $state('All Types');
@@ -91,7 +91,7 @@
 						</tr>
 					{:else}
 						{#each filteredRegisters as register (register.id)}
-							<RegisterTableRow {register} onEdit={(id) => console.log(id)} />
+							<RegisterTableRow {register} onEdit={(r) => onEdit?.(r)} />
 						{/each}
 					{/if}
 				</tbody>

@@ -52,8 +52,8 @@ namespace MqttDiscovery {
 
             Serial.printf("Published %d discovery messages for Modbus device %s (%s)\n",
                           publishedDiscoveryCount,
-                          device.name.c_str(),
-                          device.identifier.c_str());
+                          device.discovery.name.c_str(),
+                          device.discovery.identifier.c_str());
         }
     }
 
@@ -67,8 +67,13 @@ namespace MqttDiscovery {
         JsonObject deviceJson = json["device"].to<JsonObject>();
         device.discovery.toJson(deviceJson);
 
+        JsonArray identifiers = deviceJson["identifiers"].to<JsonArray>();
+        identifiers.add(device.discovery.identifier);
+        deviceJson.remove("identifier");
+
         bool result = MqttManager::publish(
-            generateDiscoveryTopic(device.identifier, discovery.uniqueId, TDiscovery::Component),
+            generateDiscoveryTopic(
+                device.discovery.identifier, discovery.uniqueId, TDiscovery::Component),
             doc,
             true);
 
@@ -76,8 +81,8 @@ namespace MqttDiscovery {
                       result ? "Successfully" : "Failed",
                       discovery.name.c_str(),
                       discovery.uniqueId.c_str(),
-                      device.name.c_str(),
-                      device.identifier.c_str());
+                      device.discovery.name.c_str(),
+                      device.discovery.identifier.c_str());
         Serial.printf("Discovery JSON: %s\n", doc.as<String>().c_str());
 
         return result;

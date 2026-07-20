@@ -11,15 +11,8 @@ struct DeviceDiscovery {
     String model;
     String name;
 
-    void setDeviceInfo(const String& deviceName, const String& deviceIdentifier) {
-        name = deviceName;
-        identifier = deviceIdentifier;
-    }
-
     void toJson(JsonObject json) const {
-        JsonArray identifiers = json["identifiers"].to<JsonArray>();
-        identifiers.add(identifier);
-
+        json["identifier"] = identifier;
         json["manufacturer"] = manufacturer;
 
         if (!model.isEmpty())
@@ -30,13 +23,7 @@ struct DeviceDiscovery {
     }
 
     void fromJson(JsonObject json) {
-        JsonArray identifiers = json["identifiers"].as<JsonArray>();
-        if (!identifiers.isNull() && identifiers.size() > 0) {
-            identifier = identifiers[0].as<String>();
-        } else {
-            identifier = "";
-        }
-
+        identifier = json["identifier"] | "";
         manufacturer = json["manufacturer"] | "";
         model = json["model"] | "";
         name = json["name"] | "";

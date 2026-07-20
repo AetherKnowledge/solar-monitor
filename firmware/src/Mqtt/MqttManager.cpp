@@ -23,6 +23,10 @@ namespace MqttManager {
         mqttClient.setCallback(callback);
 
         mqttClient.setBufferSize(1024);
+
+        // This is also here to prevent race condition of modbus devices being updated before MQTT
+        // topics are generated
+        generateTopics();
     }
 
     void reload() {
@@ -107,27 +111,27 @@ namespace MqttManager {
     void generateTopics() {
         for (auto& device : ConfigManager::config.modbusDevices) {
             for (auto& reg : device.readRegisters) {
-                reg.discovery.stateTopic =
-                    MqttDiscovery::generateStateTopic(device.identifier, reg.discovery.uniqueId);
+                reg.discovery.stateTopic = MqttDiscovery::generateStateTopic(
+                    device.discovery.identifier, reg.discovery.uniqueId);
             }
 
             for (auto& sensor : device.virtualSensors) {
-                sensor.discovery.stateTopic =
-                    MqttDiscovery::generateStateTopic(device.identifier, sensor.discovery.uniqueId);
+                sensor.discovery.stateTopic = MqttDiscovery::generateStateTopic(
+                    device.discovery.identifier, sensor.discovery.uniqueId);
             }
 
             for (auto& reg : device.numberWriteRegisters) {
-                reg.discovery.commandTopic =
-                    MqttDiscovery::generateCommandTopic(device.identifier, reg.discovery.uniqueId);
-                reg.discovery.stateTopic =
-                    MqttDiscovery::generateStateTopic(device.identifier, reg.discovery.uniqueId);
+                reg.discovery.commandTopic = MqttDiscovery::generateCommandTopic(
+                    device.discovery.identifier, reg.discovery.uniqueId);
+                reg.discovery.stateTopic = MqttDiscovery::generateStateTopic(
+                    device.discovery.identifier, reg.discovery.uniqueId);
             }
 
             for (auto& reg : device.selectWriteRegisters) {
-                reg.discovery.commandTopic =
-                    MqttDiscovery::generateCommandTopic(device.identifier, reg.discovery.uniqueId);
-                reg.discovery.stateTopic =
-                    MqttDiscovery::generateStateTopic(device.identifier, reg.discovery.uniqueId);
+                reg.discovery.commandTopic = MqttDiscovery::generateCommandTopic(
+                    device.discovery.identifier, reg.discovery.uniqueId);
+                reg.discovery.stateTopic = MqttDiscovery::generateStateTopic(
+                    device.discovery.identifier, reg.discovery.uniqueId);
             }
         }
     }
@@ -188,8 +192,8 @@ namespace MqttManager {
         Serial.printf("Received payload for %s (%s) of device %s (%s): %s\n",
                       reg.discovery.name.c_str(),
                       reg.discovery.uniqueId.c_str(),
-                      device.name.c_str(),
-                      device.identifier.c_str(),
+                      device.discovery.name.c_str(),
+                      device.discovery.identifier.c_str(),
                       value.c_str());
 
         return result;

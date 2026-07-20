@@ -96,7 +96,7 @@ namespace ReadRegisterManager {
                     "Duplicate register %u found in device %s. Only the first "
                     "occurrence will be used.\n",
                     reg.address,
-                    device.name.c_str());
+                    device.discovery.name.c_str());
                 continue;
             }
 
@@ -109,7 +109,7 @@ namespace ReadRegisterManager {
                 lastGroup.count = newCount;
             } else {
                 Serial.printf("Read group for device %s: %u-%u (%u registers)\n",
-                              device.name.c_str(),
+                              device.discovery.name.c_str(),
                               lastGroup.startAddress,
                               lastGroup.startAddress + lastGroup.count - 1,
                               lastGroup.count);

@@ -6,7 +6,6 @@
 	import { queryClient } from '$lib/queryClient';
 	import MqttFillIcon from '@iconify-svelte/mingcute/mqtt-fill';
 	import {
-		Cable,
 		LayoutDashboard,
 		PanelLeftClose,
 		PanelLeftOpen,
@@ -46,11 +45,6 @@
 			label: 'Devices',
 			href: '/devices',
 			icon: RadioReceiver
-		},
-		{
-			label: 'Registers',
-			href: '/registers',
-			icon: Cable
 		}
 	] satisfies SidebarItemProps[];
 

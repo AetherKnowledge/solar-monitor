@@ -18,8 +18,8 @@ namespace WriteRegisterManager {
             Serial.printf("Wrote value %f to register %u of device %s (%s)\n",
                           value,
                           reg.address,
-                          device.name.c_str(),
-                          device.identifier.c_str());
+                          device.discovery.name.c_str(),
+                          device.discovery.identifier.c_str());
 
             return true;
         }

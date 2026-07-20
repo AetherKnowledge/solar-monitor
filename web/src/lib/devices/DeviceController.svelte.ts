@@ -26,6 +26,7 @@ export function createDevicesController() {
 			}
 		}
 	}));
+
 	const savedDevices = $derived(query.data?.devices || []);
 
 	$effect(() => {
