@@ -17,4 +17,5 @@ bool loadConfig();
 bool saveConfig();
 bool updateNetworkConfig(const NetworkConfig& newConfig);
 bool updateMqttConfig(const MQTTConfig& newConfig);
+bool updateModbusConfig(const std::vector<ModbusDevice>& devices);
 void resetConfig();

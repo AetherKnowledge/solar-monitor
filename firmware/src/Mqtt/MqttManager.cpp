@@ -22,8 +22,11 @@ namespace MqttManager {
         mqttClient.setCallback(callback);
 
         mqttClient.setBufferSize(1024);
+    }
 
-        MqttManager::connect();
+    void reload() {
+        disconnect();
+        setup();
     }
 
     bool connect() {
@@ -66,7 +69,6 @@ namespace MqttManager {
             Serial.println();
             Serial.println("Failed to connect to MQTT");
         }
-
         return connected;
     }
 
@@ -90,7 +92,7 @@ namespace MqttManager {
 
             if (millis() - lastAttempt > 5000) {
                 lastAttempt = millis();
-                if (!connect()) {
+                if (!MqttManager::connect()) {
                     Serial.printf("MQTT connect failed, rc=%d\n", mqttClient.state());
                 }
             }

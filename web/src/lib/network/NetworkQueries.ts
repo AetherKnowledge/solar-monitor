@@ -41,12 +41,12 @@ export const scanNetworks = async () => {
 export function createNetworkConfigQueryOptions() {
 	return queryOptions<NetworkConfig>({
 		queryKey: ['networkConfig'],
-		queryFn: async () => apiFetch<NetworkConfig>(`/api/config/network`)
+		queryFn: async () => apiFetch<NetworkConfig>(`/api/network/config`)
 	});
 }
 
 export async function updateNetworkConfig(config: NetworkConfig) {
-	const result = await apiFetch<SimpleResponse>(`/api/config/network`, {
+	const result = await apiFetch<SimpleResponse>(`/api/network/config`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'

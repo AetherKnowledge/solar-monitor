@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include <Mqtt/MqttManager.h>
 #include <Networking/Networking.h>
+#include <Modbus/ModbusManager.h>
 
 Config config;
 bool configLoaded = false;
@@ -118,8 +119,7 @@ bool updateNetworkConfig(const NetworkConfig& newConfig) {
     config.network = newConfig;
     saveConfig();
 
-    MqttManager::disconnect();
-    MqttManager::setup();
+    MqttManager::reload();
 
     Serial.println();
     Serial.println("Network configuration updated");
@@ -132,12 +132,20 @@ bool updateMqttConfig(const MQTTConfig& newConfig) {
     config.mqtt = newConfig;
     saveConfig();
 
-    MqttManager::disconnect();
-    MqttManager::setup();
+    MqttManager::reload();
 
     Serial.println();
     Serial.println("MQTT configuration updated");
     Serial.println(config.mqtt.toString().c_str());
+
+    return true;
+}
+
+bool updateModbusConfig(const std::vector<ModbusDevice>& devices) {
+    ModbusManager::pendingDevices = devices;
+    ModbusManager::updateRequested = true;
+
+    Serial.println("\nModbus configuration updating");
 
     return true;
 }

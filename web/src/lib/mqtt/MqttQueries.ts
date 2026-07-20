@@ -6,12 +6,12 @@ import type { MqttConfig } from './MqttTypes';
 export function createMqttConfigQueryOptions() {
 	return queryOptions<MqttConfig>({
 		queryKey: ['mqttConfig'],
-		queryFn: async () => apiFetch<MqttConfig>(`/api/config/mqtt`)
+		queryFn: async () => apiFetch<MqttConfig>(`/api/mqtt/config`)
 	});
 }
 
 export async function updateMqttConfig(config: MqttConfig) {
-	const result = await apiFetch<SimpleResponse>(`/api/config/mqtt`, {
+	const result = await apiFetch<SimpleResponse>(`/api/mqtt/config`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'

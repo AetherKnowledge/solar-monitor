@@ -11,7 +11,7 @@ void startScanning() {
 
     if (wifiScanStatus != UpdateStatus::InProgress) {
         wifiScanStatus = UpdateStatus::InProgress;
-        int r = WiFi.scanNetworks(true);
+        WiFi.scanNetworks(true);
     }
 }
 

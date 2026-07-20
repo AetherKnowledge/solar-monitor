@@ -83,21 +83,13 @@ struct Config {
         network.toJson(json["network"].to<JsonObject>());
         mqtt.toJson(json["mqtt"].to<JsonObject>());
 
-        JsonArray modbusArray = json["modbusDevices"].to<JsonArray>();
-        for (const auto& device : modbusDevices) {
-            JsonObject deviceJson = modbusArray.add<JsonObject>();
-            device.toJson(deviceJson);
-        }
+        serializeVector(json["modbusDevices"], modbusDevices);
     }
 
     void fromJson(JsonObject json) {
         network.fromJson(json["network"].as<JsonObject>());
         mqtt.fromJson(json["mqtt"].as<JsonObject>());
 
-        for (JsonObject deviceJson : json["modbusDevices"].as<JsonArray>()) {
-            ModbusDevice device;
-            device.fromJson(deviceJson);
-            modbusDevices.push_back(device);
-        }
+        deserializeVector(json["modbusDevices"], modbusDevices);
     }
 };

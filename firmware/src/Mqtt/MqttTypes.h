@@ -121,12 +121,12 @@ struct SelectDiscovery : WriteDiscovery {
 
     void toJson(JsonObject json) const {
         WriteDiscovery::toJson(json);
-        serializeVector(json, "options", options);
+        serializeVector(json["options"], options);
     }
 
     void fromJson(JsonObject json) {
         WriteDiscovery::fromJson(json);
-        deserializeVector(json, "options", options);
+        deserializeVector(json["options"], options);
     }
 };
 

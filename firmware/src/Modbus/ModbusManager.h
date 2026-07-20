@@ -8,9 +8,13 @@ namespace ModbusManager {
     extern bool hasStarted;
     extern std::set<int> portsInUse;
 
+    extern volatile bool updateRequested;
+    extern std::vector<ModbusDevice> pendingDevices;
+
     void setup();
     void loop();
     void pollDevice(ModbusDevice& device);
+    void reload();
     void setupDevices(std::vector<ModbusDevice>& devices);
 
     void processReadRegisters(ModbusDevice& device, ReadGroup& group);

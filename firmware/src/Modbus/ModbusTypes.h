@@ -149,10 +149,10 @@ struct ModbusDevice {
         json["swapBytes"] = swapBytes;
         json["mqttEnabled"] = mqttEnabled;
 
-        serializeVector(json, "readRegisters", readRegisters);
-        serializeVector(json, "virtualSensors", virtualSensors);
-        serializeVector(json, "selectWriteRegisters", selectWriteRegisters);
-        serializeVector(json, "numberWriteRegisters", numberWriteRegisters);
+        serializeVector(json["readRegisters"], readRegisters);
+        serializeVector(json["virtualSensors"], virtualSensors);
+        serializeVector(json["selectWriteRegisters"], selectWriteRegisters);
+        serializeVector(json["numberWriteRegisters"], numberWriteRegisters);
 
         auto device = discovery;
         device.setDeviceInfo(name, identifier);
@@ -175,10 +175,10 @@ struct ModbusDevice {
         discovery.fromJson(discoveryJson);
         discovery.setDeviceInfo(name, identifier);
 
-        deserializeVector(json, "readRegisters", readRegisters);
-        deserializeVector(json, "virtualSensors", virtualSensors);
-        deserializeVector(json, "selectWriteRegisters", selectWriteRegisters);
-        deserializeVector(json, "numberWriteRegisters", numberWriteRegisters);
+        deserializeVector(json["readRegisters"], readRegisters);
+        deserializeVector(json["virtualSensors"], virtualSensors);
+        deserializeVector(json["selectWriteRegisters"], selectWriteRegisters);
+        deserializeVector(json["numberWriteRegisters"], numberWriteRegisters);
     }
 
     String toString() const {

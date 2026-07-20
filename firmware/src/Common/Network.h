@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
+#include <optional>
+#include <unordered_map>
 
 namespace Response {
     inline void send(AsyncWebServerRequest* request, int status, const String& message) {

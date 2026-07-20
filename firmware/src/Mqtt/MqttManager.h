@@ -5,8 +5,11 @@
 #include <concepts>
 
 namespace MqttManager {
+    extern volatile bool reloadRequested;
+
     void setup();
     bool connect();
+    void reload();
     void disconnect();
     bool isConnected();
 

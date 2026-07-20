@@ -5,3 +5,4 @@
 
 void registerModbusApi(AsyncWebServer& server);
 void handleGetModbusConfig(AsyncWebServerRequest* request);
+void handleUpdateModbusConfig(AsyncWebServerRequest* request, JsonVariant& json);

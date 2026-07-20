@@ -9,6 +9,9 @@ namespace ModbusManager {
     bool hasStarted = false;
     std::set<int> portsInUse;
 
+    volatile bool updateRequested = false;
+    std::vector<ModbusDevice> pendingDevices;
+
     void setup() {
         reset();
 
@@ -84,6 +87,20 @@ namespace ModbusManager {
     }
 
     void loop() {
+        if (updateRequested) {
+            updateRequested = false;
+
+            config.modbusDevices = std::move(pendingDevices);
+            saveConfig();
+
+            MqttManager::reload();
+            ModbusManager::setup();
+
+            Serial.print("Modbus configuration updated. New config: ");
+            Serial.println(config.toString().c_str());
+            return;
+        }
+
         static uint32_t lastPoll = 0;
 
         if (millis() - lastPoll < 1000)
