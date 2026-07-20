@@ -5,10 +5,11 @@
 
 	type Props = {
 		registers: RegisterListItem[];
+		onAddRegister?: () => void;
 		onEdit?: (register: RegisterListItem) => void;
 	};
 
-	let { registers, onEdit }: Props = $props();
+	let { registers, onEdit, onAddRegister }: Props = $props();
 
 	let searchQuery: string = $state('');
 	let selectedType: RegisterType | 'All Types' = $state('All Types');
@@ -42,7 +43,7 @@
 				</div>
 			</div>
 
-			<button class="btn btn-primary">
+			<button class="btn btn-primary" onclick={onAddRegister}>
 				<Plus class="size-4" />
 				Add Register
 			</button>

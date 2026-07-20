@@ -20,11 +20,11 @@
 
 			<div>
 				<h1 class="text-3xl font-bold">
-					{device.name}
+					{device.discovery.name}
 				</h1>
 
 				<p class="font-mono text-sm text-base-content/60">
-					{device.identifier}
+					{device.discovery.identifier}
 				</p>
 
 				<div class="mt-3 flex flex-wrap gap-2">

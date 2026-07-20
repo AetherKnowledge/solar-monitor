@@ -4,18 +4,28 @@
 	import { page } from '$app/state';
 	import { showError } from '$lib/popup/Popup.svelte';
 	import ActionBar from './Cards/ActionBar.svelte';
+	import AddRegister from './Cards/AddRegister.svelte';
 	import Header from './Cards/Header.svelte';
 	import MqttCard from './Cards/ModbusDetails.svelte';
 	import GeneralCard from './Cards/MqttDetails.svelte';
 	import PopupBase from './Cards/PopupBase.svelte';
 	import RegisterTable from './Cards/RegisterTable.svelte';
 	import { createDevicesController, devicesState } from './DeviceController.svelte';
-	import { RegisterType, type RegisterListItem } from './DeviceTypes';
+	import {
+		addRegister,
+		getDefaultRegister,
+		RegisterType,
+		removeRegister,
+		type RegisterItem,
+		type RegisterListItem
+	} from './DeviceTypes';
 
 	const deviceId = $derived(page.params.id);
+	let newRegister: RegisterItem | null = $state(null);
 
 	const { query, save, cancel } = createDevicesController();
 	let device = $derived(devicesState.devices?.find((d) => d.discovery.identifier === deviceId));
+	let showAddRegisterPopup = $state(false);
 
 	$effect(() => {
 		if (!device && devicesState.initialized) {
@@ -100,7 +110,11 @@
 		<MqttCard bind:device />
 	</div>
 	<div class="grid gap-6 pb-6">
-		<RegisterTable {registers} onEdit={(register) => (selectedRegister = register)} />
+		<RegisterTable
+			{registers}
+			onEdit={(register) => (selectedRegister = register)}
+			onAddRegister={() => (showAddRegisterPopup = true)}
+		/>
 	</div>
 
 	<ActionBar
@@ -109,12 +123,47 @@
 		onSave={save}
 		onCancel={cancel}
 	/>
-{/if}
 
-{#if selectedRegister}
-	<PopupBase
-		bind:register={selectedRegister.data}
-		onSave={() => (selectedRegister = null)}
-		onCancel={() => (selectedRegister = null)}
-	/>
+	{#if selectedRegister}
+		<PopupBase
+			bind:register={selectedRegister.data}
+			onSave={() => (selectedRegister = null)}
+			onCancel={() => {
+				selectedRegister = null;
+				cancel();
+			}}
+			onDelete={() => {
+				if (device && selectedRegister) {
+					removeRegister(device, selectedRegister.data);
+				}
+				selectedRegister = null;
+			}}
+		/>
+	{/if}
+
+	{#if newRegister}
+		<PopupBase
+			bind:register={newRegister}
+			isNew={true}
+			onSave={() => {
+				if (device && newRegister) {
+					addRegister(device, newRegister);
+				}
+				newRegister = null;
+			}}
+			onCancel={() => {
+				newRegister = null;
+			}}
+		/>
+	{/if}
+
+	{#if showAddRegisterPopup}
+		<AddRegister
+			onCancel={() => (showAddRegisterPopup = false)}
+			onSelect={(type) => {
+				showAddRegisterPopup = false;
+				newRegister = getDefaultRegister(type);
+			}}
+		/>
+	{/if}
 {/if}

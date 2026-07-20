@@ -5,6 +5,7 @@
 	import { defaultNetworkConfig, type NetworkConfig } from '$lib/network/NetworkTypes';
 	import WifiNetwork from '$lib/network/WifiNetworks.svelte';
 	import { hidePopup, showError, showLoading } from '$lib/popup/Popup.svelte';
+	import { Wifi } from '@lucide/svelte';
 
 	let query = createNetworkConfigQuery();
 	let savedNetworkConfig = $derived(query.data);
@@ -67,6 +68,24 @@
 		}
 	}
 </script>
+
+<div class="card bg-base-100 border border-base-300 shadow-sm">
+	<div class="card-body gap-6">
+		<div class="flex items-center gap-3">
+			<div class="bg-primary/10 text-primary rounded-xl p-3">
+				<Wifi class="size-7" />
+			</div>
+
+			<div>
+				<h2 class="card-title">Network Configuration</h2>
+
+				<p class="text-base-content/60 text-sm">
+					Configure how this device connects to your local network and Wi-Fi.
+				</p>
+			</div>
+		</div>
+	</div>
+</div>
 
 <form
 	bind:this={form}

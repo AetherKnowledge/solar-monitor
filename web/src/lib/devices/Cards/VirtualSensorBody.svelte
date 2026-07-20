@@ -1,27 +1,27 @@
 <script lang="ts">
 	import {
-		ArrowLeftRight,
-		Binary,
+		Calculator,
 		Cpu,
 		FingerprintPattern,
-		Hash,
+		FunctionSquare,
 		House,
 		Image,
 		Package,
 		Ruler,
-		Settings2,
 		Sigma,
-		Waypoints
+		TextCursorInput
 	} from '@lucide/svelte';
 
-	let { register = $bindable() }: { register: ReadRegister } = $props();
+	import type { VirtualSensor } from '../DeviceTypes';
 
-	import { RegisterTransform, type ReadRegister } from '../DeviceTypes';
 	import DataInput from './DataInput.svelte';
-	import DataSelect from './DataSelect.svelte';
+
+	let { register = $bindable() }: { register: VirtualSensor } = $props();
 </script>
 
 <div class="flex-1 overflow-y-auto p-6">
+	<!-- General -->
+
 	<div class="flex items-center gap-3">
 		<div class="bg-primary/10 text-primary rounded-xl p-3">
 			<Package class="size-6" />
@@ -29,7 +29,7 @@
 
 		<div>
 			<h2 class="card-title">General</h2>
-			<p class="text-base-content/60 text-sm">Basic information about this register.</p>
+			<p class="text-base-content/60 text-sm">Basic information about this virtual sensor.</p>
 		</div>
 	</div>
 
@@ -37,31 +37,23 @@
 		<DataInput
 			label="Name"
 			description="Friendly name shown throughout the application."
-			placeholder="Battery Voltage"
+			placeholder="Battery Power"
 			icon={Package}
 			bind:value={register.discovery.name}
 		/>
+
 		<DataInput
 			label="Identifier"
-			description="Unique identifier for the register."
-			placeholder="battery_voltage"
+			description="Unique identifier for the virtual sensor."
+			placeholder="battery_power"
 			icon={FingerprintPattern}
 			bind:value={register.discovery.unique_id}
 		/>
 
 		<DataInput
-			label="Address"
-			description="Modbus register address."
-			placeholder="4501"
-			type="number"
-			icon={Hash}
-			bind:value={register.address}
-		/>
-
-		<DataInput
 			label="Unit"
 			description="Measurement unit displayed to users."
-			placeholder="V"
+			placeholder="W"
 			icon={Ruler}
 			bind:value={register.discovery.unit_of_measurement}
 		/>
@@ -69,65 +61,60 @@
 
 	<div class="divider my-6"></div>
 
-	<!-- Data Processing -->
+	<!-- Expression -->
 
 	<div class="flex items-center gap-3">
 		<div class="bg-secondary/10 text-secondary rounded-xl p-3">
-			<Settings2 class="size-6" />
+			<FunctionSquare class="size-6" />
 		</div>
 
 		<div>
-			<h2 class="card-title">Data Processing</h2>
-			<p class="text-base-content/60 text-sm">Configure how the raw Modbus value is interpreted.</p>
+			<h2 class="card-title">Expression</h2>
+			<p class="text-base-content/60 text-sm">
+				Create a calculated sensor using other register values.
+			</p>
 		</div>
 	</div>
 
-	<div class="mt-6 grid gap-5 md:grid-cols-2">
-		<DataSelect
-			label="Transform"
-			description="Mathematical operation to apply to the raw value."
-			icon={ArrowLeftRight}
-			iconColor="text-secondary"
-			options={Object.values(RegisterTransform).map((t) => t.toString())}
-			bind:value={register.transform}
-		/>
+	<div class="mt-6">
+		<label class="form-control">
+			<div class="label">
+				<span class="text-sm flex items-center gap-1">
+					<TextCursorInput class="size-4 text-secondary" />
+					<p class="pt-0.5">Expression</p>
+				</span>
+			</div>
 
-		<DataInput
-			label="Transform Argument"
-			description="Value used by the selected transform."
-			placeholder="1"
-			type="number"
-			icon={Binary}
-			iconColor="text-secondary"
-			bind:value={register.transformArgument}
-		/>
+			<textarea
+				class="textarea textarea-bordered h-28 font-mono w-full"
+				placeholder="(battery_voltage * battery_current)"
+				bind:value={register.expression}></textarea>
 
-		<DataInput
-			label="Rounding"
-			description="Number of decimal places."
-			placeholder="2"
-			type="number"
-			icon={Waypoints}
-			iconColor="text-secondary"
-			bind:value={register.rounding}
-		/>
+			<div class="label">
+				<span class="label-text-alt text-xs">
+					Use register identifiers and mathematical operators to calculate a value.
+				</span>
+			</div>
+		</label>
 	</div>
 
 	<div class="mt-5 rounded-xl border border-base-300 bg-base-200/50 p-4">
 		<div class="flex items-center justify-between">
 			<div class="flex items-start gap-3">
 				<div class="rounded-lg bg-secondary/10 p-2 text-secondary">
-					<Sigma class="size-6" />
+					<Calculator class="size-6" />
 				</div>
 
 				<div>
-					<h3 class="font-medium text-sm">Signed Value</h3>
+					<h3 class="font-medium text-sm">Persistent Value</h3>
 
-					<p class="text-base-content/60 text-sm">Interpret the register as a signed integer.</p>
+					<p class="text-base-content/60 text-sm">
+						Restore the last calculated value after the device restarts.
+					</p>
 				</div>
 			</div>
 
-			<input type="checkbox" class="toggle toggle-secondary" bind:checked={register.signedValue} />
+			<input type="checkbox" class="toggle toggle-secondary" bind:checked={register.isPersistent} />
 		</div>
 	</div>
 
@@ -152,7 +139,7 @@
 		<DataInput
 			label="Device Class"
 			description="Defines the type of sensor for Home Assistant."
-			placeholder="voltage"
+			placeholder="power"
 			icon={Cpu}
 			iconColor="text-success"
 			bind:value={register.discovery.device_class}
@@ -160,9 +147,9 @@
 
 		<DataInput
 			label="State Class"
-			description="Defines how the sensor's state is interpreted."
+			description="Defines how the sensor state is interpreted."
 			placeholder="measurement"
-			icon={Binary}
+			icon={Sigma}
 			iconColor="text-success"
 			bind:value={register.discovery.state_class}
 		/>
@@ -170,17 +157,17 @@
 		<DataInput
 			label="Unit of Measurement"
 			description="Unit displayed in Home Assistant."
-			placeholder="V"
-			icon={Image}
+			placeholder="W"
+			icon={Ruler}
 			iconColor="text-success"
 			bind:value={register.discovery.unit_of_measurement}
 		/>
 
 		<DataInput
 			label="Icon"
-			description="Custom icon for the sensor in Home Assistant."
+			description="Custom icon for Home Assistant."
 			placeholder="mdi:flash"
-			icon={House}
+			icon={Image}
 			iconColor="text-success"
 			bind:value={register.discovery.icon}
 		/>

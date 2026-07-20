@@ -129,3 +129,99 @@ export interface ModbusDevice {
 	selectWriteRegisters: SelectWriteRegister[];
 	numberWriteRegisters: NumberWriteRegister[];
 }
+
+export const defaultReadRegister: ReadRegister = {
+	address: 0,
+	rounding: 0,
+	transform: RegisterTransform.None,
+	transformArgument: 0,
+	signedValue: false,
+	discovery: {
+		name: '',
+		unique_id: ''
+	}
+};
+
+export const defaultVirtualSensor: VirtualSensor = {
+	expression: '',
+	isPersistent: false,
+	discovery: {
+		name: '',
+		unique_id: ''
+	}
+};
+
+export const defaultSelectWriteRegister: SelectWriteRegister = {
+	address: 0,
+	discovery: {
+		name: '',
+		unique_id: '',
+		command_topic: '',
+		qos: 0,
+		options: []
+	}
+};
+
+export const defaultNumberWriteRegister: NumberWriteRegister = {
+	address: 0,
+	discovery: {
+		name: '',
+		unique_id: '',
+		command_topic: '',
+		qos: 0,
+		min: 0,
+		max: 0,
+		step: 0
+	}
+};
+
+export function getDefaultRegister(type: RegisterType): RegisterItem {
+	switch (type) {
+		case RegisterType.Read:
+			return { type: RegisterType.Read, register: defaultReadRegister };
+		case RegisterType.Virtual:
+			return { type: RegisterType.Virtual, register: defaultVirtualSensor };
+		case RegisterType.Select:
+			return { type: RegisterType.Select, register: defaultSelectWriteRegister };
+		case RegisterType.Number:
+			return { type: RegisterType.Number, register: defaultNumberWriteRegister };
+	}
+}
+
+export function addRegister(device: ModbusDevice, register: RegisterItem) {
+	switch (register.type) {
+		case RegisterType.Read:
+			device.readRegisters.push(register.register);
+			return;
+		case RegisterType.Virtual:
+			device.virtualSensors.push(register.register);
+			return;
+		case RegisterType.Select:
+			device.selectWriteRegisters.push(register.register);
+			return;
+		case RegisterType.Number:
+			device.numberWriteRegisters.push(register.register);
+			return;
+	}
+}
+
+export function removeRegister(device: ModbusDevice, register: RegisterItem) {
+	switch (register.type) {
+		case RegisterType.Read:
+			device.readRegisters = device.readRegisters.filter((r) => r !== register.register);
+			return;
+		case RegisterType.Virtual:
+			device.virtualSensors = device.virtualSensors.filter((r) => r !== register.register);
+			return;
+		case RegisterType.Select:
+			device.selectWriteRegisters = device.selectWriteRegisters.filter(
+				(r) => r !== register.register
+			);
+			return;
+		case RegisterType.Number:
+			device.numberWriteRegisters = device.numberWriteRegisters.filter(
+				(r) => r !== register.register
+			);
+			return;
+	}
+}

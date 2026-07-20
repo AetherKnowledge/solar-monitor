@@ -1,7 +1,6 @@
 <script lang="ts">
 	import {
-		ArrowLeftRight,
-		Binary,
+		Calculator,
 		Cpu,
 		FingerprintPattern,
 		Hash,
@@ -10,18 +9,20 @@
 		Package,
 		Ruler,
 		Settings2,
-		Sigma,
+		SlidersHorizontal,
 		Waypoints
 	} from '@lucide/svelte';
 
-	let { register = $bindable() }: { register: ReadRegister } = $props();
+	import type { NumberWriteRegister } from '../DeviceTypes';
 
-	import { RegisterTransform, type ReadRegister } from '../DeviceTypes';
 	import DataInput from './DataInput.svelte';
-	import DataSelect from './DataSelect.svelte';
+
+	let { register = $bindable() }: { register: NumberWriteRegister } = $props();
 </script>
 
 <div class="flex-1 overflow-y-auto p-6">
+	<!-- General -->
+
 	<div class="flex items-center gap-3">
 		<div class="bg-primary/10 text-primary rounded-xl p-3">
 			<Package class="size-6" />
@@ -29,7 +30,9 @@
 
 		<div>
 			<h2 class="card-title">General</h2>
-			<p class="text-base-content/60 text-sm">Basic information about this register.</p>
+			<p class="text-base-content/60 text-sm">
+				Basic information about this writable number register.
+			</p>
 		</div>
 	</div>
 
@@ -37,14 +40,15 @@
 		<DataInput
 			label="Name"
 			description="Friendly name shown throughout the application."
-			placeholder="Battery Voltage"
+			placeholder="Maximum Charge Current"
 			icon={Package}
 			bind:value={register.discovery.name}
 		/>
+
 		<DataInput
 			label="Identifier"
 			description="Unique identifier for the register."
-			placeholder="battery_voltage"
+			placeholder="max_charge_current"
 			icon={FingerprintPattern}
 			bind:value={register.discovery.unique_id}
 		/>
@@ -52,7 +56,7 @@
 		<DataInput
 			label="Address"
 			description="Modbus register address."
-			placeholder="4501"
+			placeholder="4700"
 			type="number"
 			icon={Hash}
 			bind:value={register.address}
@@ -61,7 +65,7 @@
 		<DataInput
 			label="Unit"
 			description="Measurement unit displayed to users."
-			placeholder="V"
+			placeholder="A"
 			icon={Ruler}
 			bind:value={register.discovery.unit_of_measurement}
 		/>
@@ -69,7 +73,7 @@
 
 	<div class="divider my-6"></div>
 
-	<!-- Data Processing -->
+	<!-- Number Configuration -->
 
 	<div class="flex items-center gap-3">
 		<div class="bg-secondary/10 text-secondary rounded-xl p-3">
@@ -77,58 +81,71 @@
 		</div>
 
 		<div>
-			<h2 class="card-title">Data Processing</h2>
-			<p class="text-base-content/60 text-sm">Configure how the raw Modbus value is interpreted.</p>
+			<h2 class="card-title">Number Configuration</h2>
+			<p class="text-base-content/60 text-sm">
+				Configure the writable numeric range and MQTT behavior.
+			</p>
 		</div>
 	</div>
 
 	<div class="mt-6 grid gap-5 md:grid-cols-2">
-		<DataSelect
-			label="Transform"
-			description="Mathematical operation to apply to the raw value."
-			icon={ArrowLeftRight}
+		<DataInput
+			label="Minimum"
+			description="Lowest value that can be written."
+			type="number"
+			placeholder="0"
+			icon={SlidersHorizontal}
 			iconColor="text-secondary"
-			options={Object.values(RegisterTransform).map((t) => t.toString())}
-			bind:value={register.transform}
+			bind:value={register.discovery.min}
 		/>
 
 		<DataInput
-			label="Transform Argument"
-			description="Value used by the selected transform."
+			label="Maximum"
+			description="Highest value that can be written."
+			type="number"
+			placeholder="100"
+			icon={SlidersHorizontal}
+			iconColor="text-secondary"
+			bind:value={register.discovery.max}
+		/>
+
+		<DataInput
+			label="Step"
+			description="Increment between allowed values."
+			type="number"
 			placeholder="1"
-			type="number"
-			icon={Binary}
-			iconColor="text-secondary"
-			bind:value={register.transformArgument}
-		/>
-
-		<DataInput
-			label="Rounding"
-			description="Number of decimal places."
-			placeholder="2"
-			type="number"
 			icon={Waypoints}
 			iconColor="text-secondary"
-			bind:value={register.rounding}
+			bind:value={register.discovery.step}
 		/>
-	</div>
 
-	<div class="mt-5 rounded-xl border border-base-300 bg-base-200/50 p-4">
-		<div class="flex items-center justify-between">
-			<div class="flex items-start gap-3">
-				<div class="rounded-lg bg-secondary/10 p-2 text-secondary">
-					<Sigma class="size-6" />
-				</div>
+		<DataInput
+			label="QoS"
+			description="MQTT Quality of Service level."
+			type="number"
+			placeholder="0"
+			icon={Calculator}
+			iconColor="text-secondary"
+			bind:value={register.discovery.qos}
+		/>
 
-				<div>
-					<h3 class="font-medium text-sm">Signed Value</h3>
+		<DataInput
+			label="Command Topic"
+			description="MQTT topic used for writes."
+			placeholder="homeassistant/number/..."
+			icon={House}
+			iconColor="text-secondary"
+			bind:value={register.discovery.command_topic}
+		/>
 
-					<p class="text-base-content/60 text-sm">Interpret the register as a signed integer.</p>
-				</div>
-			</div>
-
-			<input type="checkbox" class="toggle toggle-secondary" bind:checked={register.signedValue} />
-		</div>
+		<DataInput
+			label="Command Template"
+			description="Optional payload template."
+			placeholder={`"{{ value }}"`}
+			icon={Image}
+			iconColor="text-secondary"
+			bind:value={register.discovery.command_template}
+		/>
 	</div>
 
 	<div class="divider my-6"></div>
@@ -151,38 +168,38 @@
 	<div class="mt-6 grid gap-5 md:grid-cols-2">
 		<DataInput
 			label="Device Class"
-			description="Defines the type of sensor for Home Assistant."
-			placeholder="voltage"
+			description="Defines the number entity type."
+			placeholder="current"
 			icon={Cpu}
 			iconColor="text-success"
 			bind:value={register.discovery.device_class}
 		/>
 
 		<DataInput
-			label="State Class"
-			description="Defines how the sensor's state is interpreted."
-			placeholder="measurement"
-			icon={Binary}
-			iconColor="text-success"
-			bind:value={register.discovery.state_class}
-		/>
-
-		<DataInput
 			label="Unit of Measurement"
 			description="Unit displayed in Home Assistant."
-			placeholder="V"
-			icon={Image}
+			placeholder="A"
+			icon={Ruler}
 			iconColor="text-success"
 			bind:value={register.discovery.unit_of_measurement}
 		/>
 
 		<DataInput
 			label="Icon"
-			description="Custom icon for the sensor in Home Assistant."
-			placeholder="mdi:flash"
-			icon={House}
+			description="Custom icon displayed in Home Assistant."
+			placeholder="mdi:current-ac"
+			icon={Image}
 			iconColor="text-success"
 			bind:value={register.discovery.icon}
+		/>
+
+		<DataInput
+			label="Value Template"
+			description="Optional MQTT value template."
+			placeholder={`"{{ value_json.value }}"`}
+			icon={Calculator}
+			iconColor="text-success"
+			bind:value={register.discovery.value_template}
 		/>
 	</div>
 </div>

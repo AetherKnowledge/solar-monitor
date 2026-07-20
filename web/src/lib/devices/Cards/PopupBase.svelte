@@ -4,16 +4,20 @@
 	import { RegisterType, type RegisterItem } from '$lib/devices/DeviceTypes';
 	import BlurPage from '$lib/popup/BlurPage.svelte';
 	import { Trash2, X } from '@lucide/svelte';
+	import NumberWriteBody from './NumberWriteBody.svelte';
 	import ReadRegisterBody from './ReadRegisterBody.svelte';
+	import SelectWriteBody from './SelectWriteBody.svelte';
+	import VirtualSensorBody from './VirtualSensorBody.svelte';
 
 	type Props = {
 		register: RegisterItem;
 		onSave?: () => void;
 		onCancel?: () => void;
-		onDelete?: () => void;
+		onDelete?: (register: RegisterItem) => void;
+		isNew?: boolean;
 	};
 
-	const { register = $bindable(), onSave, onCancel, onDelete }: Props = $props();
+	const { register = $bindable(), onSave, onCancel, onDelete, isNew = false }: Props = $props();
 
 	const info = $derived.by(() => {
 		switch (register.type) {
@@ -60,7 +64,7 @@
 
 <BlurPage>
 	<div class="bg-base-100 shadow-2xl border border-base-300 animate-fade-up w-[80%]">
-		<div class="flex h-200 flex-col w-full">
+		<div class="flex max-h-[80vh] flex-col w-full">
 			<!-- Header -->
 			<div class="border-b border-base-300 p-6">
 				<div class="flex items-start justify-between gap-4">
@@ -89,14 +93,22 @@
 			<!-- Body -->
 			{#if register.type === RegisterType.Read}
 				<ReadRegisterBody bind:register={register.register} />
+			{:else if register.type === RegisterType.Virtual}
+				<VirtualSensorBody bind:register={register.register} />
+			{:else if register.type === RegisterType.Number}
+				<NumberWriteBody bind:register={register.register} />
+			{:else if register.type === RegisterType.Select}
+				<SelectWriteBody bind:register={register.register} />
 			{/if}
 
 			<!-- Footer -->
 			<div class="border-t border-base-300 bg-base-200/30 flex items-center justify-between p-5">
-				<button class="btn btn-error btn-soft" onclick={onDelete}>
-					<Trash2 class="size-4" />
-					Delete
-				</button>
+				{#if !isNew}
+					<button class="btn btn-error btn-soft" onclick={() => onDelete?.(register)}>
+						<Trash2 class="size-4" />
+						Delete
+					</button>
+				{/if}
 
 				<div class="flex gap-2">
 					<button class="btn btn-ghost" onclick={onCancel}> Cancel </button>
