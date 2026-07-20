@@ -5,6 +5,7 @@
         "Jason2866.esp-decoder",
         "bradlc.vscode-tailwindcss",
         "dbaeumer.vscode-eslint",
+        "emeraldwalk.RunOnSave",
         "esbenp.prettier-vscode",
         "llvm-vs-code-extensions.vscode-clangd",
         "platformio.platformio-ide",

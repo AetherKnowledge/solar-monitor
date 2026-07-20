@@ -15,5 +15,13 @@
     "--query-driver=${env:USERPROFILE}/.platformio/packages/**/bin/*",
     "--background-index"
   ],
-  "platformio-ide.disablePIOHomeStartup": true
+  "platformio-ide.disablePIOHomeStartup": true,
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "platformio\\.ini$",
+        "cmd": "pio run -t compiledb"
+      }
+    ]
+  }
 }
