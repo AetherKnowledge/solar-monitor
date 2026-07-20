@@ -33,10 +33,10 @@
 				</div>
 
 				<div>
-					<h2 class="card-title text-xl">{device.name}</h2>
+					<h2 class="card-title text-xl">{device.discovery.identifier}</h2>
 
 					<p class="text-base-content/60 text-sm font-mono">
-						{device.identifier}
+						{device.discovery.identifier}
 					</p>
 
 					{#if device.discovery.manufacturer || device.discovery.model}
@@ -125,7 +125,9 @@
 		</div>
 
 		<div class="card-actions justify-end">
-			<a href={resolve(`/devices/${device.identifier}/`)} class="btn btn-primary"> Configure </a>
+			<a href={resolve(`/devices/${device.discovery.identifier}/`)} class="btn btn-primary">
+				Configure
+			</a>
 		</div>
 	</div>
 </div>
