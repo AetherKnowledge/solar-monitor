@@ -1,9 +1,9 @@
 #include "NetworkApi.h"
-#include <Networking/Networking.h>
+#include <Networking/NetworkManager.h>
 #include <WiFi.h>
 #include <Common/Json.h>
 #include <Common/Network.h>
-#include <Config/Config.h>
+#include <Config/ConfigManager.h>
 
 void registerNetworkApi(AsyncWebServer& server) {
     server.on("/api/network/wifinetworks", HTTP_GET, [](AsyncWebServerRequest* request) {
@@ -28,8 +28,8 @@ void registerNetworkApi(AsyncWebServer& server) {
 
 void handleGetWifiNetworks(AsyncWebServerRequest* request) {
     JsonDocument doc;
-    doc["status"] = Enum::toString(wifiScanStatus);
-    serializeVector(doc["networks"], cachedWifiNetworks);
+    doc["status"] = Enum::toString(NetworkManager::scanStatus);
+    serializeVector(doc["networks"], NetworkManager::cachedWifiNetworks);
 
     String response;
     serializeJson(doc, response);
@@ -40,12 +40,12 @@ void handleGetWifiNetworks(AsyncWebServerRequest* request) {
 }
 
 void handleScanWifiNetworks(AsyncWebServerRequest* request) {
-    if (wifiScanStatus != UpdateStatus::InProgress) {
-        wifiScanRequested = true;
+    if (NetworkManager::scanStatus != UpdateStatus::InProgress) {
+        NetworkManager::scanStatus = UpdateStatus::Requested;
     }
 
     JsonDocument doc;
-    doc["status"] = Enum::toString(wifiScanStatus);
+    doc["status"] = Enum::toString(NetworkManager::scanStatus);
 
     String response;
     serializeJson(doc, response);
@@ -57,7 +57,8 @@ void handleScanWifiNetworks(AsyncWebServerRequest* request) {
 
 void handleGetNetworkConfig(AsyncWebServerRequest* request) {
     JsonDocument doc;
-    config.network.toJson(doc.to<JsonObject>());
+    ConfigManager::config.network.toJson(doc.to<JsonObject>());
+    doc["updateStatus"] = Enum::toString(NetworkManager::updateStatus);
 
     String response;
     serializeJson(doc, response);
@@ -70,8 +71,8 @@ void handleGetNetworkConfig(AsyncWebServerRequest* request) {
 void handleUpdateNetworkConfig(AsyncWebServerRequest* request, JsonVariant& json) {
     NetworkConfig newConfig;
     newConfig.fromJson(json);
-    networkUpdateRequested = true;
-    pendingNetworkConfig = newConfig;
+    NetworkManager::updateStatus = UpdateStatus::Requested;
+    NetworkManager::pendingConfig = newConfig;
 
     Response::success(request, 202, "OK");
 }

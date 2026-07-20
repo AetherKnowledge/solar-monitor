@@ -1,7 +1,7 @@
 #include <Arduino.h>
-#include <Networking/Networking.h>
+#include <Networking/NetworkManager.h>
 #include <WebServer/WebServer.h>
-#include <Config/Config.h>
+#include <Config/ConfigManager.h>
 #include <Mqtt/MqttManager.h>
 #include <Modbus/ModbusManager.h>
 #include <LittleFS.h>
@@ -18,10 +18,12 @@ void setup() {
         Serial.println("Mount failed");
     }
 
-    loadConfig();
+    ConfigManager::load();
 
-    if (configLoaded) {
-        connectToWiFi(config.network.ssid, config.network.password, config.network.mode);
+    if (ConfigManager::hasLoaded) {
+        NetworkManager::connect(ConfigManager::config.network.ssid,
+                                ConfigManager::config.network.password,
+                                ConfigManager::config.network.mode);
         ModbusManager::setup();
         MqttManager::setup();
     }
@@ -30,18 +32,20 @@ void setup() {
 }
 
 void loop() {
-    if (wifiScanRequested) {
-        startScanning();
-        wifiScanRequested = false;
+    if (NetworkManager::scanStatus == UpdateStatus::Requested) {
+        NetworkManager::startScanning();
     }
 
-    if (wifiScanStatus == UpdateStatus::InProgress) {
-        scanNetworks();
+    if (NetworkManager::scanStatus == UpdateStatus::InProgress) {
+        NetworkManager::pollNetworkScan();
     }
 
-    if (networkUpdateRequested) {
-        updateNetworkConfig(pendingNetworkConfig);
-        networkUpdateRequested = false;
+    if (NetworkManager::updateStatus == UpdateStatus::Requested) {
+        NetworkManager::updateConfig();
+    }
+
+    if (ModbusManager::updateStatus == UpdateStatus::Requested) {
+        ModbusManager::updateConfig(ModbusManager::pendingDevices);
     }
 
     ModbusManager::loop();

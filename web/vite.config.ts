@@ -45,6 +45,10 @@ export default defineConfig(({ command }) => ({
 						'/api': {
 							target: 'http://192.168.254.122',
 							changeOrigin: true
+						},
+						'/test': {
+							target: 'http://localhost:3001',
+							changeOrigin: true
 						}
 					}
 				}

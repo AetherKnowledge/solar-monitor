@@ -1,11 +1,11 @@
 import { apiFetch } from '$lib/common/CommonFunctions';
-import { UpdateStatus, type SimpleResponse } from '$lib/common/CommonTypes';
+import { UpdateStatus, type SimpleResponse, type WithUpdateStatus } from '$lib/common/CommonTypes';
 import { type ScanRequestResponse } from '$lib/network/NetworkTypes';
-import { queryOptions } from '@tanstack/svelte-query';
+import { createQuery } from '@tanstack/svelte-query';
 import type { NetworkConfig } from './NetworkTypes';
 
-export function createNetworkQueryOptions() {
-	return queryOptions<ScanRequestResponse>({
+export function createNetworkScanQuery() {
+	return createQuery<ScanRequestResponse>(() => ({
 		queryKey: ['networks'],
 		queryFn: async () => getNetworks(),
 		initialData: {
@@ -14,11 +14,11 @@ export function createNetworkQueryOptions() {
 		},
 		refetchInterval: (query) => {
 			const status = query.state.data?.status;
-			if (status === UpdateStatus.InProgress) {
+			if (status === UpdateStatus.InProgress || status === UpdateStatus.Requested) {
 				return 1000; // Refetch every second while scanning
 			}
 		}
-	});
+	}));
 }
 
 const getNetworks = async () => {
@@ -38,11 +38,17 @@ export const scanNetworks = async () => {
 	});
 };
 
-export function createNetworkConfigQueryOptions() {
-	return queryOptions<NetworkConfig>({
+export function createNetworkConfigQuery() {
+	return createQuery<WithUpdateStatus<NetworkConfig>>(() => ({
 		queryKey: ['networkConfig'],
-		queryFn: async () => apiFetch<NetworkConfig>(`/api/network/config`)
-	});
+		queryFn: async () => apiFetch(`/api/network/config`),
+		refetchInterval: (query) => {
+			const status = query.state.data?.updateStatus;
+			if (status === UpdateStatus.InProgress || status === UpdateStatus.Requested) {
+				return 1000; // Refetch every second while scanning
+			}
+		}
+	}));
 }
 
 export async function updateNetworkConfig(config: NetworkConfig) {

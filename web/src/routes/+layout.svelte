@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import type { RouteId } from '$app/types';
 	import favicon from '$lib/assets/favicon.svg';
+	import PopupHost from '$lib/popup/PopupHost.svelte';
 	import { queryClient } from '$lib/queryClient';
 	import MqttFillIcon from '@iconify-svelte/mingcute/mqtt-fill';
 	import {
@@ -75,7 +76,7 @@
 		<input id="my-drawer-4" type="checkbox" class="drawer-toggle" bind:checked={drawerOpen} />
 		<div class="drawer-content h-screen flex flex-col">
 			<!-- Navbar -->
-			<nav class="navbar w-full bg-base-300">
+			<nav class="navbar w-full bg-base-300 z-11">
 				<label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost">
 					<!-- Sidebar toggle icon -->
 					{#key drawerOpen}
@@ -127,7 +128,10 @@
 			</nav>
 			<!-- Page content here -->
 			<main class="flex-1 overflow-auto p-4">
-				{@render children()}
+				<div class="relative h-full">
+					{@render children()}
+					<PopupHost />
+				</div>
 			</main>
 		</div>
 

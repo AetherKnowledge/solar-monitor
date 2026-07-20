@@ -1,13 +1,13 @@
 import { apiFetch } from '$lib/common/CommonFunctions';
 import type { SimpleResponse } from '$lib/common/CommonTypes';
-import { queryOptions } from '@tanstack/svelte-query';
+import { createQuery } from '@tanstack/svelte-query';
 import type { MqttConfig } from './MqttTypes';
 
-export function createMqttConfigQueryOptions() {
-	return queryOptions<MqttConfig>({
+export function createMqttConfigQuery() {
+	return createQuery<MqttConfig>(() => ({
 		queryKey: ['mqttConfig'],
 		queryFn: async () => apiFetch<MqttConfig>(`/api/mqtt/config`)
-	});
+	}));
 }
 
 export async function updateMqttConfig(config: MqttConfig) {

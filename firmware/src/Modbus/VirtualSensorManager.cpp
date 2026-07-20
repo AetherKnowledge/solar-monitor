@@ -1,5 +1,5 @@
 #include "VirtualSensorManager.h"
-#include <Config/Config.h>
+#include <Config/ConfigManager.h>
 #include <tinyexpr.h>
 
 namespace VirtualSensorManager {
@@ -134,8 +134,8 @@ namespace VirtualSensorManager {
 
         lastPoll = millis();
 
-        if (findDirty(config.modbusDevices)) {
-            savePersistence(config.modbusDevices);
+        if (findDirty(ConfigManager::config.modbusDevices)) {
+            savePersistence(ConfigManager::config.modbusDevices);
         }
     }
 

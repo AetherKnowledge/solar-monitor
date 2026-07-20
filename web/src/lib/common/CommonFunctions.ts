@@ -1,4 +1,5 @@
 export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
+	console.log(`apiFetch: ${url}`, init);
 	const response = await fetch(url, init);
 
 	if (!response.ok) {

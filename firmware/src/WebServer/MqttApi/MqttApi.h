@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Config/Config.h>
+#include <Config/ConfigManager.h>
 #include <ESPAsyncWebServer.h>
 
 void registerMqttApi(AsyncWebServer& server);

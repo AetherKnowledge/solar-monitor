@@ -1,6 +1,6 @@
 #include "MqttDiscovery.h"
 #include "MqttTypes.h"
-#include <Config/Config.h>
+#include <Config/ConfigManager.h>
 #include <PubSubClient.h>
 #include "MqttManager.h"
 #include <WiFi.h>
@@ -18,7 +18,8 @@ namespace MqttManager {
         Serial.println();
         Serial.println("Setting up MQTT");
 
-        mqttClient.setServer(config.mqtt.host.c_str(), config.mqtt.port);
+        mqttClient.setServer(ConfigManager::config.mqtt.host.c_str(),
+                             ConfigManager::config.mqtt.port);
         mqttClient.setCallback(callback);
 
         mqttClient.setBufferSize(1024);
@@ -33,7 +34,7 @@ namespace MqttManager {
         Serial.println();
         Serial.println("Connecting to MQTT");
 
-        MQTTConfig& mqttConfig = config.mqtt;
+        MQTTConfig& mqttConfig = ConfigManager::config.mqtt;
         String clientId = mqttConfig.clientId;
 
         if (clientId.isEmpty()) {
@@ -104,7 +105,7 @@ namespace MqttManager {
     }
 
     void generateTopics() {
-        for (auto& device : config.modbusDevices) {
+        for (auto& device : ConfigManager::config.modbusDevices) {
             for (auto& reg : device.readRegisters) {
                 reg.discovery.stateTopic =
                     MqttDiscovery::generateStateTopic(device.identifier, reg.discovery.uniqueId);
@@ -131,6 +132,18 @@ namespace MqttManager {
         }
     }
 
+    bool updateMqttConfig(const MQTTConfig& newConfig) {
+        ConfigManager::config.mqtt = newConfig;
+        ConfigManager::save();
+        reload();
+
+        Serial.println();
+        Serial.println("MQTT configuration updated");
+        Serial.println(ConfigManager::config.mqtt.toString().c_str());
+
+        return true;
+    }
+
     bool publish(const String& topic, const String& payload, bool retain) {
         if (!mqttClient.connected())
             return false;
@@ -147,7 +160,7 @@ namespace MqttManager {
     }
 
     void subscribeAll() {
-        for (const auto& device : config.modbusDevices) {
+        for (const auto& device : ConfigManager::config.modbusDevices) {
             for (const auto& reg : device.numberWriteRegisters) {
                 mqttClient.subscribe(reg.discovery.commandTopic.c_str());
             }
@@ -183,7 +196,7 @@ namespace MqttManager {
     }
 
     void callback(char* topic, byte* payload, unsigned int length) {
-        for (auto& device : config.modbusDevices) {
+        for (auto& device : ConfigManager::config.modbusDevices) {
             for (auto& reg : device.numberWriteRegisters) {
                 if (usePayload(topic, payload, length, reg, device))
                     return;

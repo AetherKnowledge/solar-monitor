@@ -2,11 +2,20 @@
 
 #include <Common/Enum.h>
 
-enum class UpdateStatus : uint8_t { InProgress, UpdateComplete, NotStarted, UpdateFailed };
+enum class UpdateStatus : uint8_t {
+    Requested,
+    InProgress,
+    UpdateComplete,
+    NotStarted,
+    UpdateFailed
+};
 
 template <>
 inline const char* Enum::toString(UpdateStatus value) {
     switch (value) {
+        case UpdateStatus::Requested:
+            return "requested";
+
         case UpdateStatus::NotStarted:
             return "not_started";
 

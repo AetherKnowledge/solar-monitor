@@ -1,7 +1,9 @@
 #include "ModbusApi.h"
-#include <Config/Config.h>
+#include <Config/ConfigManager.h>
 #include <Common/Network.h>
 #include <Common/Json.h>
+#include <Modbus/ModbusManager.h>
+#include "Common/Enum.h"
 
 void registerModbusApi(AsyncWebServer& server) {
     server.on("/api/modbus/config", HTTP_GET, [](AsyncWebServerRequest* request) {
@@ -19,12 +21,14 @@ void registerModbusApi(AsyncWebServer& server) {
 void handleGetModbusConfig(AsyncWebServerRequest* request) {
     JsonDocument doc;
 
-    serializeVector(doc, config.modbusDevices);
+    serializeVector(doc["devices"], ConfigManager::config.modbusDevices);
+    doc["updateStatus"] = Enum::toString(ModbusManager::updateStatus);
 
     String response;
     serializeJson(doc, response);
 
-    Serial.println("Modbus Config: " + String(config.modbusDevices.size()) + " devices");
+    Serial.println("Modbus Config: " + String(ConfigManager::config.modbusDevices.size()) +
+                   " devices");
     Serial.printf("\nFetch Modbus Config: %s\n", doc.as<String>().c_str());
 
     request->send(200, "application/json", response);
@@ -32,17 +36,12 @@ void handleGetModbusConfig(AsyncWebServerRequest* request) {
 
 void handleUpdateModbusConfig(AsyncWebServerRequest* request, JsonVariant& json) {
     std::vector<ModbusDevice> devices;
-    deserializeVector(json, devices);
+    deserializeVector(json["devices"], devices);
 
     Serial.println("Recieved Modbus Config: " + String(devices.size()) + " devices");
     serializeJson(json, Serial);
     Serial.println();
 
-    if (updateModbusConfig(devices)) {
-        Serial.println("Modbus Config updated successfully");
-        Response::success(request, 202, "OK");
-    } else {
-        Serial.println("Failed to update Modbus Config");
-        Response::error(request, 500, "Failed to update Modbus Config");
-    }
+    ModbusManager::requestUpdate(devices);
+    Response::success(request, 202, "OK");
 }

@@ -1,7 +1,7 @@
 #include "ModbusManager.h"
 #include "ReadRegisterManager.h"
 #include "VirtualSensorManager.h"
-#include <Config/Config.h>
+#include <Config/ConfigManager.h>
 #include <Mqtt/MqttDiscovery.h>
 #include <Mqtt/MqttManager.h>
 
@@ -9,7 +9,7 @@ namespace ModbusManager {
     bool hasStarted = false;
     std::set<int> portsInUse;
 
-    volatile bool updateRequested = false;
+    volatile UpdateStatus updateStatus = UpdateStatus::NotStarted;
     std::vector<ModbusDevice> pendingDevices;
 
     void setup() {
@@ -18,9 +18,9 @@ namespace ModbusManager {
         Serial.println();
         Serial.println("Setting up Modbus Manager");
 
-        ReadRegisterManager::setup(config.modbusDevices);
-        VirtualSensorManager::setup(config.modbusDevices);
-        setupDevices(config.modbusDevices);
+        ReadRegisterManager::setup(ConfigManager::config.modbusDevices);
+        VirtualSensorManager::setup(ConfigManager::config.modbusDevices);
+        setupDevices(ConfigManager::config.modbusDevices);
 
         hasStarted = true;
     }
@@ -79,25 +79,36 @@ namespace ModbusManager {
         Serial1.end();
         Serial2.end();
 
-        for (auto& device : config.modbusDevices) {
+        for (auto& device : ConfigManager::config.modbusDevices) {
             device.initialized = false;
             device.readGroups.clear();
             VirtualSensorManager::resetDevice(device);
         }
     }
 
+    void requestUpdate(const std::vector<ModbusDevice>& devices) {
+        pendingDevices = devices;
+        updateStatus = UpdateStatus::Requested;
+
+        Serial.println("\nModbus configuration updating");
+    }
+
+    void updateConfig(const std::vector<ModbusDevice>& devices) {
+        updateStatus = UpdateStatus::InProgress;
+
+        ConfigManager::config.modbusDevices = std::move(pendingDevices);
+        ConfigManager::save();
+        MqttManager::reload();
+        ModbusManager::setup();
+
+        updateStatus = UpdateStatus::UpdateComplete;
+        Serial.print("Modbus configuration updated. New config: ");
+        Serial.println(ConfigManager::config.toString().c_str());
+        return;
+    }
+
     void loop() {
-        if (updateRequested) {
-            updateRequested = false;
-
-            config.modbusDevices = std::move(pendingDevices);
-            saveConfig();
-
-            MqttManager::reload();
-            ModbusManager::setup();
-
-            Serial.print("Modbus configuration updated. New config: ");
-            Serial.println(config.toString().c_str());
+        if (updateStatus == UpdateStatus::Requested || updateStatus == UpdateStatus::InProgress) {
             return;
         }
 
@@ -111,7 +122,7 @@ namespace ModbusManager {
         if (!hasStarted)
             return;
 
-        for (auto& device : config.modbusDevices) {
+        for (auto& device : ConfigManager::config.modbusDevices) {
             if (!device.initialized)
                 continue;
 

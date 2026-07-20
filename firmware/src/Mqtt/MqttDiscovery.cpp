@@ -1,6 +1,6 @@
 #include "MqttDiscovery.h"
 #include "MqttManager.h"
-#include <Config/Config.h>
+#include <Config/ConfigManager.h>
 #include <Mqtt/MqttTypes.h>
 
 namespace MqttDiscovery {
@@ -23,7 +23,7 @@ namespace MqttDiscovery {
 
         MqttManager::publish("homeassistant/sensor/solar-monitor/uptime/config", doc);
 
-        for (const auto& device : config.modbusDevices) {
+        for (const auto& device : ConfigManager::config.modbusDevices) {
             auto publishedDiscoveryCount = 0;
 
             for (const auto& readRegister : device.readRegisters) {
@@ -86,8 +86,8 @@ namespace MqttDiscovery {
     String generateDiscoveryTopic(const String& deviceIdentifier,
                                   const String& uniqueId,
                                   const String& component) {
-        return config.mqtt.autoDiscoveryPrefix + "/" + component + "/" + deviceIdentifier + "/" +
-               uniqueId + "/config";
+        return ConfigManager::config.mqtt.autoDiscoveryPrefix + "/" + component + "/" +
+               deviceIdentifier + "/" + uniqueId + "/config";
     }
 
     String generateStateTopic(const String& deviceTopicPrefix, const String& uniqueId) {

@@ -1,18 +1,13 @@
 <script lang="ts">
-	import PageLoading from '$lib/loading/PageLoading.svelte';
+	import { UpdateStatus } from '$lib/common/CommonTypes';
 	import NetworkMode from '$lib/network/NetworkMode.svelte';
-	import {
-		createNetworkConfigQueryOptions,
-		updateNetworkConfig
-	} from '$lib/network/NetworkQueries';
+	import { createNetworkConfigQuery, updateNetworkConfig } from '$lib/network/NetworkQueries';
 	import { defaultNetworkConfig, type NetworkConfig } from '$lib/network/NetworkTypes';
 	import WifiNetwork from '$lib/network/WifiNetworks.svelte';
-	import { createQuery } from '@tanstack/svelte-query';
+	import { hidePopup, showError, showLoading } from '$lib/popup/Popup.svelte';
 
-	let networksConfigQuery = createQuery(() => createNetworkConfigQueryOptions());
-	let savedNetworkConfig = $derived(networksConfigQuery.data);
-	let isPending = $derived(networksConfigQuery.isPending);
-	let isSaving = $state(false);
+	let query = createNetworkConfigQuery();
+	let savedNetworkConfig = $derived(query.data);
 
 	let networkConfig = $state<NetworkConfig>(defaultNetworkConfig);
 
@@ -21,6 +16,19 @@
 		if (!initialized && savedNetworkConfig) {
 			networkConfig = { ...savedNetworkConfig };
 			initialized = true;
+		}
+	});
+
+	$effect(() => {
+		if (query.isPending) {
+			showLoading('Loading network configuration...');
+		} else if (
+			query.data?.updateStatus === UpdateStatus.InProgress ||
+			query.data?.updateStatus === UpdateStatus.Requested
+		) {
+			showLoading('Updating network configuration...');
+		} else {
+			hidePopup();
 		}
 	});
 
@@ -50,46 +58,38 @@
 	}
 
 	async function saveChanges() {
-		isSaving = true;
 		try {
 			await updateNetworkConfig(networkConfig);
-			await networksConfigQuery.refetch();
-		} finally {
-			isSaving = false;
+			await query.refetch();
+		} catch {
+			showError('Failed to save network configuration. Please try again.');
+			return;
 		}
 	}
 </script>
 
-<div class="relative h-full">
-	<form
-		bind:this={form}
-		oninput={updateValidity}
-		onchange={updateValidity}
-		onsubmit={(e) => {
-			e.preventDefault();
-			saveChanges();
-		}}
-	>
-		<NetworkMode bind:networkConfig />
-		<WifiNetwork bind:networkConfig />
-		<div class="flex justify-between">
-			<button
-				type="button"
-				class="btn btn-error mt-4 w-20"
-				disabled={!hasChanged}
-				onclick={cancelChanges}
-			>
-				Cancel
-			</button>
-			<button type="submit" class="btn btn-success mt-4 w-20" disabled={!hasChanged || !isValid}>
-				Save
-			</button>
-		</div>
-	</form>
-
-	{#if isPending}
-		<PageLoading text="Loading network configuration..." />
-	{:else if isSaving}
-		<PageLoading text="Saving network configuration..." />
-	{/if}
-</div>
+<form
+	bind:this={form}
+	oninput={updateValidity}
+	onchange={updateValidity}
+	onsubmit={(e) => {
+		e.preventDefault();
+		saveChanges();
+	}}
+>
+	<NetworkMode bind:networkConfig />
+	<WifiNetwork bind:networkConfig />
+	<div class="flex justify-between">
+		<button
+			type="button"
+			class="btn btn-error mt-4 w-20"
+			disabled={!hasChanged}
+			onclick={cancelChanges}
+		>
+			Cancel
+		</button>
+		<button type="submit" class="btn btn-success mt-4 w-20" disabled={!hasChanged || !isValid}>
+			Save
+		</button>
+	</div>
+</form>

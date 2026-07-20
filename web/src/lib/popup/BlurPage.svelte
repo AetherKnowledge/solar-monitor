@@ -1,14 +1,13 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	type Props = {
-		text?: string;
-		progress?: number | null;
-		showProgress?: boolean;
+		children?: Snippet;
 	};
 
-	let { text = 'Loading...', progress = null, showProgress = false }: Props = $props();
+	let { children }: Props = $props();
 </script>
 
-<div class="fixed inset-0 bg-base-100/70 backdrop-blur-sm">
+<div class="fixed inset-0 bg-base-100/70 backdrop-blur-sm z-10">
 	<div class="relative flex h-full items-center justify-center overflow-hidden">
 		<!-- Background -->
 		<div class="absolute inset-0 overflow-hidden">
@@ -21,32 +20,9 @@
 		<div
 			class="card bg-base-100/80 backdrop-blur-xl shadow-2xl border border-base-300 w-96 animate-fade-up"
 		>
-			<div class="card-body items-center text-center gap-6">
-				<div class="relative">
-					<div class="loading loading-ring loading-xl text-primary"></div>
-
-					<div class="absolute inset-0 flex items-center justify-center animate-pulse">
-						<div class="size-3 rounded-full bg-primary"></div>
-					</div>
-				</div>
-
-				<div class="space-y-2">
-					<h2 class="text-xl font-bold">{text}</h2>
-
-					<p class="text-sm text-base-content/60">Please wait while everything is prepared.</p>
-				</div>
-
-				{#if showProgress}
-					<div class="w-full space-y-2">
-						<progress class="progress progress-primary w-full" value={progress ?? 0} max="100"
-						></progress>
-
-						<p class="text-xs text-base-content/60">
-							{progress ?? 0}%
-						</p>
-					</div>
-				{/if}
-			</div>
+			{#if children}
+				{@render children()}
+			{/if}
 		</div>
 	</div>
 </div>

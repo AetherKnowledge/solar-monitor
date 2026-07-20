@@ -1,5 +1,6 @@
 #include "MqttApi.h"
-#include <Config/Config.h>
+#include <Config/ConfigManager.h>
+#include <Mqtt/MqttManager.h>
 #include <Common/Network.h>
 
 void registerMqttApi(AsyncWebServer& server) {
@@ -17,7 +18,7 @@ void registerMqttApi(AsyncWebServer& server) {
 
 void handleGetMqttConfig(AsyncWebServerRequest* request) {
     JsonDocument doc;
-    config.mqtt.toJson(doc.to<JsonObject>());
+    ConfigManager::config.mqtt.toJson(doc.to<JsonObject>());
 
     String response;
     serializeJson(doc, response);
@@ -31,7 +32,7 @@ void handleUpdateMqttConfig(AsyncWebServerRequest* request, JsonVariant& json) {
     MQTTConfig newConfig;
     newConfig.fromJson(json);
 
-    updateMqttConfig(newConfig);
+    MqttManager::updateMqttConfig(newConfig);
 
     Response::success(request, 202, "OK");
 }

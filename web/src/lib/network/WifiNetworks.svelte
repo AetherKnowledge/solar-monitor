@@ -17,9 +17,8 @@
 		SignalZero,
 		Wifi
 	} from '@lucide/svelte';
-	import { createQuery } from '@tanstack/svelte-query';
 	import { onMount } from 'svelte';
-	import { createNetworkQueryOptions, scanNetworks } from './NetworkQueries';
+	import { createNetworkScanQuery, scanNetworks } from './NetworkQueries';
 	import { type NetworkConfig, type WifiNetwork } from './NetworkTypes';
 
 	type Props = {
@@ -28,7 +27,7 @@
 
 	let { networkConfig = $bindable() }: Props = $props();
 
-	const networksQuery = createQuery(() => createNetworkQueryOptions());
+	const networksQuery = createNetworkScanQuery();
 	const status = $derived(networksQuery.data.status);
 	const networks = $derived(networksQuery.data.networks);
 
