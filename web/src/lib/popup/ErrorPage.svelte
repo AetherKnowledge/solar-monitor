@@ -3,10 +3,11 @@
 	import BlurPage from './BlurPage.svelte';
 	import PopupCard from './PopupCard.svelte';
 
-	type Props = {
+	export type ErrorProps = {
 		title?: string;
 		message?: string;
 		buttonText?: string;
+		hintText?: string;
 		onClose?: () => void;
 	};
 
@@ -14,8 +15,9 @@
 		title = 'Something went wrong',
 		message = 'An unexpected error occurred. Please try again.',
 		buttonText = 'Close',
+		hintText = 'If the problem persists, check your connection and try again.',
 		onClose
-	}: Props = $props();
+	}: ErrorProps = $props();
 
 	let visible = $state(true);
 
@@ -54,7 +56,7 @@
 						<TriangleAlert class="mt-0.5 size-4 shrink-0 text-error" />
 
 						<p class="text-sm text-base-content/70">
-							If the problem persists, check your connection and try again.
+							{hintText}
 						</p>
 					</div>
 				</div>

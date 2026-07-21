@@ -50,9 +50,13 @@
 		showLoading('Uploading firmware...', 0);
 
 		if (
-			!(await showYesNo(
-				'Are you sure you want to update the firmware? This will overwrite the existing firmware.'
-			))
+			!(await showYesNo({
+				message:
+					'Are you sure you want to update the firmware? This will overwrite the existing firmware.',
+				hintText:
+					'This process is not reversible. Make sure to backup your config files before proceeding.',
+				warning: true
+			}))
 		) {
 			return;
 		}
@@ -73,9 +77,13 @@
 		if (!newWebsiteFile) return;
 
 		if (
-			!(await showYesNo(
-				'Are you sure you want to update the web interface? This will overwrite the existing files.'
-			))
+			!(await showYesNo({
+				message:
+					'Are you sure you want to update the web interface? This will overwrite the existing files.',
+				hintText:
+					'This process is not reversible. Make sure to backup your config files before proceeding.',
+				warning: true
+			}))
 		) {
 			return;
 		}

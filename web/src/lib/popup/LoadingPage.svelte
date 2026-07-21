@@ -3,17 +3,19 @@
 	import BlurPage from './BlurPage.svelte';
 	import PopupCard from './PopupCard.svelte';
 
-	type Props = {
+	export type LoadingProps = {
 		text?: string;
-		description?: string;
+		message?: string;
 		progress?: number | null;
+		hintText?: string;
 	};
 
 	let {
 		text = 'Loading...',
-		description = 'Please wait while the operation completes.',
-		progress = null
-	}: Props = $props();
+		message = 'Please wait while the operation completes.',
+		progress = null,
+		hintText = 'This may take a moment.'
+	}: LoadingProps = $props();
 
 	let hasProgress = $derived(progress !== null && progress !== undefined);
 	let normalizedProgress = $derived(Math.min(100, Math.max(0, progress ?? 0)));
@@ -36,7 +38,7 @@
 					</h2>
 
 					<p class="mt-1 text-sm text-base-content/60">
-						{description}
+						{message}
 					</p>
 				</div>
 			</div>
@@ -63,7 +65,7 @@
 			<div class="flex items-center gap-2 text-xs text-base-content/50">
 				<span class="loading loading-xs loading-dots"></span>
 
-				<span> This may take a moment </span>
+				<span> {hintText} </span>
 			</div>
 		</div>
 	</PopupCard>

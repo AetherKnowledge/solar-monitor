@@ -8,39 +8,39 @@
 </script>
 
 {#if popup.type === PopupType.LOADING}
-	<LoadingPage text={popup.message} progress={popup.progress} />
+	<LoadingPage {...popup.loadingProps} />
 {/if}
 
 {#if popup.type === PopupType.SUCCESS}
 	<SuccessPage
-		message={popup.message}
+		{...popup.successProps}
 		onClose={() => {
-			const callback = popup.onClose;
+			popup.successProps?.onClose?.();
 			hidePopup();
-			callback?.();
 		}}
 	/>
 {/if}
 
 {#if popup.type === PopupType.ERROR}
 	<ErrorPage
-		message={popup.message}
+		{...popup.errorProps}
 		onClose={() => {
-			const callback = popup.onClose;
+			popup.errorProps?.onClose?.();
 			hidePopup();
-			callback?.();
 		}}
 	/>
 {/if}
 
 {#if popup.type === PopupType.YESNO}
 	<YesNoPage
-		message={popup.message}
+		{...popup.yesNoProps}
 		onYes={() => {
+			popup.yesNoProps?.onYes?.();
 			popup.resolve?.(true);
 			hidePopup();
 		}}
 		onNo={() => {
+			popup.yesNoProps?.onNo?.();
 			popup.resolve?.(false);
 			hidePopup();
 		}}

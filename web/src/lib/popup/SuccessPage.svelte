@@ -3,10 +3,11 @@
 	import BlurPage from './BlurPage.svelte';
 	import PopupCard from './PopupCard.svelte';
 
-	type Props = {
+	export type SuccessProps = {
 		title?: string;
 		message?: string;
 		buttonText?: string;
+		hintText?: string;
 		onClose?: () => void;
 	};
 
@@ -14,8 +15,9 @@
 		title = 'Success!',
 		message = 'The operation completed successfully.',
 		buttonText = 'Done',
+		hintText = 'Your changes have been applied successfully.',
 		onClose
-	}: Props = $props();
+	}: SuccessProps = $props();
 
 	let visible = $state(true);
 
@@ -53,7 +55,9 @@
 					<div class="flex items-start gap-3">
 						<Check class="mt-0.5 size-4 shrink-0 text-success" />
 
-						<p class="text-sm text-base-content/70">Your changes have been applied successfully.</p>
+						<p class="text-sm text-base-content/70">
+							{hintText}
+						</p>
 					</div>
 				</div>
 

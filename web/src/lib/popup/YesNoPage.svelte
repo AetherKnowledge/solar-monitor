@@ -1,14 +1,15 @@
 <script lang="ts">
-	import { Check, CircleHelp, TriangleAlert, X } from '@lucide/svelte';
+	import { Check, CircleQuestionMark, TriangleAlert, X } from '@lucide/svelte';
 	import BlurPage from './BlurPage.svelte';
 	import PopupCard from './PopupCard.svelte';
 
-	type Props = {
+	export type YesNoProps = {
 		title?: string;
 		message?: string;
 		yesText?: string;
 		noText?: string;
 		warning?: boolean;
+		hintText?: string;
 		onYes?: () => void;
 		onNo?: () => void;
 	};
@@ -19,9 +20,10 @@
 		yesText = 'Confirm',
 		noText = 'Cancel',
 		warning = false,
+		hintText = warning ? 'This action may not be reversible. Make sure you want to continue.' : '',
 		onYes,
 		onNo
-	}: Props = $props();
+	}: YesNoProps = $props();
 
 	let visible = $state(true);
 
@@ -50,7 +52,7 @@
 						{#if warning}
 							<TriangleAlert class="size-7" />
 						{:else}
-							<CircleHelp class="size-7" />
+							<CircleQuestionMark class="size-7" />
 						{/if}
 					</div>
 
@@ -72,7 +74,7 @@
 							<TriangleAlert class="mt-0.5 size-4 shrink-0 text-warning" />
 
 							<p class="text-sm text-base-content/70">
-								This action may not be reversible. Make sure you want to continue.
+								{hintText}
 							</p>
 						</div>
 					</div>
