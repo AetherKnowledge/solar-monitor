@@ -32,6 +32,11 @@ export function gzipOnly(outputDir: string): Plugin {
 						continue;
 					}
 
+					// Skip version.json so esp32 can read it without decompressing
+					if (path.basename(file) === 'version.json' && dir === outputDir) {
+						continue;
+					}
+
 					const ext = path.extname(file).toLowerCase();
 
 					if (!COMPRESSIBLE_EXTENSIONS.has(ext)) {

@@ -9,7 +9,7 @@
 </script>
 
 <div
-	class="card bg-base-100/80 backdrop-blur-xl shadow-2xl border border-base-300 w-96 animate-fade-up"
+	class="animate-fade-up card w-[calc(100%-2rem)] max-w-md border border-base-300 bg-base-100/95 shadow-2xl backdrop-blur-xl"
 >
 	{#if children}
 		{@render children()}

@@ -24,7 +24,7 @@ void setup() {
         MqttManager::setup();
     }
 
-    startWebServer();
+    WebServer::start();
 }
 
 void loop() {

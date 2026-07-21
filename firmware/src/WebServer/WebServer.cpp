@@ -7,65 +7,90 @@
 #include "ModbusApi/ModbusApi.h"
 #include "UpdateApi/UpdateApi.h"
 
-AsyncWebServer server(80);
-fs::LittleFSFS WebFS;
+namespace WebServer {
+    AsyncWebServer server(80);
+    fs::LittleFSFS WebFS;
 
-bool startWebServer() {
-    Serial.println("Starting web server");
+    std::string WEBSITE_VERSION = "0.0.0";
+    static void setWebsiteVersion() {
+        File file = WebFS.open("/version.json", "r");
+        if (file) {
+            JsonDocument doc;
+            DeserializationError error = deserializeJson(doc, file);
+            file.close();
 
-    bool fsMounted = WebFS.begin(false, "/website", 10, "website");
+            if (error) {
+                Serial.printf("Failed to deserialize version.json: %s\n", error.c_str());
+                return;
+            }
 
-    if (!fsMounted) {
-        Serial.println("LittleFS Mount Failed");
-        return false;
+            WEBSITE_VERSION = doc["version"] | "0.0.0";
+            Serial.println("Website version: " + String(WEBSITE_VERSION.c_str()));
+        } else {
+            Serial.println("Failed to open version.json");
+        }
     }
 
-    registerWebServerApis();
+    bool start() {
+        Serial.println("Starting web server");
 
-    server.serveStatic("/_app", WebFS, "/_app")
-        .setCacheControl("public, max-age=31536000, immutable")
-        .setTryGzipFirst(true);
+        bool fsMounted = WebFS.begin(false, "/website", 10, "website");
 
-    server.serveStatic("/roboto.woff2", WebFS, "/roboto.woff2")
-        .setCacheControl("public, max-age=31536000, immutable")
-        .setTryGzipFirst(true);
-
-    server.serveStatic("/", WebFS, "/")
-        .setDefaultFile("index.html")
-        .setCacheControl("no-cache")
-        .setTryGzipFirst(true);
-
-    server.onNotFound([](AsyncWebServerRequest* request) {
-        if (request->url().startsWith("/api/")) {
-            request->send(404);
-            return;
+        if (!fsMounted) {
+            Serial.println("LittleFS Mount Failed");
+            return false;
         }
 
-        AsyncWebServerResponse* response =
-            request->beginResponse(WebFS, "/index.html.gz", "text/html");
+        setWebsiteVersion();
 
-        response->addHeader("Cache-Control", "no-cache");
-        response->addHeader("Content-Encoding", "gzip");
+        registerApis();
 
-        request->send(response);
-    });
+        server.serveStatic("/_app", WebFS, "/_app")
+            .setCacheControl("public, max-age=31536000, immutable")
+            .setTryGzipFirst(true);
 
-    server.begin();
+        server.serveStatic("/roboto.woff2", WebFS, "/roboto.woff2")
+            .setCacheControl("public, max-age=31536000, immutable")
+            .setTryGzipFirst(true);
 
-    Serial.println("Web server started");
-    return true;
-}
+        server.serveStatic("/", WebFS, "/")
+            .setDefaultFile("index.html")
+            .setCacheControl("no-cache")
+            .setTryGzipFirst(true);
 
-void registerWebServerApis() {
-    NetworkApi::registerApi(server);
-    MqttApi::registerApi(server);
-    ConfigApi::registerApi(server);
-    ModbusApi::registerApi(server);
-    UpdateApi::registerApi(server);
-}
+        server.onNotFound([](AsyncWebServerRequest* request) {
+            if (request->url().startsWith("/api/")) {
+                request->send(404);
+                return;
+            }
 
-bool stopWebServer() {
-    server.end();
-    Serial.println("Web server stopped");
-    return true;
-}
+            AsyncWebServerResponse* response =
+                request->beginResponse(WebFS, "/index.html.gz", "text/html");
+
+            response->addHeader("Cache-Control", "no-cache");
+            response->addHeader("Content-Encoding", "gzip");
+
+            request->send(response);
+        });
+
+        server.begin();
+
+        Serial.println("Web server started");
+        return true;
+    }
+
+    void registerApis() {
+        NetworkApi::registerApi(server);
+        MqttApi::registerApi(server);
+        ConfigApi::registerApi(server);
+        ModbusApi::registerApi(server);
+        UpdateApi::registerApi(server);
+    }
+
+    bool stop() {
+        server.end();
+        Serial.println("Web server stopped");
+        return true;
+    }
+
+}  // namespace WebServer

@@ -3,14 +3,12 @@
   "scripts": {
     "dev": "pnpm --dir web dev",
     "monitor": "pio device monitor -b 115200",
-    "build:web": "pnpm --dir web build",
+    "build:web": "pnpm --dir web build && pio run --target buildfs",
     "build:firmware": "pio run",
     "build": "pnpm build:web && pnpm build:firmware",
-    "buildfs": "pio run --target buildfs",
     "upload": "pio run -t upload",
     "upload:config": "pio run -t uploadconfig",
     "uploadfs": "pio run -t uploadfs",
-    "flash:noweb": "pnpm upload && pnpm uploadfs && pnpm monitor",
     "flash": "pnpm build:web && pnpm upload && pnpm uploadfs && pnpm monitor"
   }
 }

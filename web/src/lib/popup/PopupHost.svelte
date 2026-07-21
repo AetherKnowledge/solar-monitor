@@ -8,7 +8,7 @@
 </script>
 
 {#if popup.type === PopupType.LOADING}
-	<LoadingPage text={popup.message} />
+	<LoadingPage text={popup.message} progress={popup.progress} />
 {/if}
 
 {#if popup.type === PopupType.SUCCESS}

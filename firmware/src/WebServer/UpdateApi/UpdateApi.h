@@ -5,4 +5,5 @@
 
 namespace UpdateApi {
     void registerApi(AsyncWebServer& server);
+    void handleGetVersion(AsyncWebServerRequest* request);
 }  // namespace UpdateApi

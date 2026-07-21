@@ -27,9 +27,16 @@ export function hidePopup() {
 	popup.onClose = undefined;
 }
 
-export function showLoading(message = 'Loading...') {
+export function showLoading(message = 'Loading...', progress: number | null = null) {
 	popup.type = PopupType.LOADING;
 	popup.message = message;
+	popup.progress = progress;
+}
+
+export function updateLoadingProgress(progress: number) {
+	if (popup.type !== PopupType.LOADING) return;
+
+	popup.progress = progress;
 }
 
 export function showSuccess(message: string, onClose?: () => void) {

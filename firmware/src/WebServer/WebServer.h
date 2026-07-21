@@ -1,5 +1,12 @@
 #pragma once
 
-bool startWebServer();
-bool stopWebServer();
-void registerWebServerApis();
+#include <Arduino.h>
+#include <string>
+
+namespace WebServer {
+    extern std::string WEBSITE_VERSION;
+
+    bool start();
+    bool stop();
+    void registerApis();
+}  // namespace WebServer

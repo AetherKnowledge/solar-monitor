@@ -1,12 +1,32 @@
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin as VitePlugin } from 'vite';
+import version from '../version.json';
 import { gzipOnly } from './plugins/gzip-only';
 
 const websitePath = '../firmware/data';
 
+function websiteVersion(): VitePlugin {
+	return {
+		name: 'website-version',
+
+		generateBundle() {
+			this.emitFile({
+				type: 'asset',
+				fileName: 'version.json',
+				source: JSON.stringify({
+					version: version.website
+				})
+			});
+		}
+	};
+}
+
 export default defineConfig(({ command }) => ({
+	define: {
+		__WEBSITE_VERSION__: JSON.stringify(version.website)
+	},
 	plugins: [
 		tailwindcss(),
 		sveltekit({
@@ -28,6 +48,7 @@ export default defineConfig(({ command }) => ({
 				fallback: 'index.html'
 			})
 		}),
+		websiteVersion(),
 		gzipOnly(websitePath)
 	],
 	build: {

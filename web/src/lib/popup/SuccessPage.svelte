@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CircleCheck, X } from '@lucide/svelte';
+	import { Check, CircleCheck } from '@lucide/svelte';
 	import BlurPage from './BlurPage.svelte';
 	import PopupCard from './PopupCard.svelte';
 
@@ -13,7 +13,7 @@
 	let {
 		title = 'Success!',
 		message = 'The operation completed successfully.',
-		buttonText = 'Close',
+		buttonText = 'Done',
 		onClose
 	}: Props = $props();
 
@@ -28,27 +28,40 @@
 {#if visible}
 	<BlurPage>
 		<PopupCard>
-			<div class="card-body items-center text-center gap-6">
-				<div
-					class="flex size-24 items-center justify-center rounded-full bg-success/15 text-success"
-				>
-					<CircleCheck class="size-14" />
+			<div class="card-body gap-6 p-6">
+				<!-- Header -->
+				<div class="flex items-center gap-4">
+					<div
+						class="flex size-14 shrink-0 items-center justify-center rounded-xl bg-success/10 text-success"
+					>
+						<CircleCheck class="size-7" />
+					</div>
+
+					<div class="min-w-0">
+						<h2 class="text-lg font-semibold">
+							{title}
+						</h2>
+
+						<p class="mt-1 text-sm wrap-break-word text-base-content/60">
+							{message}
+						</p>
+					</div>
 				</div>
 
-				<div class="space-y-2">
-					<h2 class="text-2xl font-bold">{title}</h2>
+				<!-- Success hint -->
+				<div class="rounded-xl border border-success/20 bg-success/5 p-4">
+					<div class="flex items-start gap-3">
+						<Check class="mt-0.5 size-4 shrink-0 text-success" />
 
-					<p class="text-base-content/70">
-						{message}
-					</p>
+						<p class="text-sm text-base-content/70">Your changes have been applied successfully.</p>
+					</div>
 				</div>
 
-				<div class="w-full pt-2">
-					<button class="btn btn-success w-full" onclick={close}>
-						<X class="size-4" />
-						{buttonText}
-					</button>
-				</div>
+				<!-- Action -->
+				<button class="btn w-full btn-success" onclick={close}>
+					<Check class="size-4" />
+					{buttonText}
+				</button>
 			</div>
 		</PopupCard>
 	</BlurPage>

@@ -1,43 +1,70 @@
 <script lang="ts">
+	import { LoaderCircle } from '@lucide/svelte';
 	import BlurPage from './BlurPage.svelte';
 	import PopupCard from './PopupCard.svelte';
 
 	type Props = {
 		text?: string;
+		description?: string;
 		progress?: number | null;
-		showProgress?: boolean;
 	};
 
-	let { text = 'Loading...', progress = null, showProgress = false }: Props = $props();
+	let {
+		text = 'Loading...',
+		description = 'Please wait while the operation completes.',
+		progress = null
+	}: Props = $props();
+
+	let hasProgress = $derived(progress !== null && progress !== undefined);
+	let normalizedProgress = $derived(Math.min(100, Math.max(0, progress ?? 0)));
 </script>
 
 <BlurPage>
 	<PopupCard>
-		<div class="card-body items-center text-center gap-6">
-			<div class="relative">
-				<div class="loading loading-ring loading-xl text-primary"></div>
+		<div class="card-body gap-6 p-6">
+			<!-- Header -->
+			<div class="flex items-center gap-4">
+				<div class="relative flex size-14 shrink-0 items-center justify-center">
+					<div class="absolute inset-0 rounded-xl bg-primary/10"></div>
 
-				<div class="absolute inset-0 flex items-center justify-center animate-pulse">
-					<div class="size-3 rounded-full bg-primary"></div>
+					<LoaderCircle class="size-7 animate-spin text-primary" />
 				</div>
-			</div>
 
-			<div class="space-y-2">
-				<h2 class="text-xl font-bold">{text}</h2>
+				<div class="min-w-0">
+					<h2 class="text-lg font-semibold">
+						{text}
+					</h2>
 
-				<p class="text-sm text-base-content/60">Please wait while everything is prepared.</p>
-			</div>
-
-			{#if showProgress}
-				<div class="w-full space-y-2">
-					<progress class="progress progress-primary w-full" value={progress ?? 0} max="100"
-					></progress>
-
-					<p class="text-xs text-base-content/60">
-						{progress ?? 0}%
+					<p class="mt-1 text-sm text-base-content/60">
+						{description}
 					</p>
 				</div>
+			</div>
+
+			<!-- Progress -->
+			{#if hasProgress}
+				<div class="space-y-2">
+					<div class="flex items-center justify-between text-sm">
+						<span class="text-base-content/60">Progress</span>
+
+						<span class="font-mono font-medium text-primary">
+							{Math.round(normalizedProgress)}%
+						</span>
+					</div>
+
+					<progress class="progress w-full progress-primary" value={normalizedProgress} max="100"
+					></progress>
+				</div>
+			{:else}
+				<progress class="progress w-full progress-primary"></progress>
 			{/if}
+
+			<!-- Footer hint -->
+			<div class="flex items-center gap-2 text-xs text-base-content/50">
+				<span class="loading loading-xs loading-dots"></span>
+
+				<span> This may take a moment </span>
+			</div>
 		</div>
 	</PopupCard>
 </BlurPage>

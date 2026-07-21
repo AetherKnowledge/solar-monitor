@@ -1,7 +1,14 @@
 <script lang="ts">
-	import { hidePopup } from '$lib/popup/Popup.svelte';
 	import {
-		ArrowUpCircle,
+		hidePopup,
+		showError,
+		showLoading,
+		showSuccess,
+		showYesNo,
+		updateLoadingProgress
+	} from '$lib/popup/Popup.svelte';
+	import {
+		CircleArrowUp,
 		CloudDownload,
 		Download,
 		Globe,
@@ -12,11 +19,14 @@
 	import { onMount } from 'svelte';
 	import {
 		checkForUpdates,
-		currentVersion,
+		createUpdateController,
 		isUpToDate,
+		latestVersion,
 		updateFirmware,
 		updateWebsite
 	} from './UpdateController.svelte';
+
+	const { query } = createUpdateController();
 
 	let checkingForUpdates = $state(false);
 	let firmwareFiles = $state<FileList>();
@@ -24,6 +34,7 @@
 
 	let newFirmwareFile = $derived(firmwareFiles?.[0] ?? null);
 	let newWebsiteFile = $derived(websiteFiles?.[0] ?? null);
+	let currentVersion = $derived(query.data);
 
 	async function onCheckUpdate() {
 		if (checkingForUpdates) return;
@@ -34,19 +45,53 @@
 	}
 
 	async function onUpdateFirmware() {
-		console.log('Updating firmware with file:', newFirmwareFile);
-
 		if (!newFirmwareFile) return;
 
-		const result = await updateFirmware(newFirmwareFile);
-		console.log('Firmware update result:', result);
+		showLoading('Uploading firmware...', 0);
+
+		if (
+			!(await showYesNo(
+				'Are you sure you want to update the firmware? This will overwrite the existing firmware.'
+			))
+		) {
+			return;
+		}
+
+		const result = await updateFirmware(newFirmwareFile, (progress) => {
+			updateLoadingProgress(progress);
+		});
+
+		if (!result) {
+			showError('Failed to update firmware. Please try again.');
+			return;
+		}
+
+		showSuccess('Firmware updated successfully.');
 	}
 
 	async function onUpdateWebsite() {
 		if (!newWebsiteFile) return;
 
-		const result = await updateWebsite(newWebsiteFile);
-		console.log('Website update result:', result);
+		if (
+			!(await showYesNo(
+				'Are you sure you want to update the web interface? This will overwrite the existing files.'
+			))
+		) {
+			return;
+		}
+
+		showLoading('Uploading web interface...', 0);
+
+		const result = await updateWebsite(newWebsiteFile, (progress) => {
+			updateLoadingProgress(progress);
+		});
+
+		if (!result) {
+			showError('Failed to update the web interface. Please try again.');
+			return;
+		}
+
+		showSuccess('Web interface updated successfully.');
 	}
 
 	onMount(() => {
@@ -62,7 +107,7 @@
 
 		<div class="flex items-center gap-3">
 			<div class="rounded-xl bg-primary/10 p-3 text-primary">
-				<ArrowUpCircle class="size-7" />
+				<CircleArrowUp class="size-7" />
 			</div>
 
 			<div>
@@ -102,22 +147,20 @@
 							<div class="text-sm text-base-content/60">Firmware Version</div>
 
 							<div class="font-mono text-lg font-semibold">
-								{currentVersion.firmware.version}
+								{currentVersion.firmware}
 							</div>
 
-							{#if !isUpToDate(currentVersion.firmware)}
-								<div class="mt-1 text-sm text-base-content/60">
-									Latest:
-									<span class="font-mono">
-										{currentVersion.firmware.latest}
-									</span>
-								</div>
-							{/if}
+							<div class="mt-1 text-sm text-base-content/60">
+								Latest:
+								<span class="font-mono">
+									{latestVersion.firmware}
+								</span>
+							</div>
 						</div>
 					</div>
 
 					<div class="flex flex-col items-end gap-3">
-						{#if isUpToDate(currentVersion.firmware)}
+						{#if isUpToDate(currentVersion.firmware, latestVersion.firmware)}
 							<div class="badge gap-1 badge-success">
 								<span class="size-2 rounded-full bg-current"></span>
 								Up to date
@@ -152,22 +195,20 @@
 							<div class="text-sm text-base-content/60">Web Interface Version</div>
 
 							<div class="font-mono text-lg font-semibold">
-								{currentVersion.website.version}
+								{currentVersion.website}
 							</div>
 
-							{#if !isUpToDate(currentVersion.website)}
-								<div class="mt-1 text-sm text-base-content/60">
-									Latest:
-									<span class="font-mono">
-										{currentVersion.website.latest}
-									</span>
-								</div>
-							{/if}
+							<div class="mt-1 text-sm text-base-content/60">
+								Latest:
+								<span class="font-mono">
+									{latestVersion.website}
+								</span>
+							</div>
 						</div>
 					</div>
 
 					<div class="flex flex-col items-end gap-3">
-						{#if isUpToDate(currentVersion.website)}
+						{#if isUpToDate(currentVersion.website, latestVersion.website)}
 							<div class="badge gap-1 badge-success">
 								<span class="size-2 rounded-full bg-current"></span>
 								Up to date
@@ -253,7 +294,7 @@
 					bind:files={websiteFiles}
 					type="file"
 					class="file-input-bordered file-input w-full"
-					accept=".bin,.zip,.gz"
+					accept=".bin"
 				/>
 
 				<button
