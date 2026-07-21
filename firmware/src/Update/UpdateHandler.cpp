@@ -20,12 +20,6 @@ namespace UpdateHandler {
     }
     void onFirmwareUpdate(
         AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
-        auto* state = static_cast<UpdateState*>(request->_tempObject);
-
-        if (!state || state->failed) {
-            return;
-        }
-
         // First chunk
         if (index == 0) {
             auto* state = new UpdateState();
@@ -43,7 +37,6 @@ namespace UpdateHandler {
 
         // Write this chunk
         if (Update.write(data, len) != len) {
-            state->failed = true;
             Serial.println("Failed to write firmware chunk");
 
             Update.printError(Serial);
@@ -82,12 +75,6 @@ namespace UpdateHandler {
 
     void onWebsiteUpdate(
         AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
-        auto* state = static_cast<UpdateState*>(request->_tempObject);
-
-        if (!state || state->failed) {
-            return;
-        }
-
         // First chunk
         if (index == 0) {
             auto* state = new UpdateState();
@@ -112,7 +99,6 @@ namespace UpdateHandler {
 
         // Write current chunk
         if (Update.write(data, len) != len) {
-            state->failed = true;
             Serial.println("Failed to write website chunk");
 
             Update.printError(Serial);
