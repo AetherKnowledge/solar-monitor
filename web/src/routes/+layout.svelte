@@ -12,6 +12,7 @@
 		PanelLeftOpen,
 		RadioReceiver,
 		SolarPanel,
+		SquareTerminal,
 		Wifi
 	} from '@lucide/svelte';
 	import { QueryClientProvider } from '@tanstack/svelte-query';
@@ -53,6 +54,11 @@
 			label: 'Update',
 			href: '/update',
 			icon: CloudDownload
+		},
+		{
+			label: 'Logs',
+			href: '/logs',
+			icon: SquareTerminal
 		}
 	] satisfies SidebarItemProps[];
 
@@ -129,8 +135,8 @@
 				</div>
 			</nav>
 			<!-- Page content here -->
-			<main class="flex-1 overflow-auto p-4">
-				<div class="relative h-full">
+			<main class="flex h-full flex-1 overflow-auto p-4">
+				<div class="flex min-w-0 flex-1 flex-col">
 					{@render children()}
 					<PopupHost />
 				</div>

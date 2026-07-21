@@ -16,6 +16,7 @@
 	import type { NumberWriteRegister } from '../DeviceTypes';
 
 	import DataInput from './DataInput.svelte';
+	import DataSelect from './DataSelect.svelte';
 
 	let { register = $bindable() }: { register: NumberWriteRegister } = $props();
 </script>
@@ -24,13 +25,13 @@
 	<!-- General -->
 
 	<div class="flex items-center gap-3">
-		<div class="bg-primary/10 text-primary rounded-xl p-3">
+		<div class="rounded-xl bg-primary/10 p-3 text-primary">
 			<Package class="size-6" />
 		</div>
 
 		<div>
 			<h2 class="card-title">General</h2>
-			<p class="text-base-content/60 text-sm">
+			<p class="text-sm text-base-content/60">
 				Basic information about this writable number register.
 			</p>
 		</div>
@@ -76,13 +77,13 @@
 	<!-- Number Configuration -->
 
 	<div class="flex items-center gap-3">
-		<div class="bg-secondary/10 text-secondary rounded-xl p-3">
+		<div class="rounded-xl bg-secondary/10 p-3 text-secondary">
 			<Settings2 class="size-6" />
 		</div>
 
 		<div>
 			<h2 class="card-title">Number Configuration</h2>
-			<p class="text-base-content/60 text-sm">
+			<p class="text-sm text-base-content/60">
 				Configure the writable numeric range and MQTT behavior.
 			</p>
 		</div>
@@ -153,13 +154,13 @@
 	<!-- Home Assistant -->
 
 	<div class="flex items-center gap-3">
-		<div class="bg-success/10 text-success rounded-xl p-3">
+		<div class="rounded-xl bg-success/10 p-3 text-success">
 			<House class="size-6" />
 		</div>
 
 		<div>
 			<h2 class="card-title">Home Assistant Discovery</h2>
-			<p class="text-base-content/60 text-sm">
+			<p class="text-sm text-base-content/60">
 				Optional metadata published through MQTT Discovery.
 			</p>
 		</div>
@@ -200,6 +201,15 @@
 			icon={Calculator}
 			iconColor="text-success"
 			bind:value={register.discovery.value_template}
+		/>
+
+		<DataSelect
+			label="Mode"
+			description="Controls how the number entity is displayed in Home Assistant."
+			icon={SlidersHorizontal}
+			iconColor="text-success"
+			options={['auto', 'box', 'slider']}
+			bind:value={register.discovery.mode}
 		/>
 	</div>
 </div>

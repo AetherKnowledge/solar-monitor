@@ -5,6 +5,7 @@
 #include <System/SystemManager.h>
 #include <Version.h>
 #include <WebServer/WebServer.h>
+#include <Common/Logger.h>
 
 namespace UpdateApi {
     void registerApi(AsyncWebServer& server) {
@@ -48,7 +49,7 @@ namespace UpdateApi {
             handleGetVersion(request);
         });
 
-        Serial.println("Update API registered");
+        Log.println("Update API registered");
     }
 
     void handleGetVersion(AsyncWebServerRequest* request) {
@@ -59,7 +60,7 @@ namespace UpdateApi {
         String response;
         serializeJson(doc, response);
 
-        Serial.println("Version: " + response);
+        Log.println("Version: " + response);
 
         request->send(200, "application/json", response);
     }

@@ -6,6 +6,9 @@
 #include "ConfigApi/ConfigApi.h"
 #include "ModbusApi/ModbusApi.h"
 #include "UpdateApi/UpdateApi.h"
+#include "SystemApi/SystemApi.h"
+#include "WebSocket.h"
+#include <Common/Logger.h>
 
 namespace WebServer {
     AsyncWebServer server(80);
@@ -20,24 +23,24 @@ namespace WebServer {
             file.close();
 
             if (error) {
-                Serial.printf("Failed to deserialize version.json: %s\n", error.c_str());
+                Log.printf("Failed to deserialize version.json: %s\n", error.c_str());
                 return;
             }
 
             WEBSITE_VERSION = doc["version"] | "0.0.0";
-            Serial.println("Website version: " + String(WEBSITE_VERSION.c_str()));
+            Log.println("Website version: " + String(WEBSITE_VERSION.c_str()));
         } else {
-            Serial.println("Failed to open version.json");
+            Log.println("Failed to open version.json");
         }
     }
 
     bool start() {
-        Serial.println("Starting web server");
+        Log.println("Starting web server");
 
         bool fsMounted = WebFS.begin(false, "/website", 10, "website");
 
         if (!fsMounted) {
-            Serial.println("LittleFS Mount Failed");
+            Log.println("LittleFS Mount Failed");
             return false;
         }
 
@@ -75,21 +78,23 @@ namespace WebServer {
 
         server.begin();
 
-        Serial.println("Web server started");
+        Log.println("Web server started");
         return true;
     }
 
     void registerApis() {
+        WebSocket::setup(server);
         NetworkApi::registerApi(server);
         MqttApi::registerApi(server);
         ConfigApi::registerApi(server);
         ModbusApi::registerApi(server);
         UpdateApi::registerApi(server);
+        SystemApi::registerApi(server);
     }
 
     bool stop() {
         server.end();
-        Serial.println("Web server stopped");
+        Log.println("Web server stopped");
         return true;
     }
 

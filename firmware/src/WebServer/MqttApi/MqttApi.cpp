@@ -2,6 +2,7 @@
 #include <Config/ConfigManager.h>
 #include <Mqtt/MqttManager.h>
 #include <Common/Network.h>
+#include <Common/Logger.h>
 
 namespace MqttApi {
     void registerApi(AsyncWebServer& server) {
@@ -14,7 +15,7 @@ namespace MqttApi {
                 handleUpdateConfig(request, json);
             }));
 
-        Serial.println("MQTT API registered");
+        Log.println("MQTT API registered");
     }
 
     void handleGetConfig(AsyncWebServerRequest* request) {
@@ -24,7 +25,7 @@ namespace MqttApi {
         String response;
         serializeJson(doc, response);
 
-        Serial.println("MQTT Config: " + response);
+        Log.println("MQTT Config: " + response);
 
         request->send(200, "application/json", response);
     }

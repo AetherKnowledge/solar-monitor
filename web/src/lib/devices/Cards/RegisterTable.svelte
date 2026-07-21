@@ -26,18 +26,18 @@
 	});
 </script>
 
-<div class="card bg-base-100 border border-base-300 shadow-sm">
+<div class="card border border-base-300 bg-base-100 shadow-sm">
 	<div class="card-body">
 		<!-- Header -->
 		<div class="flex flex-col gap-4 pb-3 md:flex-row md:items-center md:justify-between">
 			<div class="flex items-center gap-3">
-				<div class="bg-primary/10 text-primary rounded-xl p-3">
+				<div class="rounded-xl bg-primary/10 p-3 text-primary">
 					<TableProperties class="size-6" />
 				</div>
 
 				<div>
 					<h2 class="card-title">Registers</h2>
-					<p class="text-base-content/60 text-sm">
+					<p class="text-sm text-base-content/60">
 						View, search, and configure Modbus registers for this device.
 					</p>
 				</div>
@@ -51,7 +51,7 @@
 
 		<!-- Toolbar -->
 		<div class="flex flex-col gap-3 md:flex-row md:items-center">
-			<label class="input input-bordered flex-1">
+			<label class="input-bordered input flex-1">
 				<Search class="size-4 opacity-60" />
 				<input
 					type="search"
@@ -60,7 +60,7 @@
 				/>
 			</label>
 
-			<select class="select select-bordered w-full md:w-40" bind:value={selectedType}>
+			<select class="select-bordered select w-full md:w-40" bind:value={selectedType}>
 				<option>All Types</option>
 				<option>Read</option>
 				<option>Virtual</option>
@@ -70,16 +70,16 @@
 		</div>
 
 		<!-- Scrollable Table -->
-		<div class="overflow-auto h-128 rounded-box border border-base-300">
+		<div class="h-128 overflow-auto rounded-box border border-base-300">
 			<table class="table table-zebra table-sm">
-				<thead class="sticky top-0 bg-base-100 z-10">
+				<thead class="sticky top-0 z-10 bg-base-100">
 					<tr>
 						<th>Name</th>
 						<th class="text-center">Type</th>
 						<th class="text-center">Address</th>
 						<th class="text-center">Value</th>
 						<th class="text-center">Unit</th>
-						<th class="w-40 text-right pr-6">Actions</th>
+						<th class="w-40 pr-6 text-right">Actions</th>
 					</tr>
 				</thead>
 
@@ -91,7 +91,7 @@
 							</td>
 						</tr>
 					{:else}
-						{#each filteredRegisters as register (register.id)}
+						{#each filteredRegisters as register, index (index)}
 							<RegisterTableRow {register} onEdit={(r) => onEdit?.(r)} />
 						{/each}
 					{/if}

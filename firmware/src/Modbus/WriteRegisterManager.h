@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ModbusTypes.h"
+#include <Common/Logger.h>
 
 namespace WriteRegisterManager {
 
@@ -15,11 +16,11 @@ namespace WriteRegisterManager {
         if (result == ModbusMaster::ku8MBSuccess) {
             reg.value = value;
 
-            Serial.printf("Wrote value %f to register %u of device %s (%s)\n",
-                          value,
-                          reg.address,
-                          device.discovery.name.c_str(),
-                          device.discovery.identifier.c_str());
+            Log.printf("Wrote value %f to register %u of device %s (%s)\n",
+                       value,
+                       reg.address,
+                       device.discovery.name.c_str(),
+                       device.discovery.identifier.c_str());
 
             return true;
         }

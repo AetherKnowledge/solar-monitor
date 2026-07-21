@@ -4,6 +4,7 @@
 #include <Common/Json.h>
 #include <Common/Network.h>
 #include <Config/ConfigManager.h>
+#include <Common/Logger.h>
 
 namespace NetworkApi {
     void registerApi(AsyncWebServer& server) {
@@ -24,7 +25,7 @@ namespace NetworkApi {
                 handleUpdateConfig(request, json);
             }));
 
-        Serial.println("Network API registered");
+        Log.println("Network API registered");
     }
 
     void handleGetNetworks(AsyncWebServerRequest* request) {
@@ -35,7 +36,7 @@ namespace NetworkApi {
         String response;
         serializeJson(doc, response);
 
-        Serial.println("WiFi Networks: " + response);
+        Log.println("WiFi Networks: " + response);
 
         request->send(200, "application/json", response);
     }
@@ -51,7 +52,7 @@ namespace NetworkApi {
         String response;
         serializeJson(doc, response);
 
-        Serial.println("Scan WiFi Networks: " + response);
+        Log.println("Scan WiFi Networks: " + response);
 
         request->send(200, "application/json", response);
     }
@@ -64,7 +65,7 @@ namespace NetworkApi {
         String response;
         serializeJson(doc, response);
 
-        Serial.println("Network Config: " + response);
+        Log.println("Network Config: " + response);
 
         request->send(200, "application/json", response);
     }

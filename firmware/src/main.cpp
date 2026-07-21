@@ -5,8 +5,10 @@
 #include <Mqtt/MqttManager.h>
 #include <Modbus/ModbusManager.h>
 #include <System/SystemManager.h>
+#include <Display/DisplayManager.h>
+#include <Sound/SoundManager.h>
 
-#define LED_PIN 2
+#define LED_PIN 32
 
 void setup() {
     Serial.begin(115200);
@@ -14,6 +16,7 @@ void setup() {
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
 
+    SystemManager::setup();
     ConfigManager::load();
 
     if (ConfigManager::hasLoaded) {
@@ -24,6 +27,8 @@ void setup() {
         MqttManager::setup();
     }
 
+    DisplayManager::setup();
+    SoundManager::setup();
     WebServer::start();
 }
 
@@ -32,6 +37,7 @@ void loop() {
     NetworkManager::loop();
     ModbusManager::loop();
     MqttManager::loop();
+    DisplayManager::loop();
 
     delay(10);
 }

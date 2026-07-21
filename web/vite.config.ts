@@ -65,7 +65,8 @@ export default defineConfig(({ command }) => ({
 					proxy: {
 						'/api': {
 							target: 'http://192.168.254.122',
-							changeOrigin: true
+							changeOrigin: true,
+							ws: true
 						},
 						'/test': {
 							target: 'http://localhost:3001',

@@ -16,7 +16,6 @@ namespace ReadRegisterManager {
 
     bool processRegister(ModbusDevice& device, ReadRegister& reg, uint16_t rawValue);
     double transformValue(const ReadRegister& reg, double value);
-    double applyRounding(double value, uint8_t decimals);
 
     void createGroups(ModbusDevice& device);
     void createNewGroup(ModbusDevice& device, ReadRegister& reg);

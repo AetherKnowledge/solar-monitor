@@ -1,6 +1,8 @@
 #include "VirtualSensorManager.h"
 #include <Config/ConfigManager.h>
 #include <tinyexpr.h>
+#include <Common/Numbers.h>
+#include <Common/Logger.h>
 
 namespace VirtualSensorManager {
     bool loadFile(File& file, std::vector<ModbusDevice>& devices) {
@@ -9,7 +11,7 @@ namespace VirtualSensorManager {
         file.close();
 
         if (error) {
-            Serial.printf("Failed to deserialize persistence: %s\n", error.c_str());
+            Log.printf("Failed to deserialize persistence: %s\n", error.c_str());
             return false;
         }
 
@@ -31,11 +33,11 @@ namespace VirtualSensorManager {
     }
 
     bool loadPersistence(std::vector<ModbusDevice>& devices) {
-        Serial.println();
-        Serial.println("Loading persistence");
+        Log.println();
+        Log.println("Loading persistence");
 
         if (!ConfigManager::mountFS()) {
-            Serial.println("Failed to mount ConfigFS");
+            Log.println("Failed to mount ConfigFS");
             return false;
         }
 
@@ -44,15 +46,15 @@ namespace VirtualSensorManager {
 
         if (persistence && loadFile(persistence, devices)) {
             backup.close();
-            Serial.println("Loaded default persistence successfully");
+            Log.println("Loaded default persistence successfully");
             return true;
         } else if (backup && loadFile(backup, devices)) {
             persistence.close();
 
-            Serial.println("Loaded backup persistence successfully");
+            Log.println("Loaded backup persistence successfully");
             if (!copyFile(
                     ConfigManager::ConfigFS, PERSISTENCE_BAK_LOCATION, PERSISTENCE_LOCATION)) {
-                Serial.println("Failed to restore persistence from backup.");
+                Log.println("Failed to restore persistence from backup.");
             }
             return true;
         }
@@ -60,13 +62,13 @@ namespace VirtualSensorManager {
         backup.close();
         persistence.close();
 
-        Serial.println("Failed to load default and backup persistence!");
+        Log.println("Failed to load default and backup persistence!");
         return false;
     }
 
     bool savePersistence(std::vector<ModbusDevice>& devices) {
-        Serial.println();
-        Serial.println("Saving persistence");
+        Log.println();
+        Log.println("Saving persistence");
 
         JsonDocument doc;
 
@@ -81,18 +83,18 @@ namespace VirtualSensorManager {
 
         if (ConfigManager::ConfigFS.exists(PERSISTENCE_LOCATION) &&
             !copyFile(ConfigManager::ConfigFS, PERSISTENCE_LOCATION, PERSISTENCE_BAK_LOCATION)) {
-            Serial.println("Backing up persistence failed!");
+            Log.println("Backing up persistence failed!");
         }
 
         File persistence = ConfigManager::ConfigFS.open(PERSISTENCE_LOCATION, "w");
 
         if (!persistence) {
-            Serial.println("Failed to open persistence for writing.");
+            Log.println("Failed to open persistence for writing.");
             return false;
         }
 
         if (serializeJson(doc, persistence) == 0) {
-            Serial.println("Failed to write persistence.");
+            Log.println("Failed to write persistence.");
             persistence.close();
             return false;
         }
@@ -100,7 +102,7 @@ namespace VirtualSensorManager {
         persistence.close();
         clearDirty(devices);
 
-        Serial.println("Persistence saved");
+        Log.println("Persistence saved");
         return true;
     }
 
@@ -149,9 +151,9 @@ namespace VirtualSensorManager {
     }
 
     void setupDevice(ModbusDevice& device) {
-        Serial.printf("Setting up virtual sensors for device %s (%s)\n",
-                      device.discovery.name.c_str(),
-                      device.discovery.identifier.c_str());
+        Log.printf("Setting up virtual sensors for device %s (%s)\n",
+                   device.discovery.name.c_str(),
+                   device.discovery.identifier.c_str());
 
         resetDevice(device);
 
@@ -180,16 +182,16 @@ namespace VirtualSensorManager {
                       "Only ReadRegister and VirtualSensor are supported");
 
         if (reg.getId().isEmpty()) {
-            Serial.printf("Register '%s' has no unique ID.\n", reg.getName().c_str());
+            Log.printf("Register '%s' has no unique ID.\n", reg.getName().c_str());
             return;
         }
 
         auto [_, inserted] = usedIds.insert(reg.getId().c_str());
 
         if (!inserted) {
-            Serial.printf("Duplicate unique ID '%s' found for register '%s'.\n",
-                          reg.getId().c_str(),
-                          reg.getName().c_str());
+            Log.printf("Duplicate unique ID '%s' found for register '%s'.\n",
+                       reg.getId().c_str(),
+                       reg.getName().c_str());
             return;
         }
 
@@ -201,25 +203,25 @@ namespace VirtualSensorManager {
 
         device.vars.push_back(var);
 
-        Serial.printf("Added variable for virtual sensors: %s (name: %s)\n",
-                      reg.getId().c_str(),
-                      reg.getName().c_str());
+        Log.printf("Added variable for virtual sensors: %s (name: %s)\n",
+                   reg.getId().c_str(),
+                   reg.getName().c_str());
     }
 
     void compileExpressions(ModbusDevice& device) {
-        Serial.printf("Compiling expressions for device %s (%s)\n",
-                      device.discovery.name.c_str(),
-                      device.discovery.identifier.c_str());
+        Log.printf("Compiling expressions for device %s (%s)\n",
+                   device.discovery.name.c_str(),
+                   device.discovery.identifier.c_str());
         for (auto& reg : device.virtualSensors) {
             int err;
             reg.compiledExpression =
                 te_compile(reg.expression.c_str(), device.vars.data(), device.vars.size(), &err);
 
             if (!reg.compiledExpression) {
-                Serial.printf("Failed to compile '%s': %s (position %d)\n",
-                              reg.getName().c_str(),
-                              reg.expression.c_str(),
-                              err);
+                Log.printf("Failed to compile '%s': %s (position %d)\n",
+                           reg.getName().c_str(),
+                           reg.expression.c_str(),
+                           err);
             }
         }
     }
@@ -234,6 +236,10 @@ namespace VirtualSensorManager {
 
         constexpr double EPSILON = 1e-9;
         bool changed = fabs(result - reg.value) > EPSILON;
+
+        if (reg.rounding > 0) {
+            result = Numbers::applyRounding(result, reg.rounding);
+        }
 
         reg.value = result;
 

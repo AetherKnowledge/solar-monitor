@@ -135,3 +135,25 @@ export function isUpToDate(version: string, latestVersion: string): boolean {
 
 	return true;
 }
+
+export async function testUpdate(
+	_file: File,
+	onProgress?: (progress: number) => void
+): Promise<boolean> {
+	let progress = 0;
+
+	onProgress?.(progress);
+
+	while (progress < 100) {
+		await new Promise((resolve) => setTimeout(resolve, 5));
+
+		progress += Math.random() * 8 + 1;
+		progress = Math.min(progress, 100);
+
+		onProgress?.(progress);
+	}
+
+	await new Promise((resolve) => setTimeout(resolve, 500));
+
+	return true;
+}

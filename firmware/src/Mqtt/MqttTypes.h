@@ -121,6 +121,7 @@ struct NumberDiscovery : WriteDiscovery {
     double min = 0;
     double max = 100;
     double step = 1;
+    String mode = "auto";
 
     static constexpr const char* Component = "number";
 
@@ -130,6 +131,7 @@ struct NumberDiscovery : WriteDiscovery {
         json["min"] = min;
         json["max"] = max;
         json["step"] = step;
+        json["mode"] = mode;
     }
 
     void fromJson(JsonObject json) {
@@ -138,5 +140,6 @@ struct NumberDiscovery : WriteDiscovery {
         min = json["min"] | 0;
         max = json["max"] | 100;
         step = json["step"] | 1;
+        mode = json["mode"] | "auto";
     }
 };

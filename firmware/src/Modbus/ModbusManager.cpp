@@ -4,6 +4,7 @@
 #include <Config/ConfigManager.h>
 #include <Mqtt/MqttDiscovery.h>
 #include <Mqtt/MqttManager.h>
+#include <Common/Logger.h>
 
 namespace ModbusManager {
     bool hasStarted = false;
@@ -15,8 +16,8 @@ namespace ModbusManager {
     void setup() {
         reset();
 
-        Serial.println();
-        Serial.println("Setting up Modbus Manager");
+        Log.println();
+        Log.println("Setting up Modbus Manager");
 
         ReadRegisterManager::setup(ConfigManager::config.modbusDevices);
         VirtualSensorManager::setup(ConfigManager::config.modbusDevices);
@@ -30,9 +31,9 @@ namespace ModbusManager {
             if (device.port != 1 && device.port != 2) {
                 device.initialized = false;
 
-                Serial.printf("Invalid port number %d for Modbus device %s\n",
-                              device.port,
-                              device.discovery.name.c_str());
+                Log.printf("Invalid port number %d for Modbus device %s\n",
+                           device.port,
+                           device.discovery.name.c_str());
                 return;
             }
 
@@ -41,9 +42,9 @@ namespace ModbusManager {
             if (!inserted) {
                 device.initialized = false;
 
-                Serial.printf("Port %d already in use. Skipping %s\n",
-                              device.port,
-                              device.discovery.name.c_str());
+                Log.printf("Port %d already in use. Skipping %s\n",
+                           device.port,
+                           device.discovery.name.c_str());
                 return;
             }
 
@@ -64,15 +65,15 @@ namespace ModbusManager {
             }
 
             device.initialized = true;
-            Serial.printf("Initialized Modbus device %s on port %d with baudrate %d\n",
-                          device.discovery.name.c_str(),
-                          device.port,
-                          device.baudrate);
+            Log.printf("Initialized Modbus device %s on port %d with baudrate %d\n",
+                       device.discovery.name.c_str(),
+                       device.port,
+                       device.baudrate);
         }
     }
 
     void reset() {
-        Serial.println("Resetting Modbus Manager");
+        Log.println("Resetting Modbus Manager");
 
         hasStarted = false;
         portsInUse.clear();
@@ -91,7 +92,7 @@ namespace ModbusManager {
         pendingDevices = devices;
         updateStatus = UpdateStatus::Requested;
 
-        Serial.println("\nModbus configuration updating");
+        Log.println("\nModbus configuration updating");
     }
 
     void updateConfig(const std::vector<ModbusDevice>& devices) {
@@ -103,8 +104,8 @@ namespace ModbusManager {
         ModbusManager::setup();
 
         updateStatus = UpdateStatus::UpdateComplete;
-        Serial.print("Modbus configuration updated. New config: ");
-        Serial.println(ConfigManager::config.toString().c_str());
+        Log.print("Modbus configuration updated. New config: ");
+        Log.println(ConfigManager::config.toString().c_str());
         return;
     }
 
@@ -139,7 +140,7 @@ namespace ModbusManager {
     }
 
     void pollDevice(ModbusDevice& device) {
-        // Serial.println("Polling Modbus device " + device.name + " (" +
+        // Log.println("Polling Modbus device " + device.name + " (" +
         // device.identifier + ")");
 
         for (auto& group : device.readGroups) {
@@ -152,7 +153,7 @@ namespace ModbusManager {
         ReadRegisterManager::Result result = ReadRegisterManager::readGroup(device, group);
 
         if (!result.success) {
-            // Serial.printf("Failed to read register group %u-%u\n",
+            // Log.printf("Failed to read register group %u-%u\n",
             //               group.startAddress,
             //               group.startAddress + group.count - 1);
             return;
@@ -160,7 +161,7 @@ namespace ModbusManager {
 
         if (!result.changedRegisters.empty() && device.mqttEnabled && MqttManager::isConnected()) {
             for (const auto& reg : result.changedRegisters) {
-                // Serial.printf("Register %s (address: %d) value changed to %.2f\n",
+                // Log.printf("Register %s (address: %d) value changed to %.2f\n",
                 //               reg->discovery.name.c_str(),
                 //               reg->address,
                 //               reg->value);
@@ -175,7 +176,7 @@ namespace ModbusManager {
             bool result = VirtualSensorManager::updateRegister(virtualSensor);
 
             if (result && device.mqttEnabled && MqttManager::isConnected()) {
-                // Serial.printf("Virtual Sensor %s value changed to %.2f\n",
+                // Log.printf("Virtual Sensor %s value changed to %.2f\n",
                 //               virtualSensor.discovery.name.c_str(),
                 //               virtualSensor.value);
 

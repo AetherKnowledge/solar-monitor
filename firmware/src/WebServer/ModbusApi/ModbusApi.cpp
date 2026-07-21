@@ -4,6 +4,7 @@
 #include <Common/Json.h>
 #include <Modbus/ModbusManager.h>
 #include "Common/Enum.h"
+#include <Common/Logger.h>
 
 namespace ModbusApi {
     void registerApi(AsyncWebServer& server) {
@@ -16,7 +17,7 @@ namespace ModbusApi {
                 handleUpdateConfig(request, json);
             }));
 
-        Serial.println("Modbus API registered");
+        Log.println("Modbus API registered");
     }
 
     void handleGetConfig(AsyncWebServerRequest* request) {
@@ -28,9 +29,9 @@ namespace ModbusApi {
         String response;
         serializeJson(doc, response);
 
-        Serial.println("Modbus Config: " + String(ConfigManager::config.modbusDevices.size()) +
-                       " devices");
-        Serial.printf("\nFetch Modbus Config: %s\n", doc.as<String>().c_str());
+        // Log.println("Modbus Config: " + String(ConfigManager::config.modbusDevices.size()) +
+        //                " devices");
+        // Log.printf("\nFetch Modbus Config: %s\n", doc.as<String>().c_str());
 
         request->send(200, "application/json", response);
     }
@@ -39,9 +40,9 @@ namespace ModbusApi {
         std::vector<ModbusDevice> devices;
         deserializeVector(json["devices"], devices);
 
-        Serial.println("Recieved Modbus Config: " + String(devices.size()) + " devices");
-        serializeJson(json, Serial);
-        Serial.println();
+        Log.println("Recieved Modbus Config: " + String(devices.size()) + " devices");
+        serializeJson(json, Log);
+        Log.println();
 
         ModbusManager::requestUpdate(devices);
         Response::success(request, 202, "OK");

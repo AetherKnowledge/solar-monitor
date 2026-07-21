@@ -1,4 +1,6 @@
 #include "ReadRegisterManager.h"
+#include <Common/Numbers.h>
+#include <Common/Logger.h>
 
 namespace ReadRegisterManager {
     void setup(std::vector<ModbusDevice>& devices) {
@@ -11,7 +13,7 @@ namespace ReadRegisterManager {
         auto result = device.modbus.readHoldingRegisters(group.startAddress, group.count);
 
         if (result != device.modbus.ku8MBSuccess) {
-            // Serial.printf("Modbus error: %02X\n", result);
+            // Log.printf("Modbus error: %02X\n", result);
             return Result{false, {}};
         }
 
@@ -39,7 +41,7 @@ namespace ReadRegisterManager {
         value = transformValue(reg, value);
 
         if (reg.rounding > 0) {
-            value = applyRounding(value, reg.rounding);
+            value = Numbers::applyRounding(value, reg.rounding);
         }
 
         if (value != reg.value) {
@@ -66,15 +68,6 @@ namespace ReadRegisterManager {
         }
     }
 
-    double applyRounding(double value, uint8_t decimals) {
-        static constexpr double factors[] = {1.0, 10.0, 100.0, 1000.0};
-
-        if (decimals >= std::size(factors))
-            return value;
-
-        return roundf(value * factors[decimals]) / factors[decimals];
-    }
-
     void createGroups(ModbusDevice& device) {
         device.readGroups.clear();
 
@@ -92,7 +85,7 @@ namespace ReadRegisterManager {
             }
 
             if (previousRegister && reg.address == previousRegister->address) {
-                Serial.printf(
+                Log.printf(
                     "Duplicate register %u found in device %s. Only the first "
                     "occurrence will be used.\n",
                     reg.address,
@@ -108,11 +101,11 @@ namespace ReadRegisterManager {
                 lastGroup.registers.push_back(&reg);
                 lastGroup.count = newCount;
             } else {
-                Serial.printf("Read group for device %s: %u-%u (%u registers)\n",
-                              device.discovery.name.c_str(),
-                              lastGroup.startAddress,
-                              lastGroup.startAddress + lastGroup.count - 1,
-                              lastGroup.count);
+                Log.printf("Read group for device %s: %u-%u (%u registers)\n",
+                           device.discovery.name.c_str(),
+                           lastGroup.startAddress,
+                           lastGroup.startAddress + lastGroup.count - 1,
+                           lastGroup.count);
 
                 createNewGroup(device, reg);
             }

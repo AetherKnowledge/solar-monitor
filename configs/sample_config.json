@@ -16,8 +16,6 @@
   },
   "modbusDevices": [
     {
-      "name": "Inverter 1",
-      "identifier": "inverter_test_1",
       "slaveId": 5,
       "timeout": 2000,
       "baudrate": 2400,
@@ -25,6 +23,8 @@
       "swapBytes": true,
       "mqttEnabled": true,
       "discovery": {
+        "name": "Inverter 1",
+        "identifier": "inverter_test_1",
         "manufacturer": "Tester",
         "model": "Tester Inverter",
         "sw_version": "1.0.0"
@@ -88,7 +88,7 @@
       ],
       "selectWriteRegisters": [
         {
-          "address": 4504,
+          "address": 5035,
           "discovery": {
             "options": ["Option 1", "Option 2", "Option 3"],
             "command_template": "{{ this.attributes.options.index(value) }}",

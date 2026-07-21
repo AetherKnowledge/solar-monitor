@@ -9,7 +9,8 @@
 		Package,
 		Ruler,
 		Sigma,
-		TextCursorInput
+		TextCursorInput,
+		Waypoints
 	} from '@lucide/svelte';
 
 	import type { VirtualSensor } from '../DeviceTypes';
@@ -23,13 +24,13 @@
 	<!-- General -->
 
 	<div class="flex items-center gap-3">
-		<div class="bg-primary/10 text-primary rounded-xl p-3">
+		<div class="rounded-xl bg-primary/10 p-3 text-primary">
 			<Package class="size-6" />
 		</div>
 
 		<div>
 			<h2 class="card-title">General</h2>
-			<p class="text-base-content/60 text-sm">Basic information about this virtual sensor.</p>
+			<p class="text-sm text-base-content/60">Basic information about this virtual sensor.</p>
 		</div>
 	</div>
 
@@ -64,29 +65,29 @@
 	<!-- Expression -->
 
 	<div class="flex items-center gap-3">
-		<div class="bg-secondary/10 text-secondary rounded-xl p-3">
+		<div class="rounded-xl bg-secondary/10 p-3 text-secondary">
 			<FunctionSquare class="size-6" />
 		</div>
 
 		<div>
 			<h2 class="card-title">Expression</h2>
-			<p class="text-base-content/60 text-sm">
+			<p class="text-sm text-base-content/60">
 				Create a calculated sensor using other register values.
 			</p>
 		</div>
 	</div>
 
-	<div class="mt-6">
+	<div class="my-6">
 		<label class="form-control">
 			<div class="label">
-				<span class="text-sm flex items-center gap-1">
+				<span class="flex items-center gap-1 text-sm">
 					<TextCursorInput class="size-4 text-secondary" />
 					<p class="pt-0.5">Expression</p>
 				</span>
 			</div>
 
 			<textarea
-				class="textarea textarea-bordered h-28 font-mono w-full"
+				class="textarea-bordered textarea h-28 w-full font-mono"
 				placeholder="(battery_voltage * battery_current)"
 				bind:value={register.expression}></textarea>
 
@@ -98,6 +99,16 @@
 		</label>
 	</div>
 
+	<DataInput
+		label="Rounding"
+		description="Number of decimal places."
+		placeholder="2"
+		type="number"
+		icon={Waypoints}
+		iconColor="text-secondary"
+		bind:value={register.rounding}
+	/>
+
 	<div class="mt-5 rounded-xl border border-base-300 bg-base-200/50 p-4">
 		<div class="flex items-center justify-between">
 			<div class="flex items-start gap-3">
@@ -106,9 +117,9 @@
 				</div>
 
 				<div>
-					<h3 class="font-medium text-sm">Persistent Value</h3>
+					<h3 class="text-sm font-medium">Persistent Value</h3>
 
-					<p class="text-base-content/60 text-sm">
+					<p class="text-sm text-base-content/60">
 						Restore the last calculated value after the device restarts.
 					</p>
 				</div>
@@ -123,13 +134,13 @@
 	<!-- Home Assistant -->
 
 	<div class="flex items-center gap-3">
-		<div class="bg-success/10 text-success rounded-xl p-3">
+		<div class="rounded-xl bg-success/10 p-3 text-success">
 			<House class="size-6" />
 		</div>
 
 		<div>
 			<h2 class="card-title">Home Assistant Discovery</h2>
-			<p class="text-base-content/60 text-sm">
+			<p class="text-sm text-base-content/60">
 				Optional metadata published through MQTT Discovery.
 			</p>
 		</div>

@@ -4,6 +4,7 @@
 #include <Networking/NetworkManager.h>
 #include <Modbus/ModbusManager.h>
 #include <Common/UpdateStatus.h>
+#include <Common/Logger.h>
 
 namespace ConfigManager {
     Config config;
@@ -16,25 +17,25 @@ namespace ConfigManager {
         file.close();
 
         if (error) {
-            Serial.printf("Failed to deserialize config: %s\n", error.c_str());
+            Log.printf("Failed to deserialize config: %s\n", error.c_str());
             return false;
         }
 
         config.fromJson(doc.as<JsonObject>());
 
-        Serial.println("Config loaded");
-        Serial.println(config.toString().c_str());
+        Log.println("Config loaded");
+        Log.println(config.toString().c_str());
 
         hasLoaded = true;
         return true;
     }
 
     bool load() {
-        Serial.println();
-        Serial.println("Loading config");
+        Log.println();
+        Log.println("Loading config");
 
         if (!mountFS()) {
-            Serial.println("Failed to mount ConfigFS");
+            Log.println("Failed to mount ConfigFS");
             return false;
         }
 
@@ -43,14 +44,14 @@ namespace ConfigManager {
 
         if (config && loadFile(config)) {
             backup.close();
-            Serial.println("Loaded default config successfully");
+            Log.println("Loaded default config successfully");
             return true;
         } else if (backup && loadFile(backup)) {
             config.close();
 
-            Serial.println("Loaded backup config successfully");
+            Log.println("Loaded backup config successfully");
             if (!copyFile(ConfigFS, CONFIG_BAK_LOCATION, CONFIG_LOCATION)) {
-                Serial.println("Failed to restore config from backup.");
+                Log.println("Failed to restore config from backup.");
             }
             return true;
         }
@@ -58,7 +59,7 @@ namespace ConfigManager {
         backup.close();
         config.close();
 
-        Serial.println("Failed to load config and backup config! Resetting to default config.");
+        Log.println("Failed to load config and backup config! Resetting to default config.");
         reset();
         return false;
     }
@@ -73,25 +74,25 @@ namespace ConfigManager {
 
         if (ConfigFS.exists(CONFIG_LOCATION) &&
             !copyFile(ConfigFS, CONFIG_LOCATION, CONFIG_BAK_LOCATION)) {
-            Serial.println("Backing up config failed!");
+            Log.println("Backing up config failed!");
         }
 
         File config = ConfigFS.open(CONFIG_LOCATION, "w");
         if (!config) {
-            Serial.println("Failed to open config for writing.");
+            Log.println("Failed to open config for writing.");
             return false;
         }
 
         if (serializeJson(doc, config) == 0) {
-            Serial.println("Failed to write config.");
+            Log.println("Failed to write config.");
             config.close();
             return false;
         }
 
         config.close();
 
-        Serial.println();
-        Serial.println("Config saved");
+        Log.println();
+        Log.println("Config saved");
 
         return true;
     }

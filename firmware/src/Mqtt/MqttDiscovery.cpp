@@ -2,6 +2,7 @@
 #include "MqttManager.h"
 #include <Config/ConfigManager.h>
 #include <Mqtt/MqttTypes.h>
+#include <Common/Logger.h>
 
 namespace MqttDiscovery {
     void start() {
@@ -50,10 +51,10 @@ namespace MqttDiscovery {
                 }
             }
 
-            Serial.printf("Published %d discovery messages for Modbus device %s (%s)\n",
-                          publishedDiscoveryCount,
-                          device.discovery.name.c_str(),
-                          device.discovery.identifier.c_str());
+            Log.printf("Published %d discovery messages for Modbus device %s (%s)\n",
+                       publishedDiscoveryCount,
+                       device.discovery.name.c_str(),
+                       device.discovery.identifier.c_str());
         }
     }
 
@@ -77,13 +78,13 @@ namespace MqttDiscovery {
             doc,
             true);
 
-        Serial.printf("%s to publish discovery for %s (%s) of device %s (%s)\n",
-                      result ? "Successfully" : "Failed",
-                      discovery.name.c_str(),
-                      discovery.uniqueId.c_str(),
-                      device.discovery.name.c_str(),
-                      device.discovery.identifier.c_str());
-        Serial.printf("Discovery JSON: %s\n", doc.as<String>().c_str());
+        // Log.printf("%s to publish discovery for %s (%s) of device %s (%s)\n",
+        //               result ? "Successfully" : "Failed",
+        //               discovery.name.c_str(),
+        //               discovery.uniqueId.c_str(),
+        //               device.discovery.name.c_str(),
+        //               device.discovery.identifier.c_str());
+        // Log.printf("Discovery JSON: %s\n", doc.as<String>().c_str());
 
         return result;
     }

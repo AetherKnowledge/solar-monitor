@@ -84,6 +84,7 @@ export interface NumberDiscovery extends WriteDiscovery {
 	min: number;
 	max: number;
 	step: number;
+	mode: string;
 }
 
 export interface ReadRegister {
@@ -99,6 +100,7 @@ export interface ReadRegister {
 export interface VirtualSensor {
 	expression: string;
 	isPersistent: boolean;
+	rounding: number;
 
 	discovery: SensorDiscovery;
 }
@@ -145,6 +147,7 @@ export const defaultReadRegister: ReadRegister = {
 export const defaultVirtualSensor: VirtualSensor = {
 	expression: '',
 	isPersistent: false,
+	rounding: 0,
 	discovery: {
 		name: '',
 		unique_id: ''
@@ -171,7 +174,8 @@ export const defaultNumberWriteRegister: NumberWriteRegister = {
 		qos: 0,
 		min: 0,
 		max: 0,
-		step: 0
+		step: 0,
+		mode: 'auto'
 	}
 };
 

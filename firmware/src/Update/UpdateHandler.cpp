@@ -1,6 +1,7 @@
 #include "UpdateHandler.h"
 #include <Common/Network.h>
 #include <System/SystemManager.h>
+#include <Common/Logger.h>
 
 namespace UpdateHandler {
     struct UpdateState {
@@ -14,7 +15,7 @@ namespace UpdateHandler {
         }
 
         SystemManager::requestRestart = true;
-        Serial.println("Firmware update successful");
+        Log.println("Firmware update successful");
 
         Response::success(request, 200, "Firmware update successful");
     }
@@ -25,37 +26,37 @@ namespace UpdateHandler {
             auto* state = new UpdateState();
             request->_tempObject = state;
 
-            Serial.println("Starting firmware update");
-            Serial.printf("Firmware size: %u bytes\n", total);
+            Log.println("Starting firmware update");
+            Log.printf("Firmware size: %u bytes\n", total);
 
             if (!Update.begin(total, U_FLASH)) {
-                Serial.println("Failed to begin firmware update");
-                Update.printError(Serial);
+                Log.println("Failed to begin firmware update");
+                Update.printError(Log);
                 return;
             }
         }
 
         // Write this chunk
         if (Update.write(data, len) != len) {
-            Serial.println("Failed to write firmware chunk");
+            Log.println("Failed to write firmware chunk");
 
-            Update.printError(Serial);
+            Update.printError(Log);
             return;
         }
 
-        Serial.printf("Firmware: %u / %u bytes\r", index + len, total);
+        Log.printf("Firmware: %u / %u bytes\r", index + len, total);
 
         // Last chunk
         if (index + len == total) {
-            Serial.println();
+            Log.println();
 
             if (!Update.end(true)) {
-                Serial.println("Failed to finish firmware update");
-                Update.printError(Serial);
+                Log.println("Failed to finish firmware update");
+                Update.printError(Log);
                 return;
             }
 
-            Serial.println("Firmware written successfully");
+            Log.println("Firmware written successfully");
         }
     }
 
@@ -65,7 +66,7 @@ namespace UpdateHandler {
             return;
         }
 
-        Serial.println("Website update successful");
+        Log.println("Website update successful");
 
         Response::success(request, 200, "Website update successful");
 
@@ -80,8 +81,8 @@ namespace UpdateHandler {
             auto* state = new UpdateState();
             request->_tempObject = state;
 
-            Serial.println("Starting website update");
-            Serial.printf("Website size: %u bytes\n", total);
+            Log.println("Starting website update");
+            Log.printf("Website size: %u bytes\n", total);
 
             /*
              * U_SPIFFS tells Update that we're updating
@@ -89,9 +90,9 @@ namespace UpdateHandler {
              * an application partition.
              */
             if (!Update.begin(total, U_SPIFFS)) {
-                Serial.println("Failed to begin website update");
+                Log.println("Failed to begin website update");
 
-                Update.printError(Serial);
+                Update.printError(Log);
 
                 return;
             }
@@ -99,28 +100,28 @@ namespace UpdateHandler {
 
         // Write current chunk
         if (Update.write(data, len) != len) {
-            Serial.println("Failed to write website chunk");
+            Log.println("Failed to write website chunk");
 
-            Update.printError(Serial);
+            Update.printError(Log);
 
             return;
         }
 
-        Serial.printf("Website: %u / %u bytes\r", index + len, total);
+        Log.printf("Website: %u / %u bytes\r", index + len, total);
 
         // Final chunk
         if (index + len == total) {
-            Serial.println();
+            Log.println();
 
             if (!Update.end(true)) {
-                Serial.println("Failed to finish website update");
+                Log.println("Failed to finish website update");
 
-                Update.printError(Serial);
+                Update.printError(Log);
 
                 return;
             }
 
-            Serial.println("Website written successfully");
+            Log.println("Website written successfully");
         }
     }
 }  // namespace UpdateHandler

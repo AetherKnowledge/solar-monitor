@@ -47,8 +47,6 @@
 	async function onUpdateFirmware() {
 		if (!newFirmwareFile) return;
 
-		showLoading('Uploading firmware...', 0);
-
 		if (
 			!(await showYesNo({
 				message:
@@ -61,6 +59,8 @@
 			return;
 		}
 
+		showLoading('Uploading firmware...', 0);
+
 		const result = await updateFirmware(newFirmwareFile, (progress) => {
 			updateLoadingProgress(progress);
 		});
@@ -70,6 +70,7 @@
 			return;
 		}
 
+		firmwareFiles = undefined;
 		showSuccess('Firmware updated successfully.');
 	}
 
@@ -99,6 +100,7 @@
 			return;
 		}
 
+		websiteFiles = undefined;
 		showSuccess('Web interface updated successfully.');
 	}
 

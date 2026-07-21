@@ -5,6 +5,7 @@
 #include "MqttManager.h"
 #include <WiFi.h>
 #include <Modbus/WriteRegisterManager.h>
+#include <Common/Logger.h>
 
 static WiFiClient wifiClient;
 static PubSubClient mqttClient(wifiClient);
@@ -15,8 +16,8 @@ namespace MqttManager {
     }
 
     void setup() {
-        Serial.println();
-        Serial.println("Setting up MQTT");
+        Log.println();
+        Log.println("Setting up MQTT");
 
         mqttClient.setServer(ConfigManager::config.mqtt.host.c_str(),
                              ConfigManager::config.mqtt.port);
@@ -35,8 +36,8 @@ namespace MqttManager {
     }
 
     bool connect() {
-        Serial.println();
-        Serial.println("Connecting to MQTT");
+        Log.println();
+        Log.println("Connecting to MQTT");
 
         MQTTConfig& mqttConfig = ConfigManager::config.mqtt;
         String clientId = mqttConfig.clientId;
@@ -63,23 +64,23 @@ namespace MqttManager {
         }
 
         if (connected) {
-            Serial.println();
-            Serial.println("Connected to MQTT");
+            Log.println();
+            Log.println("Connected to MQTT");
             mqttClient.publish("solar-monitor/status", "online", true);
 
             generateTopics();
             subscribeAll();
             MqttDiscovery::start();
         } else {
-            Serial.println();
-            Serial.println("Failed to connect to MQTT");
+            Log.println();
+            Log.println("Failed to connect to MQTT");
         }
         return connected;
     }
 
     void disconnect() {
-        Serial.println();
-        Serial.println("Disconnecting from MQTT");
+        Log.println();
+        Log.println("Disconnecting from MQTT");
 
         if (!mqttClient.connected())
             return;
@@ -98,7 +99,7 @@ namespace MqttManager {
             if (millis() - lastAttempt > 5000) {
                 lastAttempt = millis();
                 if (!MqttManager::connect()) {
-                    Serial.printf("MQTT connect failed, rc=%d\n", mqttClient.state());
+                    Log.printf("MQTT connect failed, rc=%d\n", mqttClient.state());
                 }
             }
 
@@ -141,9 +142,9 @@ namespace MqttManager {
         ConfigManager::save();
         reload();
 
-        Serial.println();
-        Serial.println("MQTT configuration updated");
-        Serial.println(ConfigManager::config.mqtt.toString().c_str());
+        Log.println();
+        Log.println("MQTT configuration updated");
+        Log.println(ConfigManager::config.mqtt.toString().c_str());
 
         return true;
     }
@@ -152,7 +153,7 @@ namespace MqttManager {
         if (!mqttClient.connected())
             return false;
 
-        // Serial.printf("Publishing to MQTT topic: %s, payload: %s\n", topic.c_str(),
+        // Log.printf("Publishing to MQTT topic: %s, payload: %s\n", topic.c_str(),
         // payload.c_str());
         return mqttClient.publish(topic.c_str(), payload.c_str(), retain);
     }
@@ -189,12 +190,12 @@ namespace MqttManager {
             publish(reg.discovery.stateTopic, value, true);
         }
 
-        Serial.printf("Received payload for %s (%s) of device %s (%s): %s\n",
-                      reg.discovery.name.c_str(),
-                      reg.discovery.uniqueId.c_str(),
-                      device.discovery.name.c_str(),
-                      device.discovery.identifier.c_str(),
-                      value.c_str());
+        Log.printf("Received payload for %s (%s) of device %s (%s): %s\n",
+                   reg.discovery.name.c_str(),
+                   reg.discovery.uniqueId.c_str(),
+                   device.discovery.name.c_str(),
+                   device.discovery.identifier.c_str(),
+                   value.c_str());
 
         return result;
     }

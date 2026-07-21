@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <Config/ConfigManager.h>
 #include <Mqtt/MqttManager.h>
+#include <Common/Logger.h>
 
 namespace NetworkManager {
     std::vector<WiFiNetwork> cachedWifiNetworks;
@@ -11,7 +12,7 @@ namespace NetworkManager {
     NetworkConfig pendingConfig;
 
     void startScanning() {
-        Serial.println("Starting WiFi scan");
+        Log.println("Starting WiFi scan");
         if (scanStatus != UpdateStatus::InProgress) {
             scanStatus = UpdateStatus::InProgress;
             WiFi.scanNetworks(true);
@@ -22,13 +23,13 @@ namespace NetworkManager {
         int n = WiFi.scanComplete();
 
         if (n == WIFI_SCAN_FAILED) {
-            Serial.println("WiFi scan failed");
+            Log.println("WiFi scan failed");
             scanStatus = UpdateStatus::UpdateFailed;
             return;
         }
 
         if (n >= 0) {
-            Serial.println("WiFi scan complete");
+            Log.println("WiFi scan complete");
             cachedWifiNetworks.clear();
             for (int i = 0; i < n; ++i) {
                 WiFiNetwork network;
@@ -60,7 +61,7 @@ namespace NetworkManager {
     }
 
     bool connect(const String& ssid, const String& password, WiFiMode_t mode) {
-        Serial.printf("Connecting to WiFi network: %s\n", ssid.c_str());
+        Log.printf("Connecting to WiFi network: %s\n", ssid.c_str());
         WiFi.begin(ssid.c_str(), password.c_str());
         WiFi.mode(mode);
         WiFi.setSleep(false);
@@ -70,18 +71,18 @@ namespace NetworkManager {
         // Keep trying to connect for 10 seconds
         while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 10000) {
             delay(100);
-            Serial.print(".");
+            Log.print(".");
         }
-        Serial.println();
+        Log.println();
 
         if (WiFi.status() == WL_CONNECTED) {
-            Serial.println("Connected!");
+            Log.println("Connected!");
 
-            Serial.print("IP Address: ");
-            Serial.println(WiFi.localIP());
+            Log.print("IP Address: ");
+            Log.println(WiFi.localIP());
             return true;
         } else {
-            Serial.println("Failed to connect to WiFi.");
+            Log.println("Failed to connect to WiFi.");
             WiFi.mode(WIFI_AP_STA);  // Reset to default mode
             return false;
         }
@@ -94,8 +95,8 @@ namespace NetworkManager {
             connect(pendingConfig.ssid, pendingConfig.password, pendingConfig.mode);
 
         if (!isValidConnection) {
-            Serial.println();
-            Serial.println("Failed to connect to the new network. Keeping the old configuration.");
+            Log.println();
+            Log.println("Failed to connect to the new network. Keeping the old configuration.");
 
             connect(ConfigManager::config.network.ssid,
                     ConfigManager::config.network.password,
@@ -109,9 +110,9 @@ namespace NetworkManager {
         ConfigManager::save();
         MqttManager::reload();
 
-        Serial.println();
-        Serial.println("Network configuration updated");
-        Serial.println(ConfigManager::config.network.toString().c_str());
+        Log.println();
+        Log.println("Network configuration updated");
+        Log.println(ConfigManager::config.network.toString().c_str());
 
         updateStatus = UpdateStatus::UpdateComplete;
     }

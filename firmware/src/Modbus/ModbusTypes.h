@@ -83,6 +83,7 @@ struct ReadGroup {
 };
 
 struct VirtualSensor : Entity<SensorDiscovery> {
+    uint8_t rounding = 0;
     String expression;
     te_expr* compiledExpression = nullptr;
 
@@ -95,6 +96,7 @@ struct VirtualSensor : Entity<SensorDiscovery> {
 
         json["expression"] = expression;
         json["isPersistent"] = false;
+        json["rounding"] = rounding;
     }
 
     void fromJson(JsonObject json) {
@@ -102,6 +104,7 @@ struct VirtualSensor : Entity<SensorDiscovery> {
 
         expression = json["expression"].as<String>();
         isPersistent = json["isPersistent"] | false;
+        rounding = json["rounding"] | 0;
     }
 };
 
