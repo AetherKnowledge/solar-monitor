@@ -8,6 +8,7 @@
 namespace ConfigManager {
     Config config;
     bool hasLoaded = false;
+    fs::LittleFSFS ConfigFS;
 
     bool loadFile(File& file) {
         JsonDocument doc;
@@ -32,13 +33,13 @@ namespace ConfigManager {
         Serial.println();
         Serial.println("Loading config");
 
-        if (!LittleFS.begin()) {
-            Serial.println("LittleFS not mounted");
+        if (!mountFS()) {
+            Serial.println("Failed to mount ConfigFS");
             return false;
         }
 
-        File config = LittleFS.open(CONFIG_LOCATION, "r");
-        File backup = LittleFS.open(CONFIG_BAK_LOCATION, "r");
+        File config = ConfigFS.open(CONFIG_LOCATION, "r");
+        File backup = ConfigFS.open(CONFIG_BAK_LOCATION, "r");
 
         if (config && loadFile(config)) {
             backup.close();
@@ -48,7 +49,7 @@ namespace ConfigManager {
             config.close();
 
             Serial.println("Loaded backup config successfully");
-            if (!copyFile(CONFIG_BAK_LOCATION, CONFIG_LOCATION)) {
+            if (!copyFile(ConfigFS, CONFIG_BAK_LOCATION, CONFIG_LOCATION)) {
                 Serial.println("Failed to restore config from backup.");
             }
             return true;
@@ -57,19 +58,25 @@ namespace ConfigManager {
         backup.close();
         config.close();
 
-        Serial.println("Failed to load default and backup config!");
+        Serial.println("Failed to load config and backup config! Resetting to default config.");
+        reset();
         return false;
+    }
+
+    bool mountFS() {
+        return ConfigFS.begin(false, "/storage", 10, "storage");
     }
 
     bool save() {
         JsonDocument doc;
         config.toJson(doc.to<JsonObject>());
 
-        if (LittleFS.exists(CONFIG_LOCATION) && !copyFile(CONFIG_LOCATION, CONFIG_BAK_LOCATION)) {
+        if (ConfigFS.exists(CONFIG_LOCATION) &&
+            !copyFile(ConfigFS, CONFIG_LOCATION, CONFIG_BAK_LOCATION)) {
             Serial.println("Backing up config failed!");
         }
 
-        File config = LittleFS.open(CONFIG_LOCATION, "w");
+        File config = ConfigFS.open(CONFIG_LOCATION, "w");
         if (!config) {
             Serial.println("Failed to open config for writing.");
             return false;
@@ -87,6 +94,11 @@ namespace ConfigManager {
         Serial.println("Config saved");
 
         return true;
+    }
+
+    void reset() {
+        config = Config();
+        save();
     }
 
 }  // namespace ConfigManager

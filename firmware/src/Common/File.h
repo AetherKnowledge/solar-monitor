@@ -2,12 +2,12 @@
 
 #include <LittleFS.h>
 
-inline bool copyFile(const char* sourcePath, const char* destPath) {
-    File sourceFile = LittleFS.open(sourcePath, "r");
+inline bool copyFile(fs::LittleFSFS& fs, const char* sourcePath, const char* destPath) {
+    File sourceFile = fs.open(sourcePath, "r");
     if (!sourceFile)
         return false;
 
-    File destFile = LittleFS.open(destPath, "w");
+    File destFile = fs.open(destPath, "w");
     if (!destFile) {
         sourceFile.close();
         return false;

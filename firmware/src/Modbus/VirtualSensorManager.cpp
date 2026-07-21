@@ -34,13 +34,13 @@ namespace VirtualSensorManager {
         Serial.println();
         Serial.println("Loading persistence");
 
-        if (!LittleFS.begin()) {
-            Serial.println("LittleFS not mounted");
+        if (!ConfigManager::mountFS()) {
+            Serial.println("Failed to mount ConfigFS");
             return false;
         }
 
-        File persistence = LittleFS.open(PERSISTENCE_LOCATION, "r");
-        File backup = LittleFS.open(PERSISTENCE_BAK_LOCATION, "r");
+        File persistence = ConfigManager::ConfigFS.open(PERSISTENCE_LOCATION, "r");
+        File backup = ConfigManager::ConfigFS.open(PERSISTENCE_BAK_LOCATION, "r");
 
         if (persistence && loadFile(persistence, devices)) {
             backup.close();
@@ -50,7 +50,8 @@ namespace VirtualSensorManager {
             persistence.close();
 
             Serial.println("Loaded backup persistence successfully");
-            if (!copyFile(PERSISTENCE_BAK_LOCATION, PERSISTENCE_LOCATION)) {
+            if (!copyFile(
+                    ConfigManager::ConfigFS, PERSISTENCE_BAK_LOCATION, PERSISTENCE_LOCATION)) {
                 Serial.println("Failed to restore persistence from backup.");
             }
             return true;
@@ -78,12 +79,12 @@ namespace VirtualSensorManager {
             }
         }
 
-        if (LittleFS.exists(PERSISTENCE_LOCATION) &&
-            !copyFile(PERSISTENCE_LOCATION, PERSISTENCE_BAK_LOCATION)) {
+        if (ConfigManager::ConfigFS.exists(PERSISTENCE_LOCATION) &&
+            !copyFile(ConfigManager::ConfigFS, PERSISTENCE_LOCATION, PERSISTENCE_BAK_LOCATION)) {
             Serial.println("Backing up persistence failed!");
         }
 
-        File persistence = LittleFS.open(PERSISTENCE_LOCATION, "w");
+        File persistence = ConfigManager::ConfigFS.open(PERSISTENCE_LOCATION, "w");
 
         if (!persistence) {
             Serial.println("Failed to open persistence for writing.");

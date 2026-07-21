@@ -6,6 +6,7 @@
 .vscode/ipch
 .mypy_cache
 firmware/data
+config.json
 
 web/src/routes/test
 

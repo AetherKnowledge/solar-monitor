@@ -8,9 +8,9 @@
 #include <vector>
 
 struct NetworkConfig {
-    WiFiMode_t mode;
-    String ssid;
-    String password;
+    WiFiMode_t mode = WiFiMode_t::WIFI_MODE_APSTA;
+    String ssid = "SolarMonitor";
+    String password = "";
 
     String toString() const {
         return "Mode: " + String(mode) + "\nSSID: " + ssid + "\nPassword: ***";
@@ -30,14 +30,14 @@ struct NetworkConfig {
 };
 
 struct MQTTConfig {
-    bool enabled;
-    String host;
-    uint16_t port;
-    String username;
-    String password;
-    bool autoDiscoveryEnabled;
-    String autoDiscoveryPrefix;
-    String clientId;
+    bool enabled = true;
+    String host = "localhost";
+    uint16_t port = 1883;
+    String username = "";
+    String password = "";
+    bool autoDiscoveryEnabled = true;
+    String autoDiscoveryPrefix = "homeassistant";
+    String clientId = "";
 
     String toString() const {
         return "Enabled: " + String(enabled) + "\nHost: " + host + "\nPort: " + String(port) +

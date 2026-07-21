@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 import { gzipOnly } from './plugins/gzip-only';
 
-const websitePath = '../firmware/data/website';
+const websitePath = '../firmware/data';
 
 export default defineConfig(({ command }) => ({
 	plugins: [

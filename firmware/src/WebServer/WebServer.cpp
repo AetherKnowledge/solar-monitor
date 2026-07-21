@@ -8,26 +8,29 @@
 #include "UpdateApi/UpdateApi.h"
 
 AsyncWebServer server(80);
+fs::LittleFSFS WebFS;
 
 bool startWebServer() {
     Serial.println("Starting web server");
 
-    if (!LittleFS.begin()) {
+    bool fsMounted = WebFS.begin(false, "/website", 10, "website");
+
+    if (!fsMounted) {
         Serial.println("LittleFS Mount Failed");
         return false;
     }
 
     registerWebServerApis();
 
-    server.serveStatic("/_app", LittleFS, "/website/_app")
+    server.serveStatic("/_app", WebFS, "/_app")
         .setCacheControl("public, max-age=31536000, immutable")
         .setTryGzipFirst(true);
 
-    server.serveStatic("/roboto.woff2", LittleFS, "/website/roboto.woff2")
+    server.serveStatic("/roboto.woff2", WebFS, "/roboto.woff2")
         .setCacheControl("public, max-age=31536000, immutable")
         .setTryGzipFirst(true);
 
-    server.serveStatic("/", LittleFS, "/website")
+    server.serveStatic("/", WebFS, "/")
         .setDefaultFile("index.html")
         .setCacheControl("no-cache")
         .setTryGzipFirst(true);
@@ -39,7 +42,7 @@ bool startWebServer() {
         }
 
         AsyncWebServerResponse* response =
-            request->beginResponse(LittleFS, "/website/index.html.gz", "text/html");
+            request->beginResponse(WebFS, "/index.html.gz", "text/html");
 
         response->addHeader("Cache-Control", "no-cache");
         response->addHeader("Content-Encoding", "gzip");
