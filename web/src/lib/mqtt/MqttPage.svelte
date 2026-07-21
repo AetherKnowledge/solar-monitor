@@ -51,6 +51,12 @@
 		}
 	}
 
+	onMount(() => {
+		return () => {
+			hidePopup();
+		};
+	});
+
 	async function saveChanges() {
 		showLoading('Saving MQTT configuration...');
 		try {
@@ -74,16 +80,16 @@
 		saveChanges();
 	}}
 >
-	<div class="card bg-base-100 border border-base-300 shadow-sm">
+	<div class="card border border-base-300 bg-base-100 shadow-sm">
 		<div class="card-body gap-6">
 			<div class="flex items-center gap-3">
-				<div class="bg-primary/10 text-primary rounded-xl p-3">
+				<div class="rounded-xl bg-primary/10 p-3 text-primary">
 					<MqttFillIcon class="size-6" />
 				</div>
 
 				<div>
 					<h2 class="card-title">MQTT Configuration</h2>
-					<p class="text-base-content/60 text-sm">
+					<p class="text-sm text-base-content/60">
 						Configure how this device connects to your MQTT broker.
 					</p>
 				</div>
@@ -92,11 +98,11 @@
 			<div class="flex flex-col">
 				<div class="flex flex-col">
 					<span class="font-medium">Broker</span>
-					<span class="text-base-content/50 text-sm">
+					<span class="text-sm text-base-content/50">
 						The hostname or IP address of your MQTT broker.
 					</span>
 				</div>
-				<label class="input validator w-full">
+				<label class="validator input w-full">
 					<MqttFillIcon class="size-4 opacity-60" />
 					<input
 						bind:value={mqttConfig.host}
@@ -111,11 +117,11 @@
 			<div class="flex flex-col">
 				<div class="flex flex-col">
 					<span class="font-medium">Port</span>
-					<span class="text-base-content/50 text-sm">
+					<span class="text-sm text-base-content/50">
 						The network port used to connect to the MQTT broker. The default is 1883.
 					</span>
 				</div>
-				<label class="input validator w-full">
+				<label class="validator input w-full">
 					<EthernetPort class="size-4 opacity-60" />
 					<input
 						class="grow"
@@ -133,12 +139,12 @@
 			<div class="flex flex-col">
 				<div class="flex flex-col">
 					<span class="font-medium">Client ID</span>
-					<span class="text-base-content/50 text-sm">
+					<span class="text-sm text-base-content/50">
 						A unique identifier for this device when connecting to the MQTT broker. Leave blank to
 						generate one automatically.
 					</span>
 				</div>
-				<label class="input validator w-full">
+				<label class="validator input w-full">
 					<MqttFillIcon class="size-4 opacity-60" />
 					<input
 						bind:value={mqttConfig.clientId}
@@ -152,7 +158,7 @@
 			<div class="flex flex-col">
 				<div class="flex flex-col">
 					<span class="font-medium">Username</span>
-					<span class="text-base-content/50 text-sm">
+					<span class="text-sm text-base-content/50">
 						Optional username used to authenticate with the MQTT broker.
 					</span>
 				</div>
@@ -170,12 +176,12 @@
 			<div class="flex flex-col">
 				<div class="flex flex-col">
 					<span class="font-medium">Password</span>
-					<span class="text-base-content/50 text-sm">
+					<span class="text-sm text-base-content/50">
 						Optional password used to authenticate with the MQTT broker.
 					</span>
 				</div>
 				<div class="join">
-					<label class="input w-full join-item">
+					<label class="input join-item w-full">
 						<KeyRound class="size-4 opacity-60" />
 
 						<input
@@ -188,7 +194,7 @@
 
 					<button
 						type="button"
-						class="btn btn-outline border-base-content/20 join-item w-15"
+						class="btn join-item w-15 border-base-content/20 btn-outline"
 						onclick={() => (showPassword = !showPassword)}
 					>
 						{#if showPassword}
@@ -203,7 +209,7 @@
 			<div class="flex items-center justify-between">
 				<div class="flex flex-col">
 					<span class="font-medium">Home Assistant Autodiscovery</span>
-					<span class="text-base-content/50 text-sm">
+					<span class="text-sm text-base-content/50">
 						Automatically publish Home Assistant discovery topics.
 					</span>
 				</div>
@@ -219,7 +225,7 @@
 				<div transition:slide class="flex flex-col overflow-hidden">
 					<div class="flex flex-col">
 						<span class="font-medium">Autodiscovery Prefix</span>
-						<span class="text-base-content/50 text-sm">
+						<span class="text-sm text-base-content/50">
 							The MQTT topic prefix Home Assistant listens to for discovery messages. The default is <code
 								>homeassistant</code
 							>.
@@ -240,13 +246,13 @@
 			<div class="flex justify-between">
 				<button
 					type="button"
-					class="btn btn-error mt-4 w-20"
+					class="btn mt-4 w-20 btn-error"
 					disabled={!hasChanged}
 					onclick={cancelChanges}
 				>
 					Cancel
 				</button>
-				<button type="submit" class="btn btn-success mt-4 w-20" disabled={!hasChanged || !isValid}>
+				<button type="submit" class="btn mt-4 w-20 btn-success" disabled={!hasChanged || !isValid}>
 					Save
 				</button>
 			</div>

@@ -109,7 +109,12 @@ namespace ModbusManager {
     }
 
     void loop() {
-        if (updateStatus == UpdateStatus::Requested || updateStatus == UpdateStatus::InProgress) {
+        if (updateStatus == UpdateStatus::Requested) {
+            updateConfig(pendingDevices);
+            return;
+        }
+
+        if (updateStatus == UpdateStatus::InProgress) {
             return;
         }
 

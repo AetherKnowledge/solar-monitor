@@ -45,6 +45,20 @@ namespace NetworkManager {
         }
     }
 
+    void loop() {
+        if (scanStatus == UpdateStatus::Requested) {
+            startScanning();
+        }
+
+        if (scanStatus == UpdateStatus::InProgress) {
+            pollNetworkScan();
+        }
+
+        if (updateStatus == UpdateStatus::Requested) {
+            updateConfig();
+        }
+    }
+
     bool connect(const String& ssid, const String& password, WiFiMode_t mode) {
         Serial.printf("Connecting to WiFi network: %s\n", ssid.c_str());
         WiFi.begin(ssid.c_str(), password.c_str());
@@ -99,7 +113,7 @@ namespace NetworkManager {
         Serial.println("Network configuration updated");
         Serial.println(ConfigManager::config.network.toString().c_str());
 
-        NetworkManager::updateStatus = UpdateStatus::UpdateComplete;
+        updateStatus = UpdateStatus::UpdateComplete;
     }
 
 }  // namespace NetworkManager

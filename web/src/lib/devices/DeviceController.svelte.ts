@@ -2,6 +2,7 @@ import { apiFetch } from '$lib/common/CommonFunctions';
 import { UpdateStatus, type SimpleResponse } from '$lib/common/CommonTypes';
 import { hidePopup, showError, showLoading } from '$lib/popup/Popup.svelte';
 import { createQuery } from '@tanstack/svelte-query';
+import { onMount } from 'svelte';
 import type { ModbusDevice } from './DeviceTypes';
 
 export type ModbusDevices = {
@@ -50,6 +51,12 @@ export function createDevicesController() {
 		} else {
 			hidePopup();
 		}
+	});
+
+	onMount(() => {
+		return () => {
+			hidePopup();
+		};
 	});
 
 	async function save() {

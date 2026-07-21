@@ -5,6 +5,7 @@
 #include <Mqtt/MqttManager.h>
 #include <Modbus/ModbusManager.h>
 #include <LittleFS.h>
+#include <System/SystemManager.h>
 
 #define LED_PIN 2
 
@@ -32,22 +33,8 @@ void setup() {
 }
 
 void loop() {
-    if (NetworkManager::scanStatus == UpdateStatus::Requested) {
-        NetworkManager::startScanning();
-    }
-
-    if (NetworkManager::scanStatus == UpdateStatus::InProgress) {
-        NetworkManager::pollNetworkScan();
-    }
-
-    if (NetworkManager::updateStatus == UpdateStatus::Requested) {
-        NetworkManager::updateConfig();
-    }
-
-    if (ModbusManager::updateStatus == UpdateStatus::Requested) {
-        ModbusManager::updateConfig(ModbusManager::pendingDevices);
-    }
-
+    SystemManager::loop();
+    NetworkManager::loop();
     ModbusManager::loop();
     MqttManager::loop();
 

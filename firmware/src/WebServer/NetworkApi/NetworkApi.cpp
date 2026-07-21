@@ -5,74 +5,76 @@
 #include <Common/Network.h>
 #include <Config/ConfigManager.h>
 
-void registerNetworkApi(AsyncWebServer& server) {
-    server.on("/api/network/wifinetworks", HTTP_GET, [](AsyncWebServerRequest* request) {
-        handleGetWifiNetworks(request);
-    });
+namespace NetworkApi {
+    void registerApi(AsyncWebServer& server) {
+        server.on("/api/network/wifinetworks", HTTP_GET, [](AsyncWebServerRequest* request) {
+            handleGetNetworks(request);
+        });
 
-    server.on("/api/network/wifinetworks/scan", HTTP_POST, [](AsyncWebServerRequest* request) {
-        handleScanWifiNetworks(request);
-    });
+        server.on("/api/network/wifinetworks/scan", HTTP_POST, [](AsyncWebServerRequest* request) {
+            handleScanNetworks(request);
+        });
 
-    server.on("/api/network/config", HTTP_GET, [](AsyncWebServerRequest* request) {
-        handleGetNetworkConfig(request);
-    });
+        server.on("/api/network/config", HTTP_GET, [](AsyncWebServerRequest* request) {
+            handleGetConfig(request);
+        });
 
-    server.addHandler(new AsyncCallbackJsonWebHandler(
-        "/api/network/config", [](AsyncWebServerRequest* request, JsonVariant& json) {
-            handleUpdateNetworkConfig(request, json);
-        }));
+        server.addHandler(new AsyncCallbackJsonWebHandler(
+            "/api/network/config", [](AsyncWebServerRequest* request, JsonVariant& json) {
+                handleUpdateConfig(request, json);
+            }));
 
-    Serial.println("Network API registered");
-}
-
-void handleGetWifiNetworks(AsyncWebServerRequest* request) {
-    JsonDocument doc;
-    doc["status"] = Enum::toString(NetworkManager::scanStatus);
-    serializeVector(doc["networks"], NetworkManager::cachedWifiNetworks);
-
-    String response;
-    serializeJson(doc, response);
-
-    Serial.println("WiFi Networks: " + response);
-
-    request->send(200, "application/json", response);
-}
-
-void handleScanWifiNetworks(AsyncWebServerRequest* request) {
-    if (NetworkManager::scanStatus != UpdateStatus::InProgress) {
-        NetworkManager::scanStatus = UpdateStatus::Requested;
+        Serial.println("Network API registered");
     }
 
-    JsonDocument doc;
-    doc["status"] = Enum::toString(NetworkManager::scanStatus);
+    void handleGetNetworks(AsyncWebServerRequest* request) {
+        JsonDocument doc;
+        doc["status"] = Enum::toString(NetworkManager::scanStatus);
+        serializeVector(doc["networks"], NetworkManager::cachedWifiNetworks);
 
-    String response;
-    serializeJson(doc, response);
+        String response;
+        serializeJson(doc, response);
 
-    Serial.println("Scan WiFi Networks: " + response);
+        Serial.println("WiFi Networks: " + response);
 
-    request->send(200, "application/json", response);
-}
+        request->send(200, "application/json", response);
+    }
 
-void handleGetNetworkConfig(AsyncWebServerRequest* request) {
-    JsonDocument doc;
-    ConfigManager::config.network.toJson(doc.to<JsonObject>());
-    doc["updateStatus"] = Enum::toString(NetworkManager::updateStatus);
+    void handleScanNetworks(AsyncWebServerRequest* request) {
+        if (NetworkManager::scanStatus != UpdateStatus::InProgress) {
+            NetworkManager::scanStatus = UpdateStatus::Requested;
+        }
 
-    String response;
-    serializeJson(doc, response);
+        JsonDocument doc;
+        doc["status"] = Enum::toString(NetworkManager::scanStatus);
 
-    Serial.println("Network Config: " + response);
+        String response;
+        serializeJson(doc, response);
 
-    request->send(200, "application/json", response);
-}
+        Serial.println("Scan WiFi Networks: " + response);
 
-void handleUpdateNetworkConfig(AsyncWebServerRequest* request, JsonVariant& json) {
-    NetworkConfig newConfig;
-    newConfig.fromJson(json);
-    NetworkManager::updateStatus = UpdateStatus::Requested;
-    NetworkManager::pendingConfig = newConfig;
+        request->send(200, "application/json", response);
+    }
 
-    Response::success(request, 202, "OK");
-}
+    void handleGetConfig(AsyncWebServerRequest* request) {
+        JsonDocument doc;
+        ConfigManager::config.network.toJson(doc.to<JsonObject>());
+        doc["updateStatus"] = Enum::toString(NetworkManager::updateStatus);
+
+        String response;
+        serializeJson(doc, response);
+
+        Serial.println("Network Config: " + response);
+
+        request->send(200, "application/json", response);
+    }
+
+    void handleUpdateConfig(AsyncWebServerRequest* request, JsonVariant& json) {
+        NetworkConfig newConfig;
+        newConfig.fromJson(json);
+        NetworkManager::updateStatus = UpdateStatus::Requested;
+        NetworkManager::pendingConfig = newConfig;
+
+        Response::success(request, 202, "OK");
+    }
+}  // namespace NetworkApi

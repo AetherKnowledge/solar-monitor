@@ -3,6 +3,8 @@
 #include <Config/ConfigManager.h>
 #include <ESPAsyncWebServer.h>
 
-void registerMqttApi(AsyncWebServer& server);
-void handleGetMqttConfig(AsyncWebServerRequest* request);
-void handleUpdateMqttConfig(AsyncWebServerRequest* request, JsonVariant& json);
+namespace MqttApi {
+    void registerApi(AsyncWebServer& server);
+    void handleGetConfig(AsyncWebServerRequest* request);
+    void handleUpdateConfig(AsyncWebServerRequest* request, JsonVariant& json);
+}  // namespace MqttApi

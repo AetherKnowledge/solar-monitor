@@ -3,6 +3,6 @@
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h>
 
-namespace ConfigApi {
+namespace UpdateApi {
     void registerApi(AsyncWebServer& server);
-}
+}  // namespace UpdateApi

@@ -14,6 +14,7 @@ namespace NetworkManager {
     extern NetworkConfig pendingConfig;
 
     bool connect(const String& ssid, const String& password, WiFiMode_t mode);
+    void loop();
     void startScanning();
     void pollNetworkScan();
     void updateConfig();

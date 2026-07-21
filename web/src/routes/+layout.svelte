@@ -6,6 +6,7 @@
 	import { queryClient } from '$lib/queryClient';
 	import MqttFillIcon from '@iconify-svelte/mingcute/mqtt-fill';
 	import {
+		CloudDownload,
 		LayoutDashboard,
 		PanelLeftClose,
 		PanelLeftOpen,
@@ -19,9 +20,11 @@
 	import { fly } from 'svelte/transition';
 	import './layout.css';
 
+	type StaticRoute = Exclude<RouteId, '/devices/[id]' | '/test/[id]'>;
+
 	type SidebarItemProps = {
 		label: string;
-		href: RouteId;
+		href: StaticRoute;
 		icon: typeof LayoutDashboard | typeof MqttFillIcon | Component;
 	};
 
@@ -45,6 +48,11 @@
 			label: 'Devices',
 			href: '/devices',
 			icon: RadioReceiver
+		},
+		{
+			label: 'Update',
+			href: '/update',
+			icon: CloudDownload
 		}
 	] satisfies SidebarItemProps[];
 
@@ -68,9 +76,9 @@
 <QueryClientProvider client={queryClient}>
 	<div class="drawer h-screen overflow-hidden lg:drawer-open">
 		<input id="my-drawer-4" type="checkbox" class="drawer-toggle" bind:checked={drawerOpen} />
-		<div class="drawer-content h-screen flex flex-col">
+		<div class="drawer-content flex h-screen flex-col">
 			<!-- Navbar -->
-			<nav class="navbar w-full bg-base-300 z-11">
+			<nav class="navbar z-11 w-full bg-base-300">
 				<label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost">
 					<!-- Sidebar toggle icon -->
 					{#key drawerOpen}
@@ -146,8 +154,8 @@
 						<SolarPanel class="size-8 shrink-0" />
 
 						<span
-							class={`overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out text-2xl ${
-								drawerOpen ? 'max-w-48 opacity-100 ml-2' : 'max-w-0 opacity-0 ml-0'
+							class={`overflow-hidden text-2xl whitespace-nowrap transition-all duration-300 ease-in-out ${
+								drawerOpen ? 'ml-2 max-w-48 opacity-100' : 'ml-0 max-w-0 opacity-0'
 							}`}
 						>
 							Solar Monitor
@@ -166,7 +174,7 @@
 	<li>
 		<a
 			href={resolve(href)}
-			class="is-drawer-close:tooltip is-drawer-close:tooltip-right text-nowrap"
+			class="text-nowrap is-drawer-close:tooltip is-drawer-close:tooltip-right"
 			data-tip={label}
 		>
 			<Icon class="my-1.5 inline-block size-5" />

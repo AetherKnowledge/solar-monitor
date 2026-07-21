@@ -3,36 +3,38 @@
 #include <Mqtt/MqttManager.h>
 #include <Common/Network.h>
 
-void registerMqttApi(AsyncWebServer& server) {
-    server.on("/api/mqtt/config", HTTP_GET, [](AsyncWebServerRequest* request) {
-        handleGetMqttConfig(request);
-    });
+namespace MqttApi {
+    void registerApi(AsyncWebServer& server) {
+        server.on("/api/mqtt/config", HTTP_GET, [](AsyncWebServerRequest* request) {
+            handleGetConfig(request);
+        });
 
-    server.addHandler(new AsyncCallbackJsonWebHandler(
-        "/api/mqtt/config", [](AsyncWebServerRequest* request, JsonVariant& json) {
-            handleUpdateMqttConfig(request, json);
-        }));
+        server.addHandler(new AsyncCallbackJsonWebHandler(
+            "/api/mqtt/config", [](AsyncWebServerRequest* request, JsonVariant& json) {
+                handleUpdateConfig(request, json);
+            }));
 
-    Serial.println("MQTT API registered");
-}
+        Serial.println("MQTT API registered");
+    }
 
-void handleGetMqttConfig(AsyncWebServerRequest* request) {
-    JsonDocument doc;
-    ConfigManager::config.mqtt.toJson(doc.to<JsonObject>());
+    void handleGetConfig(AsyncWebServerRequest* request) {
+        JsonDocument doc;
+        ConfigManager::config.mqtt.toJson(doc.to<JsonObject>());
 
-    String response;
-    serializeJson(doc, response);
+        String response;
+        serializeJson(doc, response);
 
-    Serial.println("MQTT Config: " + response);
+        Serial.println("MQTT Config: " + response);
 
-    request->send(200, "application/json", response);
-}
+        request->send(200, "application/json", response);
+    }
 
-void handleUpdateMqttConfig(AsyncWebServerRequest* request, JsonVariant& json) {
-    MQTTConfig newConfig;
-    newConfig.fromJson(json);
+    void handleUpdateConfig(AsyncWebServerRequest* request, JsonVariant& json) {
+        MQTTConfig newConfig;
+        newConfig.fromJson(json);
 
-    MqttManager::updateMqttConfig(newConfig);
+        MqttManager::updateMqttConfig(newConfig);
 
-    Response::success(request, 202, "OK");
-}
+        Response::success(request, 202, "OK");
+    }
+}  // namespace MqttApi

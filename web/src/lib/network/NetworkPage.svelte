@@ -6,6 +6,7 @@
 	import WifiNetwork from '$lib/network/WifiNetworks.svelte';
 	import { hidePopup, showError, showLoading } from '$lib/popup/Popup.svelte';
 	import { Wifi } from '@lucide/svelte';
+	import { onMount } from 'svelte';
 
 	let query = createNetworkConfigQuery();
 	let savedNetworkConfig = $derived(query.data);
@@ -31,6 +32,12 @@
 		} else {
 			hidePopup();
 		}
+	});
+
+	onMount(() => {
+		return () => {
+			hidePopup();
+		};
 	});
 
 	let form: HTMLFormElement | undefined = $state(undefined);
@@ -69,17 +76,17 @@
 	}
 </script>
 
-<div class="card bg-base-100 border border-base-300 shadow-sm">
+<div class="card border border-base-300 bg-base-100 shadow-sm">
 	<div class="card-body gap-6">
 		<div class="flex items-center gap-3">
-			<div class="bg-primary/10 text-primary rounded-xl p-3">
+			<div class="rounded-xl bg-primary/10 p-3 text-primary">
 				<Wifi class="size-7" />
 			</div>
 
 			<div>
 				<h2 class="card-title">Network Configuration</h2>
 
-				<p class="text-base-content/60 text-sm">
+				<p class="text-sm text-base-content/60">
 					Configure how this device connects to your local network and Wi-Fi.
 				</p>
 			</div>
@@ -101,13 +108,13 @@
 	<div class="flex justify-between">
 		<button
 			type="button"
-			class="btn btn-error mt-4 w-20"
+			class="btn mt-4 w-20 btn-error"
 			disabled={!hasChanged}
 			onclick={cancelChanges}
 		>
 			Cancel
 		</button>
-		<button type="submit" class="btn btn-success mt-4 w-20" disabled={!hasChanged || !isValid}>
+		<button type="submit" class="btn mt-4 w-20 btn-success" disabled={!hasChanged || !isValid}>
 			Save
 		</button>
 	</div>

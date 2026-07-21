@@ -5,6 +5,7 @@
 #include "MqttApi/MqttApi.h"
 #include "ConfigApi/ConfigApi.h"
 #include "ModbusApi/ModbusApi.h"
+#include "UpdateApi/UpdateApi.h"
 
 AsyncWebServer server(80);
 
@@ -53,10 +54,11 @@ bool startWebServer() {
 }
 
 void registerWebServerApis() {
-    registerNetworkApi(server);
-    registerMqttApi(server);
-    registerConfigApi(server);
-    registerModbusApi(server);
+    NetworkApi::registerApi(server);
+    MqttApi::registerApi(server);
+    ConfigApi::registerApi(server);
+    ModbusApi::registerApi(server);
+    UpdateApi::registerApi(server);
 }
 
 bool stopWebServer() {

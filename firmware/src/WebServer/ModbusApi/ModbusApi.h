@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h>
 
-void registerModbusApi(AsyncWebServer& server);
-void handleGetModbusConfig(AsyncWebServerRequest* request);
-void handleUpdateModbusConfig(AsyncWebServerRequest* request, JsonVariant& json);
+namespace ModbusApi {
+    void registerApi(AsyncWebServer& server);
+    void handleGetConfig(AsyncWebServerRequest* request);
+    void handleUpdateConfig(AsyncWebServerRequest* request, JsonVariant& json);
+}  // namespace ModbusApi

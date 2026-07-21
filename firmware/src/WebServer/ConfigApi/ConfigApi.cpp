@@ -2,6 +2,8 @@
 #include <Common/Network.h>
 #include <Config/ConfigManager.h>
 
-void registerConfigApi(AsyncWebServer& server) {
-    Serial.println("Config API registered");
-}
+namespace ConfigApi {
+    void registerApi(AsyncWebServer& server) {
+        Serial.println("Config API registered");
+    }
+}  // namespace ConfigApi
