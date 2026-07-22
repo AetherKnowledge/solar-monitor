@@ -2,126 +2,102 @@
 #include <Common/Network.h>
 #include <System/SystemManager.h>
 #include <Common/Logger.h>
+#include <Common/UpdateStatus.h>
 
 namespace UpdateHandler {
-    struct UpdateState {
-        bool failed = false;
-    };
+    UpdateStatus updateStatus = UpdateStatus::NotStarted;
 
-    void onFirmwareUpdateFinish(AsyncWebServerRequest* request) {
-        if (Update.hasError()) {
-            Response::error(request, 500, "Firmware update failed");
+    void onUpdateFinish(AsyncWebServerRequest* request, bool isFirmware) {
+        const String name = isFirmware ? "Firmware" : "Website";
+
+        if (!Update.hasError() && Update.isFinished() &&
+            updateStatus == UpdateStatus::UpdateComplete) {
+            updateStatus = UpdateStatus::NotStarted;
+            SystemManager::requestRestart = true;
+
+            String completeMessage = name + " update complete. Restarting system...";
+            Response::success(request, 200, completeMessage, &Log);
             return;
         }
 
-        SystemManager::requestRestart = true;
-        Log.println("Firmware update successful");
-
-        Response::success(request, 200, "Firmware update successful");
+        updateStatus = UpdateStatus::NotStarted;
+        String errorMessage = name + " update failed. Please check the logs for more information.";
+        Response::error(request, 500, errorMessage, &Log);
     }
-    void onFirmwareUpdate(
-        AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
+
+    void onChunk(uint8_t* data,
+                 size_t len,
+                 size_t index,
+                 bool final,
+                 std::optional<size_t> total,
+                 bool isFirmware) {
+        const char* name = isFirmware ? "Firmware" : "Website";
+        const auto partition = isFirmware ? U_FLASH : U_SPIFFS;
+
+        if (updateStatus == UpdateStatus::UpdateFailed) {
+            return;
+        }
+
         // First chunk
         if (index == 0) {
-            auto* state = new UpdateState();
-            request->_tempObject = state;
-
-            Log.println("Starting firmware update");
-            Log.printf("Firmware size: %u bytes\n", total);
-
-            if (!Update.begin(total, U_FLASH)) {
-                Log.println("Failed to begin firmware update");
-                Update.printError(Log);
-                return;
-            }
-        }
-
-        // Write this chunk
-        if (Update.write(data, len) != len) {
-            Log.println("Failed to write firmware chunk");
-
-            Update.printError(Log);
-            return;
-        }
-
-        Log.printf("Firmware: %u / %u bytes\r", index + len, total);
-
-        // Last chunk
-        if (index + len == total) {
-            Log.println();
-
-            if (!Update.end(true)) {
-                Log.println("Failed to finish firmware update");
-                Update.printError(Log);
+            if (updateStatus != UpdateStatus::NotStarted) {
+                Log.println("Update already in progress");
                 return;
             }
 
-            Log.println("Firmware written successfully");
-        }
-    }
-
-    void onWebsiteUpdateFinish(AsyncWebServerRequest* request) {
-        if (Update.hasError()) {
-            Response::error(request, 500, "Website update failed");
-            return;
-        }
-
-        Log.println("Website update successful");
-
-        Response::success(request, 200, "Website update successful");
-
-        // Restart after the response has been sent
-        SystemManager::requestRestart = true;
-    }
-
-    void onWebsiteUpdate(
-        AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
-        // First chunk
-        if (index == 0) {
-            auto* state = new UpdateState();
-            request->_tempObject = state;
-
-            Log.println("Starting website update");
-            Log.printf("Website size: %u bytes\n", total);
+            updateStatus = UpdateStatus::Requested;
+            Log.printf("Starting %s update\n", name);
+            if (total) {
+                Log.printf("%s size: %u bytes\n", name, total.value());
+            }
 
             /*
              * U_SPIFFS tells Update that we're updating
              * the filesystem/data partition rather than
              * an application partition.
              */
-            if (!Update.begin(total, U_SPIFFS)) {
-                Log.println("Failed to begin website update");
 
+            bool hasStarted = total ? Update.begin(*total, partition)
+                                    : Update.begin(UPDATE_SIZE_UNKNOWN, partition);
+
+            if (!hasStarted) {
+                updateStatus = UpdateStatus::UpdateFailed;
+
+                Log.println("Failed to begin " + String(name) + " update");
                 Update.printError(Log);
-
                 return;
             }
         }
 
         // Write current chunk
         if (Update.write(data, len) != len) {
-            Log.println("Failed to write website chunk");
+            updateStatus = UpdateStatus::UpdateFailed;
 
+            Log.println("Failed to write " + String(name) + " chunk");
             Update.printError(Log);
-
             return;
         }
 
-        Log.printf("Website: %u / %u bytes\r", index + len, total);
+        updateStatus = UpdateStatus::InProgress;
+        if (total)
+            Log.printf("%s: %u / %u bytes\r", name, index + len, total.value());
+        else
+            Log.printf("%s: %u bytes\r", name, index + len);
 
         // Final chunk
-        if (index + len == total) {
+        if (final) {
             Log.println();
 
             if (!Update.end(true)) {
-                Log.println("Failed to finish website update");
+                updateStatus = UpdateStatus::UpdateFailed;
 
+                Log.println("Failed to finish " + String(name) + " update");
                 Update.printError(Log);
-
                 return;
             }
 
-            Log.println("Website written successfully");
+            updateStatus = UpdateStatus::UpdateComplete;
+            Log.println(String(name) + " written successfully");
         }
     }
 }  // namespace UpdateHandler

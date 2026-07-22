@@ -9,6 +9,7 @@
     "upload": "pio run -t upload",
     "upload:config": "pio run -t uploadconfig",
     "uploadfs": "pio run -t uploadfs",
+    "upload:ota:firmware": "pnpm build:firmware && curl -X POST -F \"file=@.pio/build/esp32dev/firmware.bin\" http://192.168.254.122/api/update/firmware",
     "flash": "pnpm build:web && pnpm upload && pnpm uploadfs && pnpm monitor"
   }
 }

@@ -5,7 +5,7 @@
 
 namespace SystemApi {
     void registerApi(AsyncWebServer& server) {
-        server.on("/api/system/restart", HTTP_GET, [](AsyncWebServerRequest* request) {
+        server.on("/api/system/restart", HTTP_POST, [](AsyncWebServerRequest* request) {
             handleRestartRequest(request);
         });
 

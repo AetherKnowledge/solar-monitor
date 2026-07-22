@@ -14,10 +14,15 @@ namespace UpdateApi {
             HTTP_POST,
 
             // Called when request finishes
-            [](AsyncWebServerRequest* request) { UpdateHandler::onFirmwareUpdateFinish(request); },
+            [](AsyncWebServerRequest* request) { UpdateHandler::onUpdateFinish(request, true); },
 
             // Upload callback - unused when sending raw octet-stream
-            nullptr,
+            [](AsyncWebServerRequest* request,
+               const String& filename,
+               size_t index,
+               uint8_t* data,
+               size_t len,
+               bool final) { UpdateHandler::onChunk(data, len, index, final, std::nullopt, true); },
 
             // Body callback
             [](AsyncWebServerRequest* request,
@@ -25,7 +30,7 @@ namespace UpdateApi {
                size_t len,
                size_t index,
                size_t total) {
-                UpdateHandler::onFirmwareUpdate(request, data, len, index, total);
+                UpdateHandler::onChunk(data, len, index, index + len == total, total, true);
             });
 
         server.on(
@@ -33,17 +38,26 @@ namespace UpdateApi {
             HTTP_POST,
 
             // Called when request finishes
-            [](AsyncWebServerRequest* request) { UpdateHandler::onWebsiteUpdateFinish(request); },
+            [](AsyncWebServerRequest* request) { UpdateHandler::onUpdateFinish(request, false); },
 
             // Upload callback
-            nullptr,
+            [](AsyncWebServerRequest* request,
+               const String& filename,
+               size_t index,
+               uint8_t* data,
+               size_t len,
+               bool final) {
+                UpdateHandler::onChunk(data, len, index, final, std::nullopt, false);
+            },
 
             // Raw body callback
             [](AsyncWebServerRequest* request,
                uint8_t* data,
                size_t len,
                size_t index,
-               size_t total) { UpdateHandler::onWebsiteUpdate(request, data, len, index, total); });
+               size_t total) {
+                UpdateHandler::onChunk(data, len, index, index + len == total, total, false);
+            });
 
         server.on("/api/version", HTTP_GET, [](AsyncWebServerRequest* request) {
             handleGetVersion(request);

@@ -3,12 +3,14 @@
 #include <Arduino.h>
 #include <Update.h>
 #include <ESPAsyncWebServer.h>
+#include <optional>
 namespace UpdateHandler {
-    void onFirmwareUpdateFinish(AsyncWebServerRequest* request);
-    void onFirmwareUpdate(
-        AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total);
 
-    void onWebsiteUpdateFinish(AsyncWebServerRequest* request);
-    void onWebsiteUpdate(
-        AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total);
+    void onUpdateFinish(AsyncWebServerRequest* request, bool isFirmware);
+    void onChunk(uint8_t* data,
+                 size_t len,
+                 size_t index,
+                 bool final,
+                 std::optional<size_t> total,
+                 bool isFirmware);
 }  // namespace UpdateHandler

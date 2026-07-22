@@ -10,6 +10,12 @@ namespace ReadRegisterManager {
     }
 
     Result readGroup(ModbusDevice& device, ReadGroup& group) {
+        // Log.printf("Reading group for device %s: %u-%u (%u registers)\n",
+        //            device.discovery.name.c_str(),
+        //            group.startAddress,
+        //            group.startAddress + group.count - 1,
+        //            group.count);
+
         auto result = device.modbus.readHoldingRegisters(group.startAddress, group.count);
 
         if (result != device.modbus.ku8MBSuccess) {
@@ -27,6 +33,15 @@ namespace ReadRegisterManager {
                 changedRegisters.push_back(reg);
             }
         }
+
+        // Log.printf("Read group for device %s: %u-%u (%u registers)\n",
+        //            device.discovery.name.c_str(),
+        //            group.startAddress,
+        //            group.startAddress + group.count - 1,
+        //            group.count);
+        // Log.printf("Changed registers for device %s: %u\n",
+        //            device.discovery.name.c_str(),
+        //            changedRegisters.size());
         return Result{true, changedRegisters};
     }
 
@@ -43,6 +58,11 @@ namespace ReadRegisterManager {
         if (reg.rounding > 0) {
             value = Numbers::applyRounding(value, reg.rounding);
         }
+
+        // Log.printf("Processing register %s (address: %d) value: %.2f\n",
+        //            reg.discovery.name.c_str(),
+        //            reg.address,
+        //            value);
 
         if (value != reg.value) {
             reg.value = value;

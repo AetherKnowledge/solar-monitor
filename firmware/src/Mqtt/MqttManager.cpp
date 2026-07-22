@@ -75,6 +75,8 @@ namespace MqttManager {
             Log.println();
             Log.println("Failed to connect to MQTT");
         }
+
+        Log.printf("MQTT connection status: %d\n", mqttClient.state());
         return connected;
     }
 
@@ -95,6 +97,8 @@ namespace MqttManager {
 
         if (!mqttClient.connected()) {
             static unsigned long lastAttempt = 0;
+
+            Log.println("MQTT not connected, attempting to reconnect...");
 
             if (millis() - lastAttempt > 5000) {
                 lastAttempt = millis();
