@@ -121,7 +121,7 @@ namespace ModbusManager {
 
         static uint32_t lastPoll = 0;
 
-        if (millis() - lastPoll < 1000)
+        if (millis() - lastPoll < 5000)
             return;
 
         lastPoll = millis();
