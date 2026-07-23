@@ -33,12 +33,9 @@ namespace NetworkApi {
         doc["status"] = Enum::toString(NetworkManager::scanStatus);
         serializeVector(doc["networks"], NetworkManager::cachedWifiNetworks);
 
-        String response;
-        serializeJson(doc, response);
-
-        Log.println("WiFi Networks: " + response);
-
-        request->send(200, "application/json", response);
+        AsyncResponseStream* response = request->beginResponseStream("application/json");
+        serializeJson(doc, *response);
+        request->send(response);
     }
 
     void handleScanNetworks(AsyncWebServerRequest* request) {
@@ -49,12 +46,9 @@ namespace NetworkApi {
         JsonDocument doc;
         doc["status"] = Enum::toString(NetworkManager::scanStatus);
 
-        String response;
-        serializeJson(doc, response);
-
-        Log.println("Scan WiFi Networks: " + response);
-
-        request->send(200, "application/json", response);
+        AsyncResponseStream* response = request->beginResponseStream("application/json");
+        serializeJson(doc, *response);
+        request->send(response);
     }
 
     void handleGetConfig(AsyncWebServerRequest* request) {
@@ -62,12 +56,9 @@ namespace NetworkApi {
         ConfigManager::config.network.toJson(doc.to<JsonObject>());
         doc["updateStatus"] = Enum::toString(NetworkManager::updateStatus);
 
-        String response;
-        serializeJson(doc, response);
-
-        Log.println("Network Config: " + response);
-
-        request->send(200, "application/json", response);
+        AsyncResponseStream* response = request->beginResponseStream("application/json");
+        serializeJson(doc, *response);
+        request->send(response);
     }
 
     void handleUpdateConfig(AsyncWebServerRequest* request, JsonVariant& json) {

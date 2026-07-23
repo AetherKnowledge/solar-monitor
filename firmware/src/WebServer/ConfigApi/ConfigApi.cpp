@@ -43,11 +43,9 @@ namespace ConfigApi {
             return;
         }
 
-        String response;
-        serializeJsonPretty(doc, response);
-        Log.println("Config: " + response);
-
-        request->send(200, "application/json", response);
+        AsyncResponseStream* response = request->beginResponseStream("application/json");
+        serializeJsonPretty(doc, *response);
+        request->send(response);
     }
 
     void onUpload(AsyncWebServerRequest* request,

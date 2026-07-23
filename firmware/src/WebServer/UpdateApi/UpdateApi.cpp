@@ -71,12 +71,9 @@ namespace UpdateApi {
         doc["firmware"] = Version::FIRMWARE;
         doc["website"] = WebServer::WEBSITE_VERSION;
 
-        String response;
-        serializeJson(doc, response);
-
-        Log.println("Version: " + response);
-
-        request->send(200, "application/json", response);
+        AsyncResponseStream* response = request->beginResponseStream("application/json");
+        serializeJson(doc, *response);
+        request->send(response);
     }
 
 }  // namespace UpdateApi

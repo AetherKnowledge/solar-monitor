@@ -12,6 +12,10 @@ namespace ModbusApi {
             handleGetConfig(request);
         });
 
+        server.on("/api/modbus/values", HTTP_GET, [](AsyncWebServerRequest* request) {
+            handleGetValues(request);
+        });
+
         server.addHandler(new AsyncCallbackJsonWebHandler(
             "/api/modbus/config", [](AsyncWebServerRequest* request, JsonVariant& json) {
                 handleUpdateConfig(request, json);
@@ -26,14 +30,18 @@ namespace ModbusApi {
         serializeVector(doc["devices"], ConfigManager::config.modbusDevices);
         doc["updateStatus"] = Enum::toString(ModbusManager::updateStatus);
 
-        String response;
-        serializeJson(doc, response);
+        AsyncResponseStream* response = request->beginResponseStream("application/json");
+        serializeJson(doc, *response);
+        request->send(response);
+    }
 
-        // Log.println("Modbus Config: " + String(ConfigManager::config.modbusDevices.size()) +
-        //                " devices");
-        // Log.printf("\nFetch Modbus Config: %s\n", doc.as<String>().c_str());
+    void handleGetValues(AsyncWebServerRequest* request) {
+        JsonDocument doc;
+        ModbusManager::getValues(doc);
 
-        request->send(200, "application/json", response);
+        AsyncResponseStream* response = request->beginResponseStream("application/json");
+        serializeJson(doc, *response);
+        request->send(response);
     }
 
     void handleUpdateConfig(AsyncWebServerRequest* request, JsonVariant& json) {

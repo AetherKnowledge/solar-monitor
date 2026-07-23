@@ -7,4 +7,5 @@ namespace ModbusApi {
     void registerApi(AsyncWebServer& server);
     void handleGetConfig(AsyncWebServerRequest* request);
     void handleUpdateConfig(AsyncWebServerRequest* request, JsonVariant& json);
+    void handleGetValues(AsyncWebServerRequest* request);
 }  // namespace ModbusApi

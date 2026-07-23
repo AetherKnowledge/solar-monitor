@@ -22,6 +22,7 @@ namespace ModbusManager {
 
     void processReadRegisters(ModbusDevice& device, ReadGroup& group);
     void updateVirtualSensors(ModbusDevice& device);
+    void getValues(JsonDocument& doc);
 
     void reset();
 }  // namespace ModbusManager

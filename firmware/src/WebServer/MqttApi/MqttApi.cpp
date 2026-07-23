@@ -22,12 +22,9 @@ namespace MqttApi {
         JsonDocument doc;
         ConfigManager::config.mqtt.toJson(doc.to<JsonObject>());
 
-        String response;
-        serializeJson(doc, response);
-
-        Log.println("MQTT Config: " + response);
-
-        request->send(200, "application/json", response);
+        AsyncResponseStream* stream = request->beginResponseStream("application/json");
+        serializeJson(doc, *stream);
+        request->send(stream);
     }
 
     void handleUpdateConfig(AsyncWebServerRequest* request, JsonVariant& json) {

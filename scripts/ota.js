@@ -43,6 +43,12 @@ if (target.file) {
 
 args.push(`http://${ip}${target.endpoint}`);
 
+if (type !== "restart") {
+  console.log(`Uploading ${type} to ${ip}...`);
+} else {
+  console.log(`Restarting device at ${ip}...`);
+}
+
 spawnSync("curl", args, {
   stdio: "inherit",
   shell: true,

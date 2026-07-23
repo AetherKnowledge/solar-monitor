@@ -43,7 +43,7 @@
 			type: RegisterType.Read,
 			name: r.discovery.name,
 			address: r.address,
-			value: '0',
+			value: r.value ?? 0,
 			unit: r.discovery.unit_of_measurement,
 
 			data: {
@@ -56,7 +56,7 @@
 			id: r.discovery.unique_id,
 			type: RegisterType.Virtual,
 			name: r.discovery.name,
-			value: '0',
+			value: r.value ?? 0,
 			unit: r.discovery.unit_of_measurement,
 			data: {
 				type: RegisterType.Virtual,
@@ -69,7 +69,7 @@
 			type: RegisterType.Select,
 			name: r.discovery.name,
 			address: r.address,
-			value: '0',
+			value: r.value ?? 0,
 			unit: r.discovery.unit_of_measurement,
 			data: {
 				type: RegisterType.Select,
@@ -82,7 +82,7 @@
 			type: RegisterType.Number,
 			name: r.discovery.name,
 			address: r.address,
-			value: '0',
+			value: r.value ?? 0,
 			unit: r.discovery.unit_of_measurement,
 			data: {
 				type: RegisterType.Number,
@@ -105,7 +105,7 @@
 {#if device}
 	<Header {device} />
 
-	<div class="grid gap-6 xl:grid-cols-2 pb-6">
+	<div class="grid gap-6 pb-6 xl:grid-cols-2">
 		<GeneralCard bind:device />
 		<MqttCard bind:device />
 	</div>

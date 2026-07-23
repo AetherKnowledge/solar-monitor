@@ -186,4 +186,29 @@ namespace ModbusManager {
         }
     }
 
+    template <typename T>
+    static void addValues(JsonObject& obj, const std::vector<T>& values) {
+        for (const auto& value : values) {
+            obj[value.discovery.uniqueId] = value.value;
+        }
+    }
+
+    void getValues(JsonDocument& doc) {
+        for (const auto& device : ConfigManager::config.modbusDevices) {
+            JsonObject deviceJson = doc[device.discovery.identifier].to<JsonObject>();
+
+            JsonObject read = deviceJson["readRegisters"].to<JsonObject>();
+            addValues(read, device.readRegisters);
+
+            JsonObject virtuals = deviceJson["virtualSensors"].to<JsonObject>();
+            addValues(virtuals, device.virtualSensors);
+
+            JsonObject selects = deviceJson["selectWriteRegisters"].to<JsonObject>();
+            addValues(selects, device.selectWriteRegisters);
+
+            JsonObject numbers = deviceJson["numberWriteRegisters"].to<JsonObject>();
+            addValues(numbers, device.numberWriteRegisters);
+        }
+    }
+
 }  // namespace ModbusManager

@@ -27,7 +27,7 @@ export interface RegisterListItem {
 	name: string;
 	address?: number;
 
-	value?: string;
+	value?: number;
 	unit?: string;
 
 	data: RegisterItem;
@@ -87,30 +87,31 @@ export interface NumberDiscovery extends WriteDiscovery {
 	mode: string;
 }
 
-export interface ReadRegister {
+export interface Register {
+	value?: number;
+	discovery: SensorDiscovery;
+}
+
+export interface ReadRegister extends Register {
 	address: number;
 	rounding: number;
 	transform: RegisterTransform;
 	transformArgument: number;
 	signedValue: boolean;
-
-	discovery: SensorDiscovery;
 }
 
-export interface VirtualSensor {
+export interface VirtualSensor extends Register {
 	expression: string;
 	isPersistent: boolean;
 	rounding: number;
-
-	discovery: SensorDiscovery;
 }
 
-export interface SelectWriteRegister {
+export interface SelectWriteRegister extends Register {
 	address: number;
 	discovery: SelectDiscovery;
 }
 
-export interface NumberWriteRegister {
+export interface NumberWriteRegister extends Register {
 	address: number;
 	discovery: NumberDiscovery;
 }
