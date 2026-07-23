@@ -23,24 +23,24 @@
 </script>
 
 <div
-	class="card bg-base-100 border border-base-300 hover:border-primary hover:shadow-lg transition-all"
+	class="card border border-base-300 bg-base-100 transition-all hover:border-primary hover:shadow-lg"
 >
 	<div class="card-body gap-5">
-		<div class="flex justify-between items-start">
+		<div class="flex items-start justify-between">
 			<div class="flex gap-4">
-				<div class="bg-primary/10 rounded-xl p-4 h-fit">
+				<div class="h-fit rounded-xl bg-primary/10 p-4">
 					<Sun class="size-8 text-primary" />
 				</div>
 
 				<div>
-					<h2 class="card-title text-xl">{device.discovery.identifier}</h2>
+					<h2 class="card-title text-xl">{device.discovery.name}</h2>
 
-					<p class="text-base-content/60 text-sm font-mono">
+					<p class="font-mono text-sm text-base-content/60">
 						{device.discovery.identifier}
 					</p>
 
 					{#if device.discovery.manufacturer || device.discovery.model}
-						<p class="text-xs text-base-content/50 mt-1">
+						<p class="mt-1 text-xs text-base-content/50">
 							{device.discovery.manufacturer}
 							{#if device.discovery.model}
 								• {device.discovery.model}
@@ -51,12 +51,12 @@
 			</div>
 
 			<div class="flex gap-2">
-				<div class="badge badge-primary gap-1">
+				<div class="badge gap-1 badge-primary">
 					<Hash class="size-3.5" />
 					ID {device.slaveId}
 				</div>
 
-				<div class="badge badge-outline gap-1">
+				<div class="badge gap-1 badge-outline">
 					<Cable class="size-3.5" />
 					Port {device.port}
 				</div>
@@ -92,8 +92,8 @@
 
 		<div class="divider my-0"></div>
 
-		<div class="stats stats-horizontal shadow bg-base-200">
-			<div class="stat py-3 px-5">
+		<div class="stats stats-horizontal bg-base-200 shadow">
+			<div class="stat px-5 py-3">
 				<div class="stat-figure text-primary">
 					<Gauge class="size-5" />
 				</div>
@@ -103,7 +103,7 @@
 				<div class="stat-desc">Read Registers</div>
 			</div>
 
-			<div class="stat py-3 px-5">
+			<div class="stat px-5 py-3">
 				<div class="stat-figure text-secondary">
 					<Calculator class="size-5" />
 				</div>
@@ -113,7 +113,7 @@
 				<div class="stat-desc">Virtual Sensors</div>
 			</div>
 
-			<div class="stat py-3 px-5">
+			<div class="stat px-5 py-3">
 				<div class="stat-figure text-accent">
 					<SlidersHorizontal class="size-5" />
 				</div>

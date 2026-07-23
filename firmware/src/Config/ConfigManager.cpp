@@ -5,11 +5,13 @@
 #include <Modbus/ModbusManager.h>
 #include <Common/UpdateStatus.h>
 #include <Common/Logger.h>
+#include <Common/Network.h>
 
 namespace ConfigManager {
     Config config;
     bool hasLoaded = false;
     fs::LittleFSFS ConfigFS;
+    bool backupLoaded = false;
 
     bool loadFile(File& file) {
         JsonDocument doc;
@@ -48,6 +50,7 @@ namespace ConfigManager {
             return true;
         } else if (backup && loadFile(backup)) {
             config.close();
+            backupLoaded = true;
 
             Log.println("Loaded backup config successfully");
             if (!copyFile(ConfigFS, CONFIG_BAK_LOCATION, CONFIG_LOCATION)) {

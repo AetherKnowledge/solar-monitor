@@ -13,7 +13,7 @@ namespace SystemApi {
     }
     void handleRestartRequest(AsyncWebServerRequest* request) {
         // Set the requestRestart flag in SystemManager
-        SystemManager::requestRestart = true;
+        SystemManager::requestRestart();
         Response::success(request);
     }
 }  // namespace SystemApi

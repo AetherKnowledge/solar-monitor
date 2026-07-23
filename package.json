@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "pnpm --dir web dev",
@@ -9,7 +10,14 @@
     "upload": "pio run -t upload",
     "upload:config": "pio run -t uploadconfig",
     "uploadfs": "pio run -t uploadfs",
-    "upload:ota:firmware": "pnpm build:firmware && curl -X POST -F \"file=@.pio/build/esp32dev/firmware.bin\" http://192.168.254.122/api/update/firmware",
+    "upload:ota:firmware": "pnpm build:firmware && node scripts/ota.js firmware",
+    "upload:ota:web": "pnpm build:web && node scripts/ota.js web",
+    "upload:ota:config": "node scripts/ota.js config",
+    "ota:restart": "node scripts/ota.js restart",
     "flash": "pnpm build:web && pnpm upload && pnpm uploadfs && pnpm monitor"
+  },
+  "devDependencies": {
+    "dotenv": "^17.4.2",
+    "dotenv-cli": "^11.0.0"
   }
 }

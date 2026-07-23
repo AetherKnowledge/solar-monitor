@@ -17,5 +17,5 @@ namespace NetworkManager {
     void loop();
     void startScanning();
     void pollNetworkScan();
-    void updateConfig();
+    void requestUpdate(NetworkConfig& newConfig);
 }  // namespace NetworkManager

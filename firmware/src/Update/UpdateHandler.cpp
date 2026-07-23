@@ -13,7 +13,7 @@ namespace UpdateHandler {
         if (!Update.hasError() && Update.isFinished() &&
             updateStatus == UpdateStatus::UpdateComplete) {
             updateStatus = UpdateStatus::NotStarted;
-            SystemManager::requestRestart = true;
+            SystemManager::requestRestart();
 
             String completeMessage = name + " update complete. Restarting system...";
             Response::success(request, 200, completeMessage, &Log);

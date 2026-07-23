@@ -5,6 +5,6 @@
 	const devices = $derived(query.data?.devices || []);
 </script>
 
-{#each devices as device (device.identifier)}
+{#each devices as device (device.discovery.identifier)}
 	<DeviceCard {device} />
 {/each}

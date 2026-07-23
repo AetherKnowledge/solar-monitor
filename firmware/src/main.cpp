@@ -7,6 +7,8 @@
 #include <System/SystemManager.h>
 #include <Display/DisplayManager.h>
 #include <Sound/SoundManager.h>
+#include <Common/Logger.h>
+#include "Config/ConfigManager.h"
 
 #define LED_PIN 32
 
@@ -38,6 +40,7 @@ void loop() {
     ModbusManager::loop();
     MqttManager::loop();
     DisplayManager::loop();
+    SoundManager::loop();
 
     delay(10);
 }

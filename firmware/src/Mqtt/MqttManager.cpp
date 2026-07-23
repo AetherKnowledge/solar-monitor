@@ -141,7 +141,7 @@ namespace MqttManager {
         }
     }
 
-    bool updateMqttConfig(const MQTTConfig& newConfig) {
+    bool requestUpdate(const MQTTConfig& newConfig) {
         ConfigManager::config.mqtt = newConfig;
         ConfigManager::save();
         reload();

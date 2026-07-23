@@ -1,8 +1,8 @@
 #pragma once
 
 namespace SystemManager {
-    extern volatile bool requestRestart;
 
     void setup();
     void loop();
+    void requestRestart();
 }  // namespace SystemManager

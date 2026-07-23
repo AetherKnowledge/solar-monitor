@@ -4,7 +4,7 @@
 #include <Common/Logger.h>
 
 namespace SystemManager {
-    volatile bool requestRestart = false;
+    volatile bool requestedRestart = false;
     unsigned long lastBuzz = 0;
     bool buzzerActive = false;
 
@@ -14,14 +14,18 @@ namespace SystemManager {
 
     void loop() {
         // Handle system tasks
-        if (requestRestart) {
+        if (requestedRestart) {
             // Perform restart logic
-            requestRestart = false;
+            requestedRestart = false;
 
             Log.println("Restarting...");
 
             delay(1000);
             ESP.restart();
         }
+    }
+
+    void requestRestart() {
+        requestedRestart = true;
     }
 }  // namespace SystemManager

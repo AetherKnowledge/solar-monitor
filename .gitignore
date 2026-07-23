@@ -9,6 +9,8 @@ firmware/data
 config.json
 
 web/src/routes/test
+.env*
+!.env.example
 
 node_modules
 logs

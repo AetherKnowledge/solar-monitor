@@ -11,6 +11,35 @@ namespace NetworkManager {
     volatile UpdateStatus updateStatus = UpdateStatus::NotStarted;
     NetworkConfig pendingConfig;
 
+    static void updateConfig() {
+        updateStatus = UpdateStatus::InProgress;
+
+        bool isValidConnection =
+            connect(pendingConfig.ssid, pendingConfig.password, pendingConfig.mode);
+
+        if (!isValidConnection) {
+            Log.println();
+            Log.println("Failed to connect to the new network. Keeping the old configuration.");
+
+            connect(ConfigManager::config.network.ssid,
+                    ConfigManager::config.network.password,
+                    ConfigManager::config.network.mode);
+
+            updateStatus = UpdateStatus::UpdateFailed;
+            return;
+        }
+
+        ConfigManager::config.network = pendingConfig;
+        ConfigManager::save();
+        MqttManager::reload();
+
+        Log.println();
+        Log.println("Network configuration updated");
+        Log.println(ConfigManager::config.network.toString().c_str());
+
+        updateStatus = UpdateStatus::UpdateComplete;
+    }
+
     void startScanning() {
         Log.println("Starting WiFi scan");
         if (scanStatus != UpdateStatus::InProgress) {
@@ -88,33 +117,12 @@ namespace NetworkManager {
         }
     }
 
-    void updateConfig() {
-        updateStatus = UpdateStatus::InProgress;
-
-        bool isValidConnection =
-            connect(pendingConfig.ssid, pendingConfig.password, pendingConfig.mode);
-
-        if (!isValidConnection) {
-            Log.println();
-            Log.println("Failed to connect to the new network. Keeping the old configuration.");
-
-            connect(ConfigManager::config.network.ssid,
-                    ConfigManager::config.network.password,
-                    ConfigManager::config.network.mode);
-
-            updateStatus = UpdateStatus::UpdateFailed;
-            return;
-        }
-
-        ConfigManager::config.network = pendingConfig;
+    void requestUpdate(NetworkConfig& newConfig) {
+        pendingConfig = newConfig;
         ConfigManager::save();
-        MqttManager::reload();
+        updateStatus = UpdateStatus::Requested;
 
-        Log.println();
-        Log.println("Network configuration updated");
-        Log.println(ConfigManager::config.network.toString().c_str());
-
-        updateStatus = UpdateStatus::UpdateComplete;
+        Log.println("\nNetwork configuration updating");
     }
 
 }  // namespace NetworkManager

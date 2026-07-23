@@ -60,6 +60,13 @@ namespace MqttDiscovery {
 
     template <std::derived_from<SensorDiscovery> TDiscovery>
     bool publishDiscovery(const ModbusDevice& device, const TDiscovery& discovery) {
+        if (discovery.name.isEmpty() || discovery.uniqueId.isEmpty()) {
+            Log.printf("Skipping discovery for device %s (%s) due to missing name or uniqueId\n",
+                       device.discovery.name.c_str(),
+                       device.discovery.identifier.c_str());
+            return false;
+        }
+
         JsonDocument doc;
         JsonObject json = doc.to<JsonObject>();
 

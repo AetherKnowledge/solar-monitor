@@ -73,8 +73,8 @@ namespace NetworkApi {
     void handleUpdateConfig(AsyncWebServerRequest* request, JsonVariant& json) {
         NetworkConfig newConfig;
         newConfig.fromJson(json);
-        NetworkManager::updateStatus = UpdateStatus::Requested;
-        NetworkManager::pendingConfig = newConfig;
+
+        NetworkManager::requestUpdate(newConfig);
 
         Response::success(request, 202, "OK");
     }

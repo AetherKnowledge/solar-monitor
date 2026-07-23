@@ -4,6 +4,7 @@
 #include <Common/File.h>
 #include <Common/Enum.h>
 #include <Common/UpdateStatus.h>
+#include <ESPAsyncWebServer.h>
 
 namespace ConfigManager {
     inline constexpr char CONFIG_LOCATION[] = "/config.json";
@@ -12,6 +13,7 @@ namespace ConfigManager {
     extern fs::LittleFSFS ConfigFS;
     extern Config config;
     extern bool hasLoaded;
+    extern bool backupLoaded;
 
     bool loadFile(File& file);
     bool mountFS();

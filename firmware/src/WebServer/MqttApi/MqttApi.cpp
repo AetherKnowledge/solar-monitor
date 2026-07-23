@@ -34,7 +34,7 @@ namespace MqttApi {
         MQTTConfig newConfig;
         newConfig.fromJson(json);
 
-        MqttManager::updateMqttConfig(newConfig);
+        MqttManager::requestUpdate(newConfig);
 
         Response::success(request, 202, "OK");
     }
