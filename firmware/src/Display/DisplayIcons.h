@@ -117,15 +117,19 @@ namespace DisplayManager {
             return;
         }
 
-        // Small MQTT ring
-        display.drawCircle(x + 3, y + 4, 2);
+        // First Ring
+        display.drawPixel(x, y + 7);
+        display.drawPixel(x + 1, y + 7);
+        display.drawPixel(x, y + 6);
 
-        // Center dot
-        display.drawPixel(x + 3, y + 4);
+        // Second Ring
+        display.drawBox(x, y + 3, 2, 2);
+        display.drawBox(x + 2, y + 4, 2, 2);
+        display.drawBox(x + 3, y + 6, 2, 2);
 
         // X
-        display.drawLine(x + 5, y + 1, x + 7, y + 3);
-        display.drawLine(x + 5, y + 3, x + 7, y + 1);
+        display.drawLine(x + 5, y + 0, x + 7, y + 2);
+        display.drawLine(x + 7, y + 0, x + 5, y + 2);
     }
 
     inline void drawUnknownIcon(int x, int y) {

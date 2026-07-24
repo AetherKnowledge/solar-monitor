@@ -43,9 +43,10 @@ namespace DisplayManager {
 
         display.setI2CAddress(I2C_ADDRESS << 1);
         display.begin();
-
-        display.setFont(u8g2_font_ncenB08_tr);
-        display.clearBuffer();
+        display.setDisplayRotation(U8G2_R2);
+        display.setPowerSave(0);
+        display.clearDisplay();
+        display.sendBuffer();
 
         displayMutex = xSemaphoreCreateMutex();
         if (displayMutex == nullptr) {
@@ -92,7 +93,7 @@ namespace DisplayManager {
 
         int x = display.getDisplayWidth() - statusBarStyle.padding - 3;
         const auto mqttSize = getIconSize(Icon::MQTT);
-        drawMqttIcon(x - mqttSize.width, 0);
+        drawMqttIcon(x - mqttSize.width, 0, statusBarState.mqttConnected);
         x -= mqttSize.width + statusBarStyle.iconSpacing;
 
         const auto wifiSize = getIconSize(Icon::Wifi);
