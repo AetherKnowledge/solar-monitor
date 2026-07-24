@@ -11,6 +11,8 @@ namespace NetworkManager {
     volatile UpdateStatus updateStatus = UpdateStatus::NotStarted;
     NetworkConfig pendingConfig;
 
+    NetworkStatus status;
+
     static void updateConfig() {
         updateStatus = UpdateStatus::InProgress;
 
@@ -75,6 +77,20 @@ namespace NetworkManager {
         }
     }
 
+    static void pollNetworkStatus() {
+        static uint32_t lastPoll = 0;
+
+        if (millis() - lastPoll < 5000)
+            return;
+
+        lastPoll = millis();
+
+        status.connected = WiFi.status() == WL_CONNECTED;
+        status.ssid = WiFi.SSID();
+        status.ipAddress = WiFi.localIP().toString();
+        status.wifiStrength = rssiToWifiStrength(WiFi.RSSI());
+    }
+
     void loop() {
         if (scanStatus == UpdateStatus::Requested) {
             startScanning();
@@ -87,6 +103,8 @@ namespace NetworkManager {
         if (updateStatus == UpdateStatus::Requested) {
             updateConfig();
         }
+
+        pollNetworkStatus();
     }
 
     bool connect(const String& ssid, const String& password, WiFiMode_t mode) {
@@ -105,16 +123,41 @@ namespace NetworkManager {
         Log.println();
 
         if (WiFi.status() == WL_CONNECTED) {
+            status.connected = true;
+            status.ssid = ssid;
+            status.ipAddress = WiFi.localIP().toString();
+            status.wifiStrength = rssiToWifiStrength(WiFi.RSSI());
+
             Log.println("Connected!");
 
             Log.print("IP Address: ");
             Log.println(WiFi.localIP());
             return true;
         } else {
+            status.connected = false;
+
             Log.println("Failed to connect to WiFi.");
             WiFi.mode(WIFI_AP_STA);  // Reset to default mode
             return false;
         }
+    }
+
+    uint8_t rssiToWifiStrength(int8_t rssi) {
+        if (rssi >= -50) {
+            return 5;  // Excellent
+        } else if (rssi >= -60) {
+            return 4;  // Good
+        } else if (rssi >= -70) {
+            return 3;  // Fair
+        } else if (rssi >= -80) {
+            return 2;  // Weak
+        } else {
+            return 1;  // Very weak
+        }
+    }
+
+    const NetworkStatus& getNetworkStatus() {
+        return status;
     }
 
     void requestUpdate(NetworkConfig& newConfig) {

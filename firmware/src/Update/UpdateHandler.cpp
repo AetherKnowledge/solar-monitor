@@ -5,22 +5,23 @@
 #include <Common/UpdateStatus.h>
 
 namespace UpdateHandler {
-    UpdateStatus updateStatus = UpdateStatus::NotStarted;
+    UpdateProgress updateProgress = {UpdateStatus::NotStarted, 0, false};
 
     void onUpdateFinish(AsyncWebServerRequest* request, bool isFirmware) {
         const String name = isFirmware ? "Firmware" : "Website";
 
         if (!Update.hasError() && Update.isFinished() &&
-            updateStatus == UpdateStatus::UpdateComplete) {
-            updateStatus = UpdateStatus::NotStarted;
+            updateProgress.status == UpdateStatus::UpdateComplete) {
+            updateProgress.status = UpdateStatus::NotStarted;
             SystemManager::requestRestart();
 
-            String completeMessage = name + " update complete. Restarting system...";
+            String completeMessage = name + " update complete. Restarting...";
+
             Response::success(request, 200, completeMessage, &Log);
             return;
         }
 
-        updateStatus = UpdateStatus::NotStarted;
+        updateProgress.status = UpdateStatus::NotStarted;
         String errorMessage = name + " update failed. Please check the logs for more information.";
         Response::error(request, 500, errorMessage, &Log);
     }
@@ -34,18 +35,18 @@ namespace UpdateHandler {
         const char* name = isFirmware ? "Firmware" : "Website";
         const auto partition = isFirmware ? U_FLASH : U_SPIFFS;
 
-        if (updateStatus == UpdateStatus::UpdateFailed) {
+        if (updateProgress.status == UpdateStatus::UpdateFailed) {
             return;
         }
 
         // First chunk
         if (index == 0) {
-            if (updateStatus != UpdateStatus::NotStarted) {
+            if (updateProgress.status != UpdateStatus::NotStarted) {
                 Log.println("Update already in progress");
                 return;
             }
 
-            updateStatus = UpdateStatus::Requested;
+            updateProgress.status = UpdateStatus::Requested;
             Log.printf("Starting %s update\n", name);
             if (total) {
                 Log.printf("%s size: %u bytes\n", name, total.value());
@@ -61,7 +62,7 @@ namespace UpdateHandler {
                                     : Update.begin(UPDATE_SIZE_UNKNOWN, partition);
 
             if (!hasStarted) {
-                updateStatus = UpdateStatus::UpdateFailed;
+                updateProgress.status = UpdateStatus::UpdateFailed;
 
                 Log.println("Failed to begin " + String(name) + " update");
                 Update.printError(Log);
@@ -71,33 +72,41 @@ namespace UpdateHandler {
 
         // Write current chunk
         if (Update.write(data, len) != len) {
-            updateStatus = UpdateStatus::UpdateFailed;
+            updateProgress.status = UpdateStatus::UpdateFailed;
 
             Log.println("Failed to write " + String(name) + " chunk");
             Update.printError(Log);
             return;
         }
 
-        updateStatus = UpdateStatus::InProgress;
-        if (total)
+        if (updateProgress.status != UpdateStatus::InProgress) {
+            updateProgress.status = UpdateStatus::InProgress;
+        }
+
+        if (total) {
             Log.printf("%s: %u / %u bytes\r", name, index + len, total.value());
-        else
+        } else {
             Log.printf("%s: %u bytes\r", name, index + len);
+        }
 
         // Final chunk
         if (final) {
             Log.println();
 
             if (!Update.end(true)) {
-                updateStatus = UpdateStatus::UpdateFailed;
+                updateProgress.status = UpdateStatus::UpdateFailed;
 
                 Log.println("Failed to finish " + String(name) + " update");
                 Update.printError(Log);
                 return;
             }
 
-            updateStatus = UpdateStatus::UpdateComplete;
+            updateProgress.status = UpdateStatus::UpdateComplete;
             Log.println(String(name) + " written successfully");
         }
+    }
+
+    const UpdateProgress& getUpdateProgress() {
+        return updateProgress;
     }
 }  // namespace UpdateHandler

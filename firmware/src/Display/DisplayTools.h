@@ -1,10 +1,14 @@
 #pragma once
+
+#include "DisplayIcons.h"
 #include "DisplayManager.h"
+#include "DisplayTypes.h"
 
 namespace DisplayManager {
 
-    enum class TextAlignment { Left, Center, Right };
-    enum class Icon : uint16_t { Warning = 0x0022 };
+    //--------------------------------------------------------------------------
+    // Position Helpers
+    //--------------------------------------------------------------------------
 
     inline int centerX(int width, int left = 0, int right = display.getDisplayWidth()) {
         return left + ((right - left) - width) / 2;
@@ -15,43 +19,97 @@ namespace DisplayManager {
     }
 
     inline int centerTextX(const char* text, int left = 0, int right = display.getDisplayWidth()) {
-        return left + ((right - left) - display.getStrWidth(text)) / 2;
+        return centerX(display.getStrWidth(text), left, right);
     }
+
+    inline int centerTextY(const uint8_t* font,
+                           int top = 0,
+                           int bottom = display.getDisplayHeight()) {
+        display.setFont(font);
+
+        int textHeight = display.getAscent() - display.getDescent();
+
+        return centerY(textHeight, top, bottom) + display.getAscent();
+    }
+
+    inline int centerIconX(Icon icon, int left = 0, int right = display.getDisplayWidth()) {
+        return centerX(getIconSize(icon).width, left, right);
+    }
+
+    inline int centerIconY(Icon icon, int top = 0, int bottom = display.getDisplayHeight()) {
+        return centerY(getIconSize(icon).height, top, bottom);
+    }
+
+    //--------------------------------------------------------------------------
+    // Text
+    //--------------------------------------------------------------------------
 
     inline void drawStr(int x,
                         int y,
                         const char* text,
-                        TextAlignment alignment = TextAlignment::Left) {
+                        TextAlignment alignment = TextAlignment::Left,
+                        int right = display.getDisplayWidth()) {
         switch (alignment) {
-            case TextAlignment::Left:
-                display.drawStr(x, y, text);
-                break;
             case TextAlignment::Center:
-                display.drawStr(centerTextX(text, x), y, text);
+                x = centerTextX(text, x, right);
                 break;
+
             case TextAlignment::Right:
-                display.drawStr(x - display.getStrWidth(text), y, text);
+                x = right - display.getStrWidth(text);
+                break;
+
+            case TextAlignment::Left:
+            default:
                 break;
         }
+
+        display.drawStr(x, y, text);
     }
 
-    inline void drawGlyphText(int x,
-                              int y,
-                              const uint8_t* glyphFont,
-                              uint16_t glyph,
-                              int glyphWidth,
-                              int glyphHeight,
-                              const uint8_t* textFont,
-                              const char* text,
-                              TextAlignment alignment = TextAlignment::Left,
-                              int spacing = 4,
-                              int right = display.getDisplayWidth()) {
-        // Measure text
-        display.setFont(textFont);
-        int textWidth = display.getStrWidth(text);
-        int textHeight = display.getAscent() - display.getDescent();
+    //--------------------------------------------------------------------------
+    // Icon
+    //--------------------------------------------------------------------------
 
-        int totalWidth = glyphWidth + spacing + textWidth;
+    inline void drawIconAligned(int x,
+                                int y,
+                                Icon icon,
+                                TextAlignment alignment = TextAlignment::Left,
+                                int right = display.getDisplayWidth()) {
+        switch (alignment) {
+            case TextAlignment::Center:
+                x = centerIconX(icon, x, right);
+                break;
+
+            case TextAlignment::Right:
+                x = right - getIconSize(icon).width;
+                break;
+
+            case TextAlignment::Left:
+            default:
+                break;
+        }
+
+        drawIcon(icon, x, y);
+    }
+
+    //--------------------------------------------------------------------------
+    // Icon + Text
+    //--------------------------------------------------------------------------
+
+    inline void drawIconText(int x,
+                             int y,
+                             Icon icon,
+                             const char* text,
+                             const uint8_t* font = u8g2_font_6x10_tr,
+                             TextAlignment alignment = TextAlignment::Left,
+                             int spacing = 4,
+                             int right = display.getDisplayWidth()) {
+        display.setFont(font);
+
+        auto iconSize = getIconSize(icon);
+
+        int textWidth = display.getStrWidth(text);
+        int totalWidth = iconSize.width + spacing + textWidth;
 
         switch (alignment) {
             case TextAlignment::Center:
@@ -67,20 +125,34 @@ namespace DisplayManager {
                 break;
         }
 
-        // Draw glyph
-        display.setFont(glyphFont);
+        drawIcon(icon, x, y);
 
-        int glyphBaseline =
-            y + (glyphHeight - display.getMaxCharHeight()) / 2 + display.getAscent();
+        display.setFont(font);
 
-        display.drawGlyph(x, glyphBaseline, glyph);
+        int ascent = display.getAscent();
+        int descent = display.getDescent();  // Usually negative
 
-        // Draw text
-        display.setFont(textFont);
+        // Center of the icon
+        int centerY = y + iconSize.height / 2;
 
-        int textBaseline = y + (glyphHeight - textHeight) / 2 + display.getAscent();
+        // Position the text baseline so the text's bounding box is centered
+        int baseline = centerY + (ascent + descent) / 2;
 
-        display.drawStr(x + glyphWidth + spacing, textBaseline, text);
+        display.drawStr(x + iconSize.width + spacing, baseline, text);
+    }
+
+    //--------------------------------------------------------------------------
+    // Convenience Overload
+    //--------------------------------------------------------------------------
+
+    inline void drawIconText(int x,
+                             int y,
+                             Icon icon,
+                             const char* text,
+                             TextAlignment alignment = TextAlignment::Left,
+                             int spacing = 4,
+                             int right = display.getDisplayWidth()) {
+        drawIconText(x, y, icon, text, u8g2_font_6x10_tr, alignment, spacing, right);
     }
 
 }  // namespace DisplayManager

@@ -7,6 +7,13 @@
 #include <Config/ConfigTypes.h>
 
 namespace NetworkManager {
+    struct NetworkStatus {
+        bool connected;
+        String ssid;
+        String ipAddress;
+        uint8_t wifiStrength;
+    };
+
     extern std::vector<WiFiNetwork> cachedWifiNetworks;
     extern UpdateStatus scanStatus;
 
@@ -18,4 +25,6 @@ namespace NetworkManager {
     void startScanning();
     void pollNetworkScan();
     void requestUpdate(NetworkConfig& newConfig);
+    uint8_t rssiToWifiStrength(int8_t rssi);
+    const NetworkStatus& getNetworkStatus();
 }  // namespace NetworkManager

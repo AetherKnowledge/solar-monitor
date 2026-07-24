@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <esp_system.h>
 #include <Common/Logger.h>
+#include <Display/DisplayManager.h>
 
 namespace SystemManager {
     volatile bool requestedRestart = false;
@@ -15,6 +16,7 @@ namespace SystemManager {
     void loop() {
         // Handle system tasks
         if (requestedRestart) {
+            DisplayManager::showLoadingSpinner("Restarting...");
             // Perform restart logic
             requestedRestart = false;
 

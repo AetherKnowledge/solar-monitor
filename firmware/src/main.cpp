@@ -9,6 +9,7 @@
 #include <Sound/SoundManager.h>
 #include <Common/Logger.h>
 #include "Config/ConfigManager.h"
+#include "Display/DisplayManager.h"
 
 #define LED_PIN 32
 
@@ -39,7 +40,9 @@ void setup() {
     WebServer::start();
 
     DisplayManager::showLoadingProgress("Startup Complete", 100);
-    delay(500);
+    DisplayManager::finishBoot();
+    DisplayManager::showSuccess("Startup Complete");
+    delay(100);
 }
 
 void loop() {
@@ -47,8 +50,5 @@ void loop() {
     NetworkManager::loop();
     ModbusManager::loop();
     MqttManager::loop();
-    DisplayManager::loop();
     SoundManager::loop();
-
-    DisplayManager::showLoadingSpinner("Running");
 }
