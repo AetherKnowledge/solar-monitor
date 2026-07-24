@@ -111,8 +111,21 @@ namespace DisplayManager {
     // MQTT
     //------------------------------------------------------------------------------
 
-    inline void drawMqttIcon(int x, int y) {
-        drawGlyphIcon(x, y, u8g2_font_open_iconic_all_1x_t, 0x00F8, {8, 8});
+    inline void drawMqttIcon(int x, int y, bool connected = true) {
+        if (connected) {
+            drawGlyphIcon(x, y, u8g2_font_open_iconic_all_1x_t, 0x00F8, {8, 8});
+            return;
+        }
+
+        // Small MQTT ring
+        display.drawCircle(x + 3, y + 4, 2);
+
+        // Center dot
+        display.drawPixel(x + 3, y + 4);
+
+        // X
+        display.drawLine(x + 5, y + 1, x + 7, y + 3);
+        display.drawLine(x + 5, y + 3, x + 7, y + 1);
     }
 
     inline void drawUnknownIcon(int x, int y) {

@@ -85,8 +85,12 @@ namespace UpdateHandler {
 
         if (total) {
             Log.printf("%s: %u / %u bytes\r", name, index + len, total.value());
+            updateProgress.progress = static_cast<uint8_t>((index + len) * 100 / total.value());
+            updateProgress.hasTotalSize = true;
         } else {
             Log.printf("%s: %u bytes\r", name, index + len);
+            updateProgress.progress = 0;
+            updateProgress.hasTotalSize = false;
         }
 
         // Final chunk

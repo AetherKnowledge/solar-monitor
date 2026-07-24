@@ -5,6 +5,7 @@
 #include <U8g2lib.h>
 #include <Networking/NetworkManager.h>
 #include <Update/UpdateHandler.h>
+#include <Mqtt/MqttManager.h>
 #include <Common/Logger.h>
 
 namespace DisplayManager {
@@ -259,8 +260,10 @@ namespace DisplayManager {
     static void pollUpdateProgress() {
         const auto& progress = UpdateHandler::getUpdateProgress();
 
-        if (progress.status == UpdateStatus::InProgress) {
+        if (progress.status == UpdateStatus::InProgress && progress.hasTotalSize) {
             showLoadingProgress("Updating...", progress.progress);
+        } else if (progress.status == UpdateStatus::InProgress && !progress.hasTotalSize) {
+            showLoadingSpinner("Updating...");
         } else if (progress.status == UpdateStatus::UpdateComplete) {
             showSuccess("Update Complete");
         } else if (progress.status == UpdateStatus::UpdateFailed) {
@@ -275,9 +278,17 @@ namespace DisplayManager {
         statusBarState.wifiStrength = networkStatus.wifiStrength;
     }
 
+    static void pollMqttStatus() {
+        const auto& mqttStatus = MqttManager::isConnected();
+
+        DisplayLock lock;
+        statusBarState.mqttConnected = mqttStatus;
+    }
+
     void renderLoop() {
         pollUpdateProgress();
         pollNetworkStatus();
+        pollMqttStatus();
 
         DisplayState state;
         {
@@ -303,6 +314,9 @@ namespace DisplayManager {
                 break;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(state.screen == DisplayScreen::LoadingSpinner ? 33 : 100));
+        vTaskDelay(pdMS_TO_TICKS(state.screen == DisplayScreen::LoadingSpinner ||
+                                         state.screen == DisplayScreen::LoadingProgress
+                                     ? 33
+                                     : 100));
     }
 }  // namespace DisplayManager
