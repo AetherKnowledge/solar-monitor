@@ -13,8 +13,8 @@ export type ScanRequestResponse = {
 };
 
 export enum WifiMode {
-	AP = 'ap',
-	STA = 'sta',
+	AP = 'wifi_ap',
+	STA = 'wifi_sta',
 	AP_STA = 'ap+sta'
 }
 
