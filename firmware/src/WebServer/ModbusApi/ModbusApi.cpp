@@ -5,6 +5,7 @@
 #include <Modbus/ModbusManager.h>
 #include "Common/Enum.h"
 #include <Common/Logger.h>
+#include <esp_heap_caps.h>
 
 namespace ModbusApi {
     void registerApi(AsyncWebServer& server) {
@@ -30,9 +31,10 @@ namespace ModbusApi {
         serializeVector(doc["devices"], ConfigManager::config.modbusDevices);
         doc["updateStatus"] = Enum::toString(ModbusManager::updateStatus);
 
-        AsyncResponseStream* response = request->beginResponseStream("application/json");
-        serializeJson(doc, *response);
-        request->send(response);
+        Log.println("Sending Modbus Config: " + String(ConfigManager::config.modbusDevices.size()) +
+                    " devices");
+
+        Response::sendJson(request, doc);
     }
 
     void handleGetValues(AsyncWebServerRequest* request) {

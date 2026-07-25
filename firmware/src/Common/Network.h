@@ -37,4 +37,14 @@ namespace Response {
                       Print* out = nullptr) {
         send(request, status, message, out);
     }
+
+    inline void sendJson(AsyncWebServerRequest* request, const JsonVariantConst& value) {
+        AsyncResponseStream* response =
+            request->beginResponseStream("application/json", measureJson(value));
+
+        serializeJson(value, *response);
+
+        request->send(response);
+    }
+
 }  // namespace Response

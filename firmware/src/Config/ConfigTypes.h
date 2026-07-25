@@ -92,4 +92,10 @@ struct Config {
 
         deserializeVector(json["modbusDevices"], modbusDevices);
     }
+
+    void reset() {
+        network = NetworkConfig();
+        mqtt = MQTTConfig();
+        modbusDevices.clear();
+    }
 };

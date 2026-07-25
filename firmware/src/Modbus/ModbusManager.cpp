@@ -5,6 +5,7 @@
 #include <Mqtt/MqttDiscovery.h>
 #include <Mqtt/MqttManager.h>
 #include <Common/Logger.h>
+#include <Display/DisplayManager.h>
 
 namespace ModbusManager {
     bool hasStarted = false;
@@ -65,6 +66,7 @@ namespace ModbusManager {
             }
 
             device.initialized = true;
+            publishDisplayData();
             Log.printf("Initialized Modbus device %s on port %d with baudrate %d\n",
                        device.discovery.name.c_str(),
                        device.port,
@@ -109,6 +111,18 @@ namespace ModbusManager {
         return;
     }
 
+    void publishDisplayData() {
+        std::vector<DisplayData> snapshot;
+        snapshot.reserve(ConfigManager::config.modbusDevices.size());
+        for (const auto& device : ConfigManager::config.modbusDevices) {
+            if (!device.initialized)
+                continue;
+
+            snapshot.push_back(device.createDisplayData());
+        }
+        DisplayManager::updateDeviceInfo(snapshot);
+    }
+
     void loop() {
         if (updateStatus == UpdateStatus::Requested) {
             updateConfig(pendingDevices);
@@ -136,53 +150,64 @@ namespace ModbusManager {
             pollDevice(device);
         }
 
+        publishDisplayData();
+
         VirtualSensorManager::loopPersistence();
     }
 
     void pollDevice(ModbusDevice& device) {
         // Log.println("Polling Modbus device " + device.name + " (" +
         // device.identifier + ")");
+        bool success = false;
 
         for (auto& group : device.readGroups) {
-            processReadRegisters(device, group);
+            bool result = processReadRegisters(device, group);
+            if (result) {
+                success = true;
+            }
+
             updateVirtualSensors(device);
         }
+
+        device.modbusConnected = success;
     }
 
-    void processReadRegisters(ModbusDevice& device, ReadGroup& group) {
+    bool processReadRegisters(ModbusDevice& device, ReadGroup& group) {
         ReadRegisterManager::Result result = ReadRegisterManager::readGroup(device, group);
 
         if (!result.success) {
             // Log.printf("Failed to read register group %u-%u\n",
             //               group.startAddress,
             //               group.startAddress + group.count - 1);
-            return;
+            return false;
         }
 
         if (!result.changedRegisters.empty() && device.mqttEnabled && MqttManager::isConnected()) {
-            for (const auto& reg : result.changedRegisters) {
-                // Log.printf("Register %s (address: %d) value changed to %.2f\n",
-                //               reg->discovery.name.c_str(),
-                //               reg->address,
-                //               reg->value);
-
-                MqttManager::publish(reg->discovery.stateTopic, String(reg->value), true);
+            // for (const auto& reg : result.changedRegisters) {
+            //     MqttManager::publish(reg->discovery.stateTopic, String(reg->value), true);
+            // }
+            for (const auto& reg : device.readRegisters) {
+                MqttManager::publish(reg.discovery.stateTopic, String(reg.value), true);
             }
         }
+
+        return true;
     }
 
     void updateVirtualSensors(ModbusDevice& device) {
         for (auto& virtualSensor : device.virtualSensors) {
-            bool result = VirtualSensorManager::updateRegister(virtualSensor);
+            // bool result = VirtualSensorManager::updateRegister(virtualSensor);
+            // if (result && device.mqttEnabled && MqttManager::isConnected()) {
+            //     // Log.printf("Virtual Sensor %s value changed to %.2f\n",
+            //     //               virtualSensor.discovery.name.c_str(),
+            //     //               virtualSensor.value);
 
-            if (result && device.mqttEnabled && MqttManager::isConnected()) {
-                // Log.printf("Virtual Sensor %s value changed to %.2f\n",
-                //               virtualSensor.discovery.name.c_str(),
-                //               virtualSensor.value);
+            //     MqttManager::publish(
+            //         virtualSensor.discovery.stateTopic, String(virtualSensor.value), true);
+            // }
 
-                MqttManager::publish(
-                    virtualSensor.discovery.stateTopic, String(virtualSensor.value), true);
-            }
+            MqttManager::publish(
+                virtualSensor.discovery.stateTopic, String(virtualSensor.value), true);
         }
     }
 

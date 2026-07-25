@@ -30,19 +30,30 @@ struct DeviceDiscovery {
     }
 };
 
-struct SensorDiscovery {
+struct Discovery {
+    virtual ~Discovery() = default;
+
     String name;
     String uniqueId;
-
     String stateTopic;
+    String icon;
+
+    virtual const char* component() const = 0;
+
+    virtual void toJson(JsonObject) const = 0;
+    virtual void fromJson(JsonObject) = 0;
+};
+
+struct SensorDiscovery : Discovery {
     String deviceClass;
     String stateClass;
     String unitOfMeasurement;
-    String icon;
 
-    static constexpr const char* Component = "sensor";
+    const char* component() const override {
+        return "sensor";
+    }
 
-    void toJson(JsonObject json) const {
+    void toJson(JsonObject json) const override {
         json["name"] = name;
         json["unique_id"] = uniqueId;
 
@@ -62,7 +73,7 @@ struct SensorDiscovery {
             json["icon"] = icon;
     }
 
-    void fromJson(JsonObject json) {
+    void fromJson(JsonObject json) override {
         uniqueId = json["unique_id"] | "";
         name = json["name"] | uniqueId;
 
@@ -79,7 +90,9 @@ struct WriteDiscovery : SensorDiscovery {
     String valueTemplate;
     uint8_t qos = 0;
 
-    void toJson(JsonObject json) const {
+    virtual const char* component() const override = 0;
+
+    void toJson(JsonObject json) const override {
         SensorDiscovery::toJson(json);
 
         if (!valueTemplate.isEmpty())
@@ -92,7 +105,7 @@ struct WriteDiscovery : SensorDiscovery {
         json["qos"] = qos;
     }
 
-    void fromJson(JsonObject json) {
+    void fromJson(JsonObject json) override {
         SensorDiscovery::fromJson(json);
 
         valueTemplate = json["value_template"] | "";
@@ -104,14 +117,16 @@ struct WriteDiscovery : SensorDiscovery {
 struct SelectDiscovery : WriteDiscovery {
     std::vector<String> options;
 
-    static constexpr const char* Component = "select";
+    const char* component() const override {
+        return "select";
+    }
 
-    void toJson(JsonObject json) const {
+    void toJson(JsonObject json) const override {
         WriteDiscovery::toJson(json);
         serializeVector(json["options"], options);
     }
 
-    void fromJson(JsonObject json) {
+    void fromJson(JsonObject json) override {
         WriteDiscovery::fromJson(json);
         deserializeVector(json["options"], options);
     }
@@ -123,9 +138,11 @@ struct NumberDiscovery : WriteDiscovery {
     double step = 1;
     String mode = "auto";
 
-    static constexpr const char* Component = "number";
+    const char* component() const override {
+        return "number";
+    }
 
-    void toJson(JsonObject json) const {
+    void toJson(JsonObject json) const override {
         WriteDiscovery::toJson(json);
 
         json["min"] = min;
@@ -134,7 +151,7 @@ struct NumberDiscovery : WriteDiscovery {
         json["mode"] = mode;
     }
 
-    void fromJson(JsonObject json) {
+    void fromJson(JsonObject json) override {
         WriteDiscovery::fromJson(json);
 
         min = json["min"] | 0;

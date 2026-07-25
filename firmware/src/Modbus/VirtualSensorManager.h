@@ -17,8 +17,7 @@ namespace VirtualSensorManager {
     void setupDevice(ModbusDevice& device);
     bool updateRegister(VirtualSensor& virtualSensor);
 
-    template <std::derived_from<Entity<SensorDiscovery>> TRegister>
-    void addVariable(ModbusDevice& device, TRegister& reg, unordered_set_t& usedIds);
+    void addVariable(ModbusDevice& device, const Entity& reg, unordered_set_t& usedIds);
 
     void resetDevice(ModbusDevice& device);
     void compileExpressions(ModbusDevice& device);

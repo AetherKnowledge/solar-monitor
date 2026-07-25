@@ -58,8 +58,7 @@ namespace MqttDiscovery {
         }
     }
 
-    template <std::derived_from<SensorDiscovery> TDiscovery>
-    bool publishDiscovery(const ModbusDevice& device, const TDiscovery& discovery) {
+    bool publishDiscovery(const ModbusDevice& device, const Discovery& discovery) {
         if (discovery.name.isEmpty() || discovery.uniqueId.isEmpty()) {
             Log.printf("Skipping discovery for device %s (%s) due to missing name or uniqueId\n",
                        device.discovery.name.c_str(),
@@ -79,36 +78,22 @@ namespace MqttDiscovery {
         identifiers.add(device.discovery.identifier);
         deviceJson.remove("identifier");
 
-        bool result = MqttManager::publish(
-            generateDiscoveryTopic(
-                device.discovery.identifier, discovery.uniqueId, TDiscovery::Component),
-            doc,
-            true);
-
-        // Log.printf("%s to publish discovery for %s (%s) of device %s (%s)\n",
-        //               result ? "Successfully" : "Failed",
-        //               discovery.name.c_str(),
-        //               discovery.uniqueId.c_str(),
-        //               device.discovery.name.c_str(),
-        //               device.discovery.identifier.c_str());
-        // Log.printf("Discovery JSON: %s\n", doc.as<String>().c_str());
+        bool result = MqttManager::publish(generateDiscoveryTopic(device, discovery), doc, true);
 
         return result;
     }
 
-    String generateDiscoveryTopic(const String& deviceIdentifier,
-                                  const String& uniqueId,
-                                  const String& component) {
-        return ConfigManager::config.mqtt.autoDiscoveryPrefix + "/" + component + "/" +
-               deviceIdentifier + "/" + uniqueId + "/config";
+    String generateDiscoveryTopic(const ModbusDevice& device, const Discovery& discovery) {
+        return ConfigManager::config.mqtt.autoDiscoveryPrefix + "/" + discovery.component() + "/" +
+               device.discovery.identifier + "/" + discovery.uniqueId + "/config";
     }
 
-    String generateStateTopic(const String& deviceTopicPrefix, const String& uniqueId) {
-        return deviceTopicPrefix + "/" + uniqueId;
+    String generateStateTopic(const ModbusDevice& device, const Discovery& discovery) {
+        return device.discovery.identifier + "/" + discovery.uniqueId;
     }
 
-    String generateCommandTopic(const String& deviceTopicPrefix, const String& uniqueId) {
-        return deviceTopicPrefix + "/" + uniqueId + "/set";
+    String generateCommandTopic(const ModbusDevice& device, const WriteDiscovery& discovery) {
+        return device.discovery.identifier + "/" + discovery.uniqueId + "/set";
     }
 
 }  // namespace MqttDiscovery

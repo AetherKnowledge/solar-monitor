@@ -6,13 +6,10 @@
 namespace MqttDiscovery {
     void start();
 
-    template <std::derived_from<SensorDiscovery> TDiscovery>
-    bool publishDiscovery(const ModbusDevice& device, const TDiscovery& discovery);
+    bool publishDiscovery(const ModbusDevice& device, const Discovery& discovery);
 
-    String generateDiscoveryTopic(const String& deviceIdentifier,
-                                  const String& uniqueId,
-                                  const String& component = "sensor");
+    String generateDiscoveryTopic(const ModbusDevice& device, const Discovery& discovery);
 
-    String generateStateTopic(const String& deviceTopicPrefix, const String& uniqueId);
-    String generateCommandTopic(const String& deviceTopicPrefix, const String& uniqueId);
+    String generateStateTopic(const ModbusDevice& device, const Discovery& discovery);
+    String generateCommandTopic(const ModbusDevice& device, const WriteDiscovery& discovery);
 }  // namespace MqttDiscovery

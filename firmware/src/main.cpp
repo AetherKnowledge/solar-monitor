@@ -42,7 +42,8 @@ void setup() {
     DisplayManager::showLoadingProgress("Startup Complete", 100);
     DisplayManager::finishBoot();
     DisplayManager::showSuccess("Startup Complete");
-    delay(100);
+    delay(500);
+    DisplayManager::showDeviceInfo();
 }
 
 void loop() {

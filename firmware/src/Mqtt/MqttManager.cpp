@@ -116,27 +116,24 @@ namespace MqttManager {
     void generateTopics() {
         for (auto& device : ConfigManager::config.modbusDevices) {
             for (auto& reg : device.readRegisters) {
-                reg.discovery.stateTopic = MqttDiscovery::generateStateTopic(
-                    device.discovery.identifier, reg.discovery.uniqueId);
+                reg.discovery.stateTopic = MqttDiscovery::generateStateTopic(device, reg.discovery);
             }
 
             for (auto& sensor : device.virtualSensors) {
-                sensor.discovery.stateTopic = MqttDiscovery::generateStateTopic(
-                    device.discovery.identifier, sensor.discovery.uniqueId);
+                sensor.discovery.stateTopic =
+                    MqttDiscovery::generateStateTopic(device, sensor.discovery);
             }
 
             for (auto& reg : device.numberWriteRegisters) {
-                reg.discovery.commandTopic = MqttDiscovery::generateCommandTopic(
-                    device.discovery.identifier, reg.discovery.uniqueId);
-                reg.discovery.stateTopic = MqttDiscovery::generateStateTopic(
-                    device.discovery.identifier, reg.discovery.uniqueId);
+                reg.discovery.commandTopic =
+                    MqttDiscovery::generateCommandTopic(device, reg.discovery);
+                reg.discovery.stateTopic = MqttDiscovery::generateStateTopic(device, reg.discovery);
             }
 
             for (auto& reg : device.selectWriteRegisters) {
-                reg.discovery.commandTopic = MqttDiscovery::generateCommandTopic(
-                    device.discovery.identifier, reg.discovery.uniqueId);
-                reg.discovery.stateTopic = MqttDiscovery::generateStateTopic(
-                    device.discovery.identifier, reg.discovery.uniqueId);
+                reg.discovery.commandTopic =
+                    MqttDiscovery::generateCommandTopic(device, reg.discovery);
+                reg.discovery.stateTopic = MqttDiscovery::generateStateTopic(device, reg.discovery);
             }
         }
     }
@@ -180,10 +177,9 @@ namespace MqttManager {
         }
     }
 
-    template <WriteRegister TRegister>
     bool usePayload(
-        char* topic, byte* payload, unsigned int length, TRegister& reg, ModbusDevice& device) {
-        if (!reg.discovery.commandTopic.equals(topic)) {
+        char* topic, byte* payload, unsigned int length, WriteRegister& reg, ModbusDevice& device) {
+        if (!reg.getDiscovery().commandTopic.equals(topic)) {
             return false;
         }
 
@@ -191,12 +187,12 @@ namespace MqttManager {
         bool result = WriteRegisterManager::writeRegister(device, reg, value.toDouble());
 
         if (result) {
-            publish(reg.discovery.stateTopic, value, true);
+            publish(reg.getDiscovery().stateTopic, value, true);
         }
 
         Log.printf("Received payload for %s (%s) of device %s (%s): %s\n",
-                   reg.discovery.name.c_str(),
-                   reg.discovery.uniqueId.c_str(),
+                   reg.getDiscovery().name.c_str(),
+                   reg.getDiscovery().uniqueId.c_str(),
                    device.discovery.name.c_str(),
                    device.discovery.identifier.c_str(),
                    value.c_str());

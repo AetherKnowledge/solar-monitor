@@ -7,11 +7,17 @@
 #include <Update/UpdateHandler.h>
 #include <Mqtt/MqttManager.h>
 #include <Common/Logger.h>
+#include <Modbus/ModbusManager.h>
+#include <optional>
 
 namespace DisplayManager {
     constexpr uint8_t SDA_PIN = 25;
     constexpr uint8_t SCL_PIN = 26;
     constexpr uint8_t I2C_ADDRESS = 0x3F;
+
+    constexpr uint8_t PREVIOUS_BUTTON_PIN = 27;
+    constexpr uint8_t NEXT_BUTTON_PIN = 14;
+
     bool statusBarVisible = false;
     StatusBarStyle statusBarStyle;
     StatusBarState statusBarState;
@@ -32,13 +38,45 @@ namespace DisplayManager {
         }
     };
 
-    static void displayTask(void* parameter) {
+    static void displayTask(void*) {
+        TickType_t lastRender = xTaskGetTickCount();
+        TickType_t lastInput = xTaskGetTickCount();
+
         while (true) {
-            renderLoop();
+            TickType_t now = xTaskGetTickCount();
+
+            // Poll buttons every 10 ms
+            if (now - lastInput >= pdMS_TO_TICKS(10)) {
+                inputLoop();
+                lastInput = now;
+            }
+
+            // Render at different rates depending on screen
+            DisplayScreen screen;
+            {
+                DisplayLock lock;
+                screen = displayState.screen;
+            }
+
+            TickType_t renderInterval = (screen == DisplayScreen::LoadingSpinner ||
+                                         screen == DisplayScreen::LoadingProgress)
+                                            ? pdMS_TO_TICKS(33)    // ~30 FPS
+                                            : pdMS_TO_TICKS(100);  // 10 FPS
+
+            if (now - lastRender >= renderInterval) {
+                renderLoop();
+                lastRender = now;
+            }
+
+            // Yield to other tasks
+            vTaskDelay(pdMS_TO_TICKS(1));
         }
     }
 
     void setup() {
+        pinMode(PREVIOUS_BUTTON_PIN, INPUT_PULLUP);
+        pinMode(NEXT_BUTTON_PIN, INPUT_PULLUP);
+
         Wire.begin(SDA_PIN, SCL_PIN);
 
         display.setI2CAddress(I2C_ADDRESS << 1);
@@ -66,7 +104,6 @@ namespace DisplayManager {
 
     void renderStatusBar() {
         display.setFont(statusBarStyle.font);
-
         //----------------------------------------
         // separator
         //----------------------------------------
@@ -78,12 +115,14 @@ namespace DisplayManager {
         // title
         //----------------------------------------
 
+        String title = displayState.screen == DisplayScreen::DeviceInfo ? statusBarState.deviceName
+                                                                        : statusBarState.title;
         if (statusBarStyle.showTitle) {
             if (statusBarStyle.centerTitle) {
-                drawStr(0, 8, statusBarState.title.c_str(), TextAlignment::Center);
+                drawStr(0, 8, title.c_str(), TextAlignment::Center);
 
             } else {
-                drawStr(statusBarStyle.padding, 8, statusBarState.title.c_str());
+                drawStr(statusBarStyle.padding, 8, title.c_str());
             }
         }
 
@@ -99,6 +138,12 @@ namespace DisplayManager {
         const auto wifiSize = getIconSize(Icon::Wifi);
         drawWifiIcon(x - wifiSize.width, 0, statusBarState.wifiStrength);
         x -= wifiSize.width + statusBarStyle.iconSpacing;
+
+        if (statusBarState.modbusVisible) {
+            const auto modbusSize = getIconSize(Icon::Modbus);
+            drawModbusIcon(x - modbusSize.width, 0, statusBarState.modbusConnected);
+            x -= modbusSize.width + statusBarStyle.iconSpacing;
+        }
     }
 
     void finishBoot() {
@@ -131,6 +176,40 @@ namespace DisplayManager {
         DisplayLock lock;
         displayState.screen = DisplayScreen::Success;
         displayState.message = message;
+    }
+
+    void showDeviceInfo() {
+        DisplayLock lock;
+        displayState.screen = DisplayScreen::DeviceInfo;
+    }
+
+    void updateDeviceInfo(const std::vector<DisplayData>& devices) {
+        DisplayLock lock;
+        displayState.displayDevices = devices;
+    }
+
+    void showNextDevice() {
+        DisplayLock lock;
+
+        const size_t count = displayState.displayDevices.size();
+        if (count == 0)
+            return;
+
+        displayState.deviceInfoIndex = (displayState.deviceInfoIndex + 1) % count;
+
+        displayState.screen = DisplayScreen::DeviceInfo;
+    }
+
+    void showPreviousDevice() {
+        DisplayLock lock;
+
+        const size_t count = displayState.displayDevices.size();
+        if (count == 0)
+            return;
+
+        displayState.deviceInfoIndex = (displayState.deviceInfoIndex + count - 1) % count;
+
+        displayState.screen = DisplayScreen::DeviceInfo;
     }
 
     inline void beginFrame() {
@@ -258,6 +337,76 @@ namespace DisplayManager {
         endFrame();
     }
 
+    static std::optional<DisplayData> getCurrentDevice() {
+        DisplayLock lock;
+
+        const auto& devices = displayState.displayDevices;
+
+        if (devices.empty())
+            return std::nullopt;
+
+        size_t index = displayState.deviceInfoIndex % devices.size();
+        return devices[index];  // copy while locked
+    }
+
+    static void renderSensorInfo(const DisplayData::EntityData& entity) {
+        constexpr uint8_t COLS = 2;
+        constexpr uint8_t ROWS = 2;
+
+        constexpr uint8_t TOP = 12;  // below status bar
+        uint8_t CELL_W = display.getDisplayWidth() / COLS;
+        uint8_t CELL_H = display.getDisplayHeight() / ROWS;
+
+        uint8_t row = entity.index / COLS;
+        uint8_t col = entity.index % COLS;
+
+        if (entity.index >= COLS * ROWS) {
+            return;
+        }
+
+        if (row >= ROWS)
+            return;
+
+        int x = col * CELL_W;
+        int y = TOP + row * CELL_H;
+
+        display.setFont(u8g2_font_5x8_tr);
+
+        // Name
+        drawStr(x, y + 6, entity.name.c_str(), TextAlignment::Center, x + CELL_W);
+
+        // Value
+        display.setFont(u8g2_font_6x10_tr);
+        drawStr(x, y + 16, String(entity.value).c_str(), TextAlignment::Center, x + CELL_W);
+    }
+
+    static void renderDeviceInfo() {
+        beginFrame();
+
+        auto device = getCurrentDevice();
+
+        display.setFont(u8g2_font_ncenB08_tr);
+        if (!device) {
+            drawStr(0, 20, "No device configured", TextAlignment::Center);
+            endFrame();
+            return;
+        }
+
+        const auto& deviceData = device.value();
+
+        if (deviceData.entities.empty()) {
+            drawStr(0, 20, "No display items", TextAlignment::Center);
+            endFrame();
+            return;
+        }
+
+        for (auto& entity : deviceData.entities) {
+            renderSensorInfo(entity);
+        }
+
+        endFrame();
+    }
+
     static void pollUpdateProgress() {
         const auto& progress = UpdateHandler::getUpdateProgress();
 
@@ -286,16 +435,65 @@ namespace DisplayManager {
         statusBarState.mqttConnected = mqttStatus;
     }
 
+    static void pollCurrentDeviceStatus() {
+        const auto deviceData = getCurrentDevice();
+
+        if (deviceData.has_value()) {
+            DisplayLock lock;
+            statusBarState.modbusVisible = true;
+            statusBarState.modbusConnected = deviceData->modbusConnected;
+            statusBarState.deviceName = deviceData->deviceName;
+        } else {
+            DisplayLock lock;
+            statusBarState.modbusVisible = false;
+            statusBarState.modbusConnected = false;
+            statusBarState.deviceName = "No Device";
+        }
+    }
+
+    void inputLoop() {
+        static bool prevNextButtonState = HIGH;
+        static bool prevPrevButtonState = HIGH;
+
+        static uint32_t lastNextPress = 0;
+        static uint32_t lastPrevPress = 0;
+
+        constexpr uint32_t DEBOUNCE_MS = 50;
+
+        const uint32_t now = millis();
+
+        bool nextButtonState = digitalRead(NEXT_BUTTON_PIN);
+        bool prevButtonState = digitalRead(PREVIOUS_BUTTON_PIN);
+
+        // Next button (falling edge)
+        if (nextButtonState == LOW && prevNextButtonState == HIGH &&
+            (now - lastNextPress) >= DEBOUNCE_MS) {
+            lastNextPress = now;
+            showNextDevice();
+        }
+
+        // Previous button (falling edge)
+        if (prevButtonState == LOW && prevPrevButtonState == HIGH &&
+            (now - lastPrevPress) >= DEBOUNCE_MS) {
+            lastPrevPress = now;
+            showPreviousDevice();
+        }
+
+        prevNextButtonState = nextButtonState;
+        prevPrevButtonState = prevButtonState;
+    }
+
     void renderLoop() {
         pollUpdateProgress();
         pollNetworkStatus();
         pollMqttStatus();
+        pollCurrentDeviceStatus();
 
         DisplayState state;
         {
             DisplayLock lock;
             state = displayState;
-        }  // mutex released immediately
+        }
 
         switch (state.screen) {
             case DisplayScreen::LoadingProgress:
@@ -313,11 +511,10 @@ namespace DisplayManager {
             case DisplayScreen::Success:
                 renderSuccess(state.message);
                 break;
-        }
 
-        vTaskDelay(pdMS_TO_TICKS(state.screen == DisplayScreen::LoadingSpinner ||
-                                         state.screen == DisplayScreen::LoadingProgress
-                                     ? 33
-                                     : 100));
+            case DisplayScreen::DeviceInfo:
+                renderDeviceInfo();
+                break;
+        }
     }
 }  // namespace DisplayManager

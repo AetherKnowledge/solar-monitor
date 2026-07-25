@@ -132,6 +132,19 @@ namespace DisplayManager {
         display.drawLine(x + 7, y + 0, x + 5, y + 2);
     }
 
+    //------------------------------------------------------------------------------
+    // Modbus
+    //------------------------------------------------------------------------------
+
+    inline void drawModbusIcon(int x, int y, bool connected = true) {
+        static const unsigned char modbusIcon[] U8X8_PROGMEM = {0x22, 0x22, 0x7f, 0x7f, 0x3e, 0x1c};
+
+        static const unsigned char disconnectedModbusIcon[] U8X8_PROGMEM = {
+            0x14, 0x08, 0x14, 0x00, 0x7f, 0x7f, 0x3e, 0x1c};
+
+        display.drawXBMP(x, y, 7, 7, connected ? modbusIcon : disconnectedModbusIcon);
+    }
+
     inline void drawUnknownIcon(int x, int y) {
         display.setFont(u8g2_font_6x10_tr);
         display.drawStr(x, y + 8, "?");

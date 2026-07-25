@@ -10,16 +10,18 @@ namespace DisplayManager {
     // Position Helpers
     //--------------------------------------------------------------------------
 
-    inline int centerX(int width, int left = 0, int right = display.getDisplayWidth()) {
-        return left + ((right - left) - width) / 2;
+    inline int centerX(int width, int left = 0, int rightBound = display.getDisplayWidth()) {
+        return left + ((rightBound - left) - width) / 2;
     }
 
     inline int centerY(int height, int top = 0, int bottom = display.getDisplayHeight()) {
         return top + ((bottom - top) - height) / 2;
     }
 
-    inline int centerTextX(const char* text, int left = 0, int right = display.getDisplayWidth()) {
-        return centerX(display.getStrWidth(text), left, right);
+    inline int centerTextX(const char* text,
+                           int left = 0,
+                           int rightBound = display.getDisplayWidth()) {
+        return centerX(display.getStrWidth(text), left, rightBound);
     }
 
     inline int centerTextY(const uint8_t* font,
@@ -32,8 +34,8 @@ namespace DisplayManager {
         return centerY(textHeight, top, bottom) + display.getAscent();
     }
 
-    inline int centerIconX(Icon icon, int left = 0, int right = display.getDisplayWidth()) {
-        return centerX(getIconSize(icon).width, left, right);
+    inline int centerIconX(Icon icon, int left = 0, int rightBound = display.getDisplayWidth()) {
+        return centerX(getIconSize(icon).width, left, rightBound);
     }
 
     inline int centerIconY(Icon icon, int top = 0, int bottom = display.getDisplayHeight()) {
@@ -48,14 +50,14 @@ namespace DisplayManager {
                         int y,
                         const char* text,
                         TextAlignment alignment = TextAlignment::Left,
-                        int right = display.getDisplayWidth()) {
+                        int rightBound = display.getDisplayWidth()) {
         switch (alignment) {
             case TextAlignment::Center:
-                x = centerTextX(text, x, right);
+                x = centerTextX(text, x, rightBound);
                 break;
 
             case TextAlignment::Right:
-                x = right - display.getStrWidth(text);
+                x = rightBound - display.getStrWidth(text);
                 break;
 
             case TextAlignment::Left:
@@ -74,14 +76,14 @@ namespace DisplayManager {
                                 int y,
                                 Icon icon,
                                 TextAlignment alignment = TextAlignment::Left,
-                                int right = display.getDisplayWidth()) {
+                                int rightBound = display.getDisplayWidth()) {
         switch (alignment) {
             case TextAlignment::Center:
-                x = centerIconX(icon, x, right);
+                x = centerIconX(icon, x, rightBound);
                 break;
 
             case TextAlignment::Right:
-                x = right - getIconSize(icon).width;
+                x = rightBound - getIconSize(icon).width;
                 break;
 
             case TextAlignment::Left:
@@ -103,7 +105,7 @@ namespace DisplayManager {
                              const uint8_t* font = u8g2_font_6x10_tr,
                              TextAlignment alignment = TextAlignment::Left,
                              int spacing = 4,
-                             int right = display.getDisplayWidth()) {
+                             int rightBound = display.getDisplayWidth()) {
         display.setFont(font);
 
         auto iconSize = getIconSize(icon);
@@ -113,11 +115,11 @@ namespace DisplayManager {
 
         switch (alignment) {
             case TextAlignment::Center:
-                x = centerX(totalWidth, x, right);
+                x = centerX(totalWidth, x, rightBound);
                 break;
 
             case TextAlignment::Right:
-                x = right - totalWidth;
+                x = rightBound - totalWidth;
                 break;
 
             case TextAlignment::Left:
@@ -151,8 +153,8 @@ namespace DisplayManager {
                              const char* text,
                              TextAlignment alignment = TextAlignment::Left,
                              int spacing = 4,
-                             int right = display.getDisplayWidth()) {
-        drawIconText(x, y, icon, text, u8g2_font_6x10_tr, alignment, spacing, right);
+                             int rightBound = display.getDisplayWidth()) {
+        drawIconText(x, y, icon, text, u8g2_font_6x10_tr, alignment, spacing, rightBound);
     }
 
 }  // namespace DisplayManager

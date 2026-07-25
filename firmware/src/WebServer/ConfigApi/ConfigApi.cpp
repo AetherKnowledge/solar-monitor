@@ -43,9 +43,7 @@ namespace ConfigApi {
             return;
         }
 
-        AsyncResponseStream* response = request->beginResponseStream("application/json");
-        serializeJsonPretty(doc, *response);
-        request->send(response);
+        Response::sendJson(request, doc);
     }
 
     void onUpload(AsyncWebServerRequest* request,

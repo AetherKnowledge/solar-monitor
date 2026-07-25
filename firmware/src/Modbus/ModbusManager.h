@@ -12,15 +12,18 @@ namespace ModbusManager {
     extern volatile UpdateStatus updateStatus;
     extern std::vector<ModbusDevice> pendingDevices;
 
+    extern DisplayData currentDisplayData;
+
     void setup();
     void loop();
     void pollDevice(ModbusDevice& device);
+    void publishDisplayData();
     void reload();
     void requestUpdate(const std::vector<ModbusDevice>& devices);
     void updateConfig(const std::vector<ModbusDevice>& devices);
     void setupDevices(std::vector<ModbusDevice>& devices);
 
-    void processReadRegisters(ModbusDevice& device, ReadGroup& group);
+    bool processReadRegisters(ModbusDevice& device, ReadGroup& group);
     void updateVirtualSensors(ModbusDevice& device);
     void getValues(JsonDocument& doc);
 

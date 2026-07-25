@@ -7,71 +7,92 @@
 #include <ModbusMaster.h>
 #include <Mqtt/MqttTypes.h>
 #include <tinyexpr.h>
+#include <cstdint>
 #include <vector>
 #include <Common/Json.h>
 
-template <typename T>
-concept Discovery = std::derived_from<T, SensorDiscovery>;
+struct EntityBase {
+    virtual ~EntityBase() = default;
 
-template <Discovery TDiscovery>
-struct Entity {
-    double value = 0.0;
-    TDiscovery discovery;
+    double value = 0;
+    int8_t displayIndex = -1;
 
-    String& getName() {
-        return discovery.name;
+    virtual const String& getName() const = 0;
+    virtual const String& getId() const = 0;
+
+    virtual Discovery& getDiscovery() = 0;
+    virtual const Discovery& getDiscovery() const = 0;
+
+    virtual void toJson(JsonObject json) const = 0;
+    virtual void fromJson(JsonObject json) = 0;
+};
+
+struct Entity : EntityBase {
+    const String& getName() const override {
+        return getDiscovery().name;
     }
 
-    String& getId() {
-        return discovery.uniqueId;
+    const String& getId() const override {
+        return getDiscovery().uniqueId;
     }
 
-    void toJson(JsonObject json) const {
+    void toJson(JsonObject json) const override {
+        json["displayIndex"] = this->displayIndex;
         JsonObject discoveryJson = json["discovery"].to<JsonObject>();
-        discovery.toJson(discoveryJson);
+        getDiscovery().toJson(discoveryJson);
     }
 
-    void fromJson(JsonObject json) {
+    void fromJson(JsonObject json) override {
+        displayIndex = json["displayIndex"] | -1;
         JsonObject discoveryJson = json["discovery"].as<JsonObject>();
-        discovery.fromJson(discoveryJson);
+        getDiscovery().fromJson(discoveryJson);
     }
 };
 
-template <typename TDiscovery>
-struct Register : Entity<TDiscovery> {
+struct Register : Entity {
     uint16_t address;
 
-    void toJson(JsonObject json) const {
-        Entity<TDiscovery>::toJson(json);
+    void toJson(JsonObject json) const override {
+        Entity::toJson(json);
         json["address"] = this->address;
     }
 
-    void fromJson(JsonObject json) {
-        Entity<TDiscovery>::fromJson(json);
+    void fromJson(JsonObject json) override {
+        Entity::fromJson(json);
         address = json["address"].as<uint16_t>();
     }
 };
 
-struct ReadRegister : Register<SensorDiscovery> {
+struct ReadRegister : Register {
     uint8_t rounding = 0;
     RegisterTransform transform = RegisterTransform::None;
     float transformArgument = 0.0f;
     bool signedValue = false;
 
-    void toJson(JsonObject json) const {
-        Register<SensorDiscovery>::toJson(json);
+    SensorDiscovery discovery;
+
+    void toJson(JsonObject json) const override {
+        Register::toJson(json);
         json["rounding"] = rounding;
         json["transform"] = Enum::toString(transform);
         json["transformArgument"] = transformArgument;
         json["signedValue"] = signedValue;
     }
 
-    void fromJson(JsonObject json) {
-        Register<SensorDiscovery>::fromJson(json);
+    void fromJson(JsonObject json) override {
+        Register::fromJson(json);
         rounding = json["rounding"].as<uint8_t>();
         transform = Enum::fromString<RegisterTransform>(json["transform"] | "None");
         signedValue = json["signedValue"] | false;
         transformArgument = json["transformArgument"].as<float>();
+    }
+
+    SensorDiscovery& getDiscovery() override {
+        return discovery;
+    }
+
+    const SensorDiscovery& getDiscovery() const override {
+        return discovery;
     }
 };
 
@@ -82,41 +103,94 @@ struct ReadGroup {
     std::vector<ReadRegister*> registers;
 };
 
-struct VirtualSensor : Entity<SensorDiscovery> {
+struct VirtualSensor : Entity {
     uint8_t rounding = 0;
     String expression;
     te_expr* compiledExpression = nullptr;
+
+    SensorDiscovery discovery;
 
     bool isPersistent = false;
     // only updates if persistence is true
     bool isDirty = false;
 
-    void toJson(JsonObject json) const {
-        Entity<SensorDiscovery>::toJson(json);
+    void toJson(JsonObject json) const override {
+        Entity::toJson(json);
 
         json["expression"] = expression;
-        json["isPersistent"] = false;
+        json["isPersistent"] = isPersistent;
         json["rounding"] = rounding;
     }
 
-    void fromJson(JsonObject json) {
-        Entity<SensorDiscovery>::fromJson(json);
+    void fromJson(JsonObject json) override {
+        Entity::fromJson(json);
 
         expression = json["expression"].as<String>();
         isPersistent = json["isPersistent"] | false;
         rounding = json["rounding"] | 0;
     }
+
+    SensorDiscovery& getDiscovery() override {
+        return discovery;
+    }
+
+    const SensorDiscovery& getDiscovery() const override {
+        return discovery;
+    }
 };
 
-template <typename T>
-concept WriteRegisterType = requires(T reg) {
-    reg.discovery.commandTopic;
-    reg.value;
+struct WriteRegister : Register {
+    virtual ~WriteRegister() = default;
+
+    virtual WriteDiscovery& getDiscovery() override = 0;
+    virtual const WriteDiscovery& getDiscovery() const override = 0;
 };
 
-struct SelectWriteRegister : Register<SelectDiscovery> {};
+struct SelectWriteRegister : WriteRegister {
+    SelectDiscovery discovery;
 
-struct NumberWriteRegister : Register<NumberDiscovery> {};
+    const SelectDiscovery& getDiscovery() const override {
+        return discovery;
+    }
+
+    SelectDiscovery& getDiscovery() override {
+        return discovery;
+    }
+};
+
+struct NumberWriteRegister : WriteRegister {
+    NumberDiscovery discovery;
+
+    const NumberDiscovery& getDiscovery() const override {
+        return discovery;
+    }
+
+    NumberDiscovery& getDiscovery() override {
+        return discovery;
+    }
+};
+
+// Id rather not mutex this lol
+struct DisplayData {
+    struct EntityData {
+        int8_t index;
+        String name;
+        double value;
+    };
+
+    String deviceName;
+    bool modbusConnected = false;
+    std::vector<EntityData> entities;
+};
+
+struct DisplayItem {
+    EntityBase* entity;
+
+    const String toString() const {
+        return "DisplayItem: " + entity->getName() + " (ID: " + entity->getId() +
+               ", Display Index: " + String(entity->displayIndex) + ")";
+    }
+};
 
 struct ModbusDevice {
     uint8_t slaveId = 5;
@@ -129,6 +203,7 @@ struct ModbusDevice {
     bool mqttEnabled = true;
 
     ModbusMaster modbus;
+    bool modbusConnected = false;
     bool initialized = false;
 
     std::vector<ReadRegister> readRegisters;
@@ -172,6 +247,43 @@ struct ModbusDevice {
         deserializeVector(json["virtualSensors"], virtualSensors);
         deserializeVector(json["selectWriteRegisters"], selectWriteRegisters);
         deserializeVector(json["numberWriteRegisters"], numberWriteRegisters);
+    }
+
+    DisplayData createDisplayData() const {
+        DisplayData data;
+        data.deviceName = discovery.name;
+        int16_t totalDisplayItems = readRegisters.size() + virtualSensors.size() +
+                                    selectWriteRegisters.size() + numberWriteRegisters.size();
+
+        data.entities.reserve(totalDisplayItems);
+        data.modbusConnected = modbusConnected;
+
+        for (auto& reg : readRegisters) {
+            if (reg.displayIndex >= 0) {
+                data.entities.push_back(
+                    DisplayData::EntityData{reg.displayIndex, reg.getName(), reg.value});
+            }
+        }
+        for (auto& sensor : virtualSensors) {
+            if (sensor.displayIndex >= 0) {
+                data.entities.push_back(
+                    DisplayData::EntityData{sensor.displayIndex, sensor.getName(), sensor.value});
+            }
+        }
+        for (auto& reg : selectWriteRegisters) {
+            if (reg.displayIndex >= 0) {
+                data.entities.push_back(
+                    DisplayData::EntityData{reg.displayIndex, reg.getName(), reg.value});
+            }
+        }
+        for (auto& reg : numberWriteRegisters) {
+            if (reg.displayIndex >= 0) {
+                data.entities.push_back(
+                    DisplayData::EntityData{reg.displayIndex, reg.getName(), reg.value});
+            }
+        }
+
+        return data;
     }
 
     String toString() const {

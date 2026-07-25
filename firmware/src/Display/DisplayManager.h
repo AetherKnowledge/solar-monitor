@@ -12,10 +12,16 @@ namespace DisplayManager {
     void renderStatusBar();
     void finishBoot();
     void pollWifiStrength();
-    void renderLoop();
 
+    void renderLoop();
+    void inputLoop();
+
+    void updateDeviceInfo(const std::vector<DisplayData>& devices);
     void showLoadingProgress(const String& message, uint8_t percent);
     void showLoadingSpinner(const String& message, const SpinnerStyle& style = {});
     void showError(const String& message);
     void showSuccess(const String& message);
+    void showDeviceInfo();
+    void nextDevice();
+    void previousDevice();
 }  // namespace DisplayManager

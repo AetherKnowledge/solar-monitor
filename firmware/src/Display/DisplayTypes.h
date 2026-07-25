@@ -2,6 +2,8 @@
 
 #include <Arduino.h>
 #include <U8g2lib.h>
+#include <Modbus/ModbusTypes.h>
+#include <optional>
 
 namespace DisplayManager {
 
@@ -80,20 +82,25 @@ namespace DisplayManager {
 
     struct StatusBarState {
         String title = "Solar Monitor";
+        String deviceName = "No Device";
 
         uint8_t wifiStrength = 0;
         bool mqttConnected = false;
 
-        bool websocket = false;
+        bool modbusVisible = false;
+        bool modbusConnected = false;
 
+        bool websocket = false;
         bool activity = false;
     };
 
-    enum class DisplayScreen { LoadingProgress, LoadingSpinner, Error, Success };
+    enum class DisplayScreen { LoadingProgress, LoadingSpinner, Error, Success, DeviceInfo };
 
     struct DisplayState {
         DisplayScreen screen = DisplayScreen::LoadingSpinner;
 
+        uint8_t deviceInfoIndex = 0;
+        std::vector<DisplayData> displayDevices;
         String message = "Loading...";
         uint8_t progress = 0;
 

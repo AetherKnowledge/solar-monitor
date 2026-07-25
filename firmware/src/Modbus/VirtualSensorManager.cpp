@@ -173,14 +173,7 @@ namespace VirtualSensorManager {
         compileExpressions(device);
     }
 
-    template <std::derived_from<Entity<SensorDiscovery>> T>
-    void addVariable(ModbusDevice& device, T& reg, unordered_set_t& usedIds) {
-        using RegisterType = std::decay_t<T>;
-
-        static_assert(std::is_same_v<RegisterType, ReadRegister> ||
-                          std::is_same_v<RegisterType, VirtualSensor>,
-                      "Only ReadRegister and VirtualSensor are supported");
-
+    void addVariable(ModbusDevice& device, const Entity& reg, unordered_set_t& usedIds) {
         if (reg.getId().isEmpty()) {
             Log.printf("Register '%s' has no unique ID.\n", reg.getName().c_str());
             return;

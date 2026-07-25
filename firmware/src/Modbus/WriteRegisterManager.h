@@ -5,8 +5,7 @@
 
 namespace WriteRegisterManager {
 
-    template <WriteRegisterType T>
-    bool writeRegister(ModbusDevice& device, T& reg, double value) {
+    inline bool writeRegister(ModbusDevice& device, WriteRegister& reg, double value) {
         uint16_t transformedValue = device.swapBytes
                                         ? __builtin_bswap16(static_cast<uint16_t>(value))
                                         : static_cast<uint16_t>(value);
