@@ -20,12 +20,18 @@ export enum WifiMode {
 
 export type NetworkConfig = {
 	mode: WifiMode;
-	ssid?: string;
-	password?: string;
+	wifiSsid?: string;
+	wifiPassword?: string;
+	apSsid?: string;
+	apPasswordEnabled?: boolean;
+	apPassword?: string;
 };
 
 export const defaultNetworkConfig: NetworkConfig = {
 	mode: WifiMode.AP_STA,
-	ssid: '',
-	password: ''
+	wifiSsid: '',
+	wifiPassword: '',
+	apSsid: '',
+	apPassword: '',
+	apPasswordEnabled: false
 };

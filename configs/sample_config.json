@@ -1,8 +1,11 @@
 {
   "network": {
     "mode": "ap+sta",
-    "ssid": "Home Wi-Fi",
-    "password": "secret123"
+    "wifiSsid": "Home Wi-Fi",
+    "wifiPassword": "secret123",
+    "apSsid": "SolarMonitor",
+    "apPassword": "SolarMonitor",
+    "apPasswordEnabled": true
   },
   "mqtt": {
     "enabled": true,

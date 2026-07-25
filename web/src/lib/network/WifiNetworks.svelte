@@ -44,7 +44,7 @@
 	);
 
 	function select(network: WifiNetwork) {
-		networkConfig.ssid = network.ssid;
+		networkConfig.wifiSsid = network.ssid;
 		searchInput = '';
 
 		popover.hidePopover();
@@ -82,7 +82,7 @@
 		refreshNetworks();
 	});
 
-	const selectedNetwork = $derived.by(() => networks.find((n) => n.ssid === networkConfig.ssid));
+	const selectedNetwork = $derived.by(() => networks.find((n) => n.ssid === networkConfig.wifiSsid));
 </script>
 
 <fieldset class="fieldset bg-base-100 border border-base-300 rounded-box p-4 gap-5">
@@ -99,7 +99,7 @@
 			<label class="input w-full join-item">
 				<Wifi class="size-4 opacity-60" />
 				<input
-					value={selectedNetwork?.ssid || networkConfig.ssid || ''}
+					value={selectedNetwork?.ssid || networkConfig.wifiSsid || ''}
 					type="search"
 					class="grow"
 					readonly
@@ -181,7 +181,7 @@
 						type={showPassword ? 'text' : 'password'}
 						placeholder="Enter Wi-Fi password"
 						required
-						bind:value={networkConfig.password}
+						bind:value={networkConfig.wifiPassword}
 					/>
 				</label>
 
@@ -217,7 +217,7 @@
 					</div>
 
 					<div class="flex gap-1 mt-1">
-						{#if networkConfig.ssid === network.ssid}
+						{#if networkConfig.wifiSsid === network.ssid}
 							<div class="badge badge-success badge-xs">Connected</div>
 						{/if}
 
@@ -231,7 +231,7 @@
 			<div class="flex items-center gap-2">
 				{@render SignalIcon(network.rssi)}
 
-				{#if networkConfig.ssid === network.ssid}
+				{#if networkConfig.wifiSsid === network.ssid}
 					<Check class="size-4 text-primary" />
 				{/if}
 			</div>

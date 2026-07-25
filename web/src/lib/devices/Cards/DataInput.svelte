@@ -8,6 +8,7 @@
 		type?: string;
 		icon?: Component;
 		iconColor?: string;
+		required?: boolean;
 
 		value?: string | number;
 	};
@@ -19,6 +20,7 @@
 		type = 'text',
 		icon: Icon,
 		iconColor = 'text-primary',
+		required = false,
 		value = $bindable()
 	}: Props = $props();
 </script>
@@ -36,7 +38,7 @@
 		</span>
 	</div>
 
-	<input class="input input-bordered w-full" {type} {placeholder} bind:value />
+	<input class="input input-bordered w-full" {type} {placeholder} bind:value {required} />
 
 	{#if description}
 		<div class="label">

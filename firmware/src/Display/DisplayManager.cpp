@@ -425,7 +425,11 @@ namespace DisplayManager {
         const auto& networkStatus = NetworkManager::getNetworkStatus();
 
         DisplayLock lock;
-        statusBarState.wifiStrength = networkStatus.wifiStrength;
+        if (networkStatus.connected) {
+            statusBarState.wifiStrength = networkStatus.wifiStrength;
+        } else {
+            statusBarState.wifiStrength = 0;
+        }
     }
 
     static void pollMqttStatus() {

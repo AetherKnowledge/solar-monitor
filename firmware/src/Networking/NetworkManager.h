@@ -20,7 +20,7 @@ namespace NetworkManager {
     extern volatile UpdateStatus updateStatus;
     extern NetworkConfig pendingConfig;
 
-    bool connect(const String& ssid, const String& password, WiFiMode_t mode);
+    bool connect(NetworkConfig& config);
     void loop();
     void startScanning();
     void pollNetworkScan();

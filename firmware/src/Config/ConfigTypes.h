@@ -9,23 +9,32 @@
 
 struct NetworkConfig {
     WiFiMode_t mode = WiFiMode_t::WIFI_MODE_APSTA;
-    String ssid = "SolarMonitor";
-    String password = "";
+    String wifiSsid = "SolarMonitor";
+    String wifiPassword = "";
+    String apSsid = "SolarMonitor";
+    String apPassword = "SolarMonitor";
+    bool apPasswordEnabled = true;
 
     String toString() const {
-        return "Mode: " + String(mode) + "\nSSID: " + ssid + "\nPassword: ***";
+        return "Mode: " + String(mode) + "\nSSID: " + wifiSsid + "\nPassword: ***";
     }
 
     void toJson(JsonObject json) const {
-        json["ssid"] = ssid;
         json["mode"] = Enum::toString(mode);
-        json["password"] = password;
+        json["wifiSsid"] = wifiSsid;
+        json["wifiPassword"] = wifiPassword;
+        json["apSsid"] = apSsid;
+        json["apPassword"] = apPassword;
+        json["apPasswordEnabled"] = apPasswordEnabled;
     }
 
     void fromJson(JsonObjectConst json) {
         mode = Enum::fromString<WiFiMode_t>(json["mode"] | "ap+sta");
-        ssid = json["ssid"] | "";
-        password = json["password"] | "";
+        wifiSsid = json["wifiSsid"] | "";
+        wifiPassword = json["wifiPassword"] | "";
+        apSsid = json["apSsid"] | "";
+        apPassword = json["apPassword"] | "";
+        apPasswordEnabled = json["apPasswordEnabled"] | false;
     }
 };
 

@@ -16,16 +16,13 @@ namespace NetworkManager {
     static void updateConfig() {
         updateStatus = UpdateStatus::InProgress;
 
-        bool isValidConnection =
-            connect(pendingConfig.ssid, pendingConfig.password, pendingConfig.mode);
+        bool isValidConnection = connect(pendingConfig);
 
         if (!isValidConnection) {
             Log.println();
             Log.println("Failed to connect to the new network. Keeping the old configuration.");
 
-            connect(ConfigManager::config.network.ssid,
-                    ConfigManager::config.network.password,
-                    ConfigManager::config.network.mode);
+            connect(ConfigManager::config.network);
 
             updateStatus = UpdateStatus::UpdateFailed;
             return;
@@ -107,10 +104,20 @@ namespace NetworkManager {
         pollNetworkStatus();
     }
 
-    bool connect(const String& ssid, const String& password, WiFiMode_t mode) {
-        Log.printf("Connecting to WiFi network: %s\n", ssid.c_str());
-        WiFi.begin(ssid.c_str(), password.c_str());
-        WiFi.mode(mode);
+    bool connect(NetworkConfig& config) {
+        Log.printf("Connecting to WiFi network: %s\n", config.wifiSsid.c_str());
+        WiFi.mode(config.mode);
+
+        if (config.mode == WIFI_AP_STA && !config.apSsid.isEmpty()) {
+            Log.printf("Starting Access Point with SSID: %s\n", config.apSsid.c_str());
+            if (config.apPasswordEnabled) {
+                WiFi.softAP(config.apSsid.c_str(), config.apPassword.c_str());
+            } else {
+                WiFi.softAP(config.apSsid.c_str());
+            }
+        }
+
+        WiFi.begin(config.wifiSsid.c_str(), config.wifiPassword.c_str());
         WiFi.setSleep(false);
 
         unsigned long startAttemptTime = millis();
@@ -124,7 +131,7 @@ namespace NetworkManager {
 
         if (WiFi.status() == WL_CONNECTED) {
             status.connected = true;
-            status.ssid = ssid;
+            status.ssid = config.wifiSsid;
             status.ipAddress = WiFi.localIP().toString();
             status.wifiStrength = rssiToWifiStrength(WiFi.RSSI());
 

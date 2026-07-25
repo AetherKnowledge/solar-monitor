@@ -50,7 +50,7 @@
 	$effect(() => {
 		// updates the validity of the form whenever the networkConfig changes
 		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		networkConfig?.ssid;
+		networkConfig?.wifiSsid;
 
 		updateValidity();
 	});

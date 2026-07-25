@@ -25,9 +25,7 @@ void setup() {
     DisplayManager::showLoadingProgress("Loading Config", 0);
     if (ConfigManager::load()) {
         DisplayManager::showLoadingProgress("Connecting to WiFi", 40);
-        NetworkManager::connect(ConfigManager::config.network.ssid,
-                                ConfigManager::config.network.password,
-                                ConfigManager::config.network.mode);
+        NetworkManager::connect(ConfigManager::config.network);
 
         DisplayManager::showLoadingProgress("Starting Modbus", 60);
         ModbusManager::setup();
