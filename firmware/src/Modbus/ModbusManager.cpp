@@ -14,6 +14,8 @@ namespace ModbusManager {
     volatile UpdateStatus updateStatus = UpdateStatus::NotStarted;
     std::vector<ModbusDevice> pendingDevices;
 
+    double pollDeltaSeconds = 0.0;
+
     void setup() {
         reset();
 
@@ -100,6 +102,7 @@ namespace ModbusManager {
     void updateConfig(const std::vector<ModbusDevice>& devices) {
         updateStatus = UpdateStatus::InProgress;
 
+        VirtualSensorManager::savePersistence(pendingDevices);
         ConfigManager::config.modbusDevices = std::move(pendingDevices);
         ConfigManager::save();
         MqttManager::reload();
@@ -133,12 +136,21 @@ namespace ModbusManager {
             return;
         }
 
-        static uint32_t lastPoll = 0;
+        static uint32_t lastPoll = millis();
 
-        if (millis() - lastPoll < 5000)
+        const uint32_t now = millis();
+        const uint32_t elapsed = now - lastPoll;
+
+        if (elapsed < 5000)
             return;
 
-        lastPoll = millis();
+        lastPoll = now;
+
+        // Clamp to at most 10 seconds so long pauses don't inflate accumulated values.
+        pollDeltaSeconds = elapsed / 1000.0;
+
+        if (pollDeltaSeconds > 10.0)
+            pollDeltaSeconds = 10.0;
 
         if (!hasStarted)
             return;
@@ -206,6 +218,7 @@ namespace ModbusManager {
             //         virtualSensor.discovery.stateTopic, String(virtualSensor.value), true);
             // }
 
+            VirtualSensorManager::updateRegister(virtualSensor);
             MqttManager::publish(
                 virtualSensor.discovery.stateTopic, String(virtualSensor.value), true);
         }

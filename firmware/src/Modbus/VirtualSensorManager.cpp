@@ -3,6 +3,7 @@
 #include <tinyexpr.h>
 #include <Common/Numbers.h>
 #include <Common/Logger.h>
+#include <Modbus/ModbusManager.h>
 
 namespace VirtualSensorManager {
     bool loadFile(File& file, std::vector<ModbusDevice>& devices) {
@@ -158,7 +159,10 @@ namespace VirtualSensorManager {
         resetDevice(device);
 
         device.vars.clear();
-        device.vars.reserve(device.readRegisters.size() + device.virtualSensors.size());
+        device.vars.reserve(device.readRegisters.size() + device.virtualSensors.size() + 1);
+
+        device.vars.emplace_back(te_variable{
+            "pollDeltaSeconds", &ModbusManager::pollDeltaSeconds, TE_VARIABLE, nullptr});
 
         unordered_set_t usedIds;
         for (auto& readRegister : device.readRegisters) {

@@ -3,6 +3,8 @@
 #include <esp_system.h>
 #include <Common/Logger.h>
 #include <Display/DisplayManager.h>
+#include <Modbus/VirtualSensorManager.h>
+#include <Config/ConfigManager.h>
 
 namespace SystemManager {
     volatile bool requestedRestart = false;
@@ -20,6 +22,7 @@ namespace SystemManager {
             // Perform restart logic
             requestedRestart = false;
 
+            VirtualSensorManager::savePersistence(ConfigManager::config.modbusDevices);
             Log.println("Restarting...");
 
             delay(1000);

@@ -11,6 +11,7 @@ namespace ModbusManager {
 
     extern volatile UpdateStatus updateStatus;
     extern std::vector<ModbusDevice> pendingDevices;
+    extern double pollDeltaSeconds;
 
     extern DisplayData currentDisplayData;
 
