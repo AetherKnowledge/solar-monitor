@@ -108,7 +108,7 @@ namespace SystemManager {
 
         uptimeSensor.value = millis() / 1000.0;
 
-        ramUsageSensor.value = ESP.getFreeHeap() / 1024.0;
+        ramUsageSensor.value = (ESP.getHeapSize() - ESP.getFreeHeap()) / 1024.0;
         ramTotalSensor.value = ESP.getHeapSize() / 1024.0;
         ramLargestFreeBlockSensor.value =
             heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT) / 1024.0;
