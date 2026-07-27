@@ -6,6 +6,7 @@
 #include <WiFi.h>
 #include <Modbus/WriteRegisterManager.h>
 #include <Common/Logger.h>
+#include <System/SystemManager.h>
 
 static WiFiClient wifiClient;
 static PubSubClient mqttClient(wifiClient);
@@ -24,10 +25,6 @@ namespace MqttManager {
         mqttClient.setCallback(callback);
 
         mqttClient.setBufferSize(1024);
-
-        // This is also here to prevent race condition of modbus devices being updated before MQTT
-        // topics are generated
-        generateTopics();
     }
 
     void reload() {
@@ -68,9 +65,8 @@ namespace MqttManager {
             Log.println("Connected to MQTT");
             mqttClient.publish("solar-monitor/status", "online", true);
 
-            generateTopics();
             subscribeAll();
-            MqttDiscovery::start();
+            publishAll();
         } else {
             Log.println();
             Log.println("Failed to connect to MQTT");
@@ -113,31 +109,6 @@ namespace MqttManager {
         mqttClient.loop();
     }
 
-    void generateTopics() {
-        for (auto& device : ConfigManager::config.modbusDevices) {
-            for (auto& reg : device.readRegisters) {
-                reg.discovery.stateTopic = MqttDiscovery::generateStateTopic(device, reg.discovery);
-            }
-
-            for (auto& sensor : device.virtualSensors) {
-                sensor.discovery.stateTopic =
-                    MqttDiscovery::generateStateTopic(device, sensor.discovery);
-            }
-
-            for (auto& reg : device.numberWriteRegisters) {
-                reg.discovery.commandTopic =
-                    MqttDiscovery::generateCommandTopic(device, reg.discovery);
-                reg.discovery.stateTopic = MqttDiscovery::generateStateTopic(device, reg.discovery);
-            }
-
-            for (auto& reg : device.selectWriteRegisters) {
-                reg.discovery.commandTopic =
-                    MqttDiscovery::generateCommandTopic(device, reg.discovery);
-                reg.discovery.stateTopic = MqttDiscovery::generateStateTopic(device, reg.discovery);
-            }
-        }
-    }
-
     bool requestUpdate(const MQTTConfig& newConfig) {
         ConfigManager::config.mqtt = newConfig;
         ConfigManager::save();
@@ -165,6 +136,13 @@ namespace MqttManager {
         return publish(topic, payloadString, retain);
     }
 
+    void publishAll() {
+        for (const auto& device : ConfigManager::config.modbusDevices) {
+            MqttDiscovery::publishDevice(device);
+        }
+        MqttDiscovery::publishDevice(SystemManager::systemDevice);
+    }
+
     void subscribeAll() {
         for (const auto& device : ConfigManager::config.modbusDevices) {
             for (const auto& reg : device.numberWriteRegisters) {
@@ -175,42 +153,20 @@ namespace MqttManager {
                 mqttClient.subscribe(reg.discovery.commandTopic.c_str());
             }
         }
-    }
 
-    bool usePayload(
-        char* topic, byte* payload, unsigned int length, WriteRegister& reg, ModbusDevice& device) {
-        if (!reg.getDiscovery().commandTopic.equals(topic)) {
-            return false;
+        for (const auto& control : SystemManager::systemDevice.controls) {
+            mqttClient.subscribe(control->discovery.commandTopic.c_str());
         }
-
-        String value((char*)payload, length);
-        bool result = WriteRegisterManager::writeRegister(device, reg, value.toDouble());
-
-        if (result) {
-            publish(reg.getDiscovery().stateTopic, value, true);
-        }
-
-        Log.printf("Received payload for %s (%s) of device %s (%s): %s\n",
-                   reg.getDiscovery().name.c_str(),
-                   reg.getDiscovery().uniqueId.c_str(),
-                   device.discovery.name.c_str(),
-                   device.discovery.identifier.c_str(),
-                   value.c_str());
-
-        return result;
     }
 
     void callback(char* topic, byte* payload, unsigned int length) {
-        for (auto& device : ConfigManager::config.modbusDevices) {
-            for (auto& reg : device.numberWriteRegisters) {
-                if (usePayload(topic, payload, length, reg, device))
-                    return;
-            }
+        Log.printf(
+            "Received MQTT message on topic: %s, payload: %.*s\n", topic, length, (char*)payload);
 
-            for (auto& reg : device.selectWriteRegisters) {
-                if (usePayload(topic, payload, length, reg, device))
-                    return;
-            }
+        for (auto& device : ConfigManager::config.modbusDevices) {
+            device.execute(topic, payload, length);
         }
+
+        SystemManager::systemDevice.execute(topic, payload, length);
     }
 }  // namespace MqttManager

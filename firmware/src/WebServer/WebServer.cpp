@@ -98,4 +98,12 @@ namespace WebServer {
         return true;
     }
 
+    size_t getUsedBytes() {
+        return WebFS.usedBytes();
+    }
+
+    size_t getTotalBytes() {
+        return WebFS.totalBytes();
+    }
+
 }  // namespace WebServer

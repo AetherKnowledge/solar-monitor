@@ -9,4 +9,6 @@ namespace WebServer {
     bool start();
     bool stop();
     void registerApis();
+    size_t getUsedBytes();
+    size_t getTotalBytes();
 }  // namespace WebServer

@@ -10,60 +10,63 @@
 #include <cstdint>
 #include <vector>
 #include <Common/Json.h>
+#include <Common/Logger.h>
 
-struct EntityBase {
-    virtual ~EntityBase() = default;
+struct Device;
+struct ModbusDevice;
+
+struct Entity {
+    virtual ~Entity() = default;
 
     double value = 0;
     int8_t displayIndex = -1;
 
-    virtual const String& getName() const = 0;
-    virtual const String& getId() const = 0;
-
     virtual Discovery& getDiscovery() = 0;
     virtual const Discovery& getDiscovery() const = 0;
 
-    virtual void toJson(JsonObject json) const = 0;
-    virtual void fromJson(JsonObject json) = 0;
-};
-
-struct Entity : EntityBase {
-    const String& getName() const override {
+    const String& getName() const {
         return getDiscovery().name;
     }
 
-    const String& getId() const override {
+    const String& getId() const {
         return getDiscovery().uniqueId;
     }
 
-    void toJson(JsonObject json) const override {
-        json["displayIndex"] = this->displayIndex;
+    virtual void toJson(JsonObject json) const {
+        json["displayIndex"] = displayIndex;
+
         JsonObject discoveryJson = json["discovery"].to<JsonObject>();
         getDiscovery().toJson(discoveryJson);
     }
 
-    void fromJson(JsonObject json) override {
+    virtual void fromJson(JsonObject json) {
         displayIndex = json["displayIndex"] | -1;
+
         JsonObject discoveryJson = json["discovery"].as<JsonObject>();
         getDiscovery().fromJson(discoveryJson);
     }
 };
 
-struct Register : Entity {
+struct ControlEntity : Entity {
+    virtual ControlDiscovery& getDiscovery() override = 0;
+    virtual const ControlDiscovery& getDiscovery() const override = 0;
+
+    virtual bool execute(Device& device, const String& payload) = 0;
+};
+
+struct Register {
     uint16_t address;
 
-    void toJson(JsonObject json) const override {
-        Entity::toJson(json);
+    void toJson(JsonObject json) const {
         json["address"] = this->address;
     }
 
-    void fromJson(JsonObject json) override {
-        Entity::fromJson(json);
+    void fromJson(JsonObject json) {
         address = json["address"].as<uint16_t>();
     }
 };
 
-struct ReadRegister : Register {
+struct ReadRegister : Register, Entity {
     uint8_t rounding = 0;
     RegisterTransform transform = RegisterTransform::None;
     float transformArgument = 0.0f;
@@ -73,6 +76,8 @@ struct ReadRegister : Register {
 
     void toJson(JsonObject json) const override {
         Register::toJson(json);
+        Entity::toJson(json);
+
         json["rounding"] = rounding;
         json["transform"] = Enum::toString(transform);
         json["transformArgument"] = transformArgument;
@@ -81,6 +86,8 @@ struct ReadRegister : Register {
 
     void fromJson(JsonObject json) override {
         Register::fromJson(json);
+        Entity::fromJson(json);
+
         rounding = json["rounding"].as<uint8_t>();
         transform = Enum::fromString<RegisterTransform>(json["transform"] | "None");
         signedValue = json["signedValue"] | false;
@@ -139,11 +146,21 @@ struct VirtualSensor : Entity {
     }
 };
 
-struct WriteRegister : Register {
-    virtual ~WriteRegister() = default;
+struct WriteRegister : Register, ControlEntity {
+    virtual ControlDiscovery& getDiscovery() override = 0;
+    virtual const ControlDiscovery& getDiscovery() const override = 0;
 
-    virtual WriteDiscovery& getDiscovery() override = 0;
-    virtual const WriteDiscovery& getDiscovery() const override = 0;
+    bool execute(Device&, const String&) override;
+
+    void toJson(JsonObject json) const override {
+        Register::toJson(json);
+        ControlEntity::toJson(json);
+    }
+
+    void fromJson(JsonObject json) override {
+        Register::fromJson(json);
+        ControlEntity::fromJson(json);
+    }
 };
 
 struct SelectWriteRegister : WriteRegister {
@@ -183,37 +200,100 @@ struct DisplayData {
     std::vector<EntityData> entities;
 };
 
-struct DisplayItem {
-    EntityBase* entity;
+struct Device {
+    virtual ~Device() = default;
 
-    const String toString() const {
-        return "DisplayItem: " + entity->getName() + " (ID: " + entity->getId() +
-               ", Display Index: " + String(entity->displayIndex) + ")";
+    DeviceDiscovery discovery;
+    bool mqttEnabled = true;
+    bool initialized = false;
+
+    virtual void forEachEntity(const std::function<void(Entity&)>& fn) = 0;
+    virtual void forEachControlEntity(const std::function<void(ControlEntity&)>& fn) = 0;
+
+    virtual void forEachEntity(const std::function<void(const Entity&)>& fn) const = 0;
+    virtual void forEachControlEntity(
+        const std::function<void(const ControlEntity&)>& fn) const = 0;
+
+    virtual ControlEntity* findControlEntity(const String& topic) = 0;
+
+    void execute(char* topic, byte* payload, unsigned int length) {
+        String value((char*)payload, length);
+
+        auto* entity = findControlEntity(topic);
+        if (entity) {
+            entity->execute(*this, value);
+            return;
+        }
+    }
+
+    void generateTopics() {
+        forEachEntity([&](Entity& entity) {
+            entity.getDiscovery().stateTopic =
+                discovery.identifier + "/" + entity.getDiscovery().uniqueId;
+        });
+
+        forEachControlEntity([&](ControlEntity& entity) {
+            entity.getDiscovery().commandTopic =
+                discovery.identifier + "/" + entity.getDiscovery().uniqueId + "/set";
+        });
     }
 };
 
-struct ModbusDevice {
+struct ModbusDevice : Device {
     uint8_t slaveId = 5;
     uint32_t timeout = 1000;
     uint32_t baudrate = 2400;
     uint8_t port = 1;
     bool swapBytes = false;
 
-    DeviceDiscovery discovery;
-    bool mqttEnabled = true;
-
     ModbusMaster modbus;
     bool modbusConnected = false;
-    bool initialized = false;
+
+    std::vector<te_variable> vars;
 
     std::vector<ReadRegister> readRegisters;
     std::vector<ReadGroup> readGroups;
-
     std::vector<VirtualSensor> virtualSensors;
-    std::vector<te_variable> vars;
-
     std::vector<SelectWriteRegister> selectWriteRegisters;
     std::vector<NumberWriteRegister> numberWriteRegisters;
+
+    void forEachEntity(const std::function<void(Entity&)>& fn) override {
+        for (auto& r : readRegisters) fn(r);
+        for (auto& v : virtualSensors) fn(v);
+        for (auto& s : selectWriteRegisters) fn(s);
+        for (auto& n : numberWriteRegisters) fn(n);
+    }
+
+    void forEachEntity(const std::function<void(const Entity&)>& fn) const override {
+        for (const auto& reg : readRegisters) fn(reg);
+        for (const auto& sensor : virtualSensors) fn(sensor);
+        for (const auto& reg : selectWriteRegisters) fn(reg);
+        for (const auto& reg : numberWriteRegisters) fn(reg);
+    }
+
+    void forEachControlEntity(const std::function<void(ControlEntity&)>& fn) override {
+        for (auto& s : selectWriteRegisters) fn(s);
+        for (auto& n : numberWriteRegisters) fn(n);
+    }
+
+    void forEachControlEntity(const std::function<void(const ControlEntity&)>& fn) const override {
+        for (const auto& s : selectWriteRegisters) fn(s);
+        for (const auto& n : numberWriteRegisters) fn(n);
+    }
+
+    ControlEntity* findControlEntity(const String& topic) override {
+        for (auto& s : selectWriteRegisters) {
+            if (s.getDiscovery().commandTopic == topic) {
+                return &s;
+            }
+        }
+        for (auto& n : numberWriteRegisters) {
+            if (n.getDiscovery().commandTopic == topic) {
+                return &n;
+            }
+        }
+        return nullptr;
+    }
 
     void toJson(JsonObject json) const {
         json["slaveId"] = slaveId;
@@ -247,41 +327,23 @@ struct ModbusDevice {
         deserializeVector(json["virtualSensors"], virtualSensors);
         deserializeVector(json["selectWriteRegisters"], selectWriteRegisters);
         deserializeVector(json["numberWriteRegisters"], numberWriteRegisters);
+
+        generateTopics();
     }
 
     DisplayData createDisplayData() const {
         DisplayData data;
-        data.deviceName = discovery.name;
-        int16_t totalDisplayItems = readRegisters.size() + virtualSensors.size() +
-                                    selectWriteRegisters.size() + numberWriteRegisters.size();
+        data.entities.reserve(readRegisters.size() + virtualSensors.size() +
+                              selectWriteRegisters.size() + numberWriteRegisters.size());
 
-        data.entities.reserve(totalDisplayItems);
+        data.deviceName = discovery.name;
         data.modbusConnected = modbusConnected;
 
-        for (auto& reg : readRegisters) {
-            if (reg.displayIndex >= 0) {
-                data.entities.push_back(
-                    DisplayData::EntityData{reg.displayIndex, reg.getName(), reg.value});
+        forEachEntity([&](const Entity& entity) {
+            if (entity.displayIndex >= 0) {
+                data.entities.push_back({entity.displayIndex, entity.getName(), entity.value});
             }
-        }
-        for (auto& sensor : virtualSensors) {
-            if (sensor.displayIndex >= 0) {
-                data.entities.push_back(
-                    DisplayData::EntityData{sensor.displayIndex, sensor.getName(), sensor.value});
-            }
-        }
-        for (auto& reg : selectWriteRegisters) {
-            if (reg.displayIndex >= 0) {
-                data.entities.push_back(
-                    DisplayData::EntityData{reg.displayIndex, reg.getName(), reg.value});
-            }
-        }
-        for (auto& reg : numberWriteRegisters) {
-            if (reg.displayIndex >= 0) {
-                data.entities.push_back(
-                    DisplayData::EntityData{reg.displayIndex, reg.getName(), reg.value});
-            }
-        }
+        });
 
         return data;
     }

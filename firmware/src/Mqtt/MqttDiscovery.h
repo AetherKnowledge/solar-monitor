@@ -1,15 +1,12 @@
 #pragma once
 
 #include <Modbus/ModbusTypes.h>
-#include <concepts>
 
 namespace MqttDiscovery {
-    void start();
+    void publishDevice(const Device& device);
 
-    bool publishDiscovery(const ModbusDevice& device, const Discovery& discovery);
+    bool publishDiscovery(const DeviceDiscovery& deviceDiscovery, const Discovery& discovery);
 
-    String generateDiscoveryTopic(const ModbusDevice& device, const Discovery& discovery);
-
-    String generateStateTopic(const ModbusDevice& device, const Discovery& discovery);
-    String generateCommandTopic(const ModbusDevice& device, const WriteDiscovery& discovery);
+    String generateDiscoveryTopic(const DeviceDiscovery& deviceDiscovery,
+                                  const Discovery& discovery);
 }  // namespace MqttDiscovery

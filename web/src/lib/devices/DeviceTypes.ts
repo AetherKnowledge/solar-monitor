@@ -69,18 +69,18 @@ export interface SensorDiscovery {
 	icon?: string;
 }
 
-export interface WriteDiscovery extends SensorDiscovery {
+export interface ControlDiscovery extends SensorDiscovery {
 	value_template?: string;
 	command_template?: string;
 	command_topic: string;
 	qos: number;
 }
 
-export interface SelectDiscovery extends WriteDiscovery {
+export interface SelectDiscovery extends ControlDiscovery {
 	options: string[];
 }
 
-export interface NumberDiscovery extends WriteDiscovery {
+export interface NumberDiscovery extends ControlDiscovery {
 	min: number;
 	max: number;
 	step: number;

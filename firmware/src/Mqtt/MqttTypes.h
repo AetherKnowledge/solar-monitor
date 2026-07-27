@@ -84,19 +84,15 @@ struct SensorDiscovery : Discovery {
     }
 };
 
-struct WriteDiscovery : SensorDiscovery {
+struct ControlDiscovery : SensorDiscovery {
     String commandTemplate;
     String commandTopic;
-    String valueTemplate;
     uint8_t qos = 0;
 
     virtual const char* component() const override = 0;
 
     void toJson(JsonObject json) const override {
         SensorDiscovery::toJson(json);
-
-        if (!valueTemplate.isEmpty())
-            json["value_template"] = valueTemplate;
 
         if (!commandTemplate.isEmpty())
             json["command_template"] = commandTemplate;
@@ -108,13 +104,29 @@ struct WriteDiscovery : SensorDiscovery {
     void fromJson(JsonObject json) override {
         SensorDiscovery::fromJson(json);
 
-        valueTemplate = json["value_template"] | "";
         commandTemplate = json["command_template"] | "";
         qos = json["qos"] | 0;
     }
 };
 
-struct SelectDiscovery : WriteDiscovery {
+struct ValueDiscovery : ControlDiscovery {
+    String valueTemplate;
+
+    virtual const char* component() const override = 0;
+
+    void toJson(JsonObject json) const override {
+        ControlDiscovery::toJson(json);
+        if (!valueTemplate.isEmpty())
+            json["value_template"] = valueTemplate;
+    }
+
+    void fromJson(JsonObject json) override {
+        ControlDiscovery::fromJson(json);
+        valueTemplate = json["value_template"] | "";
+    }
+};
+
+struct SelectDiscovery : ValueDiscovery {
     std::vector<String> options;
 
     const char* component() const override {
@@ -122,17 +134,17 @@ struct SelectDiscovery : WriteDiscovery {
     }
 
     void toJson(JsonObject json) const override {
-        WriteDiscovery::toJson(json);
+        ValueDiscovery::toJson(json);
         serializeVector(json["options"], options);
     }
 
     void fromJson(JsonObject json) override {
-        WriteDiscovery::fromJson(json);
+        ValueDiscovery::fromJson(json);
         deserializeVector(json["options"], options);
     }
 };
 
-struct NumberDiscovery : WriteDiscovery {
+struct NumberDiscovery : ValueDiscovery {
     double min = 0;
     double max = 100;
     double step = 1;
@@ -143,7 +155,7 @@ struct NumberDiscovery : WriteDiscovery {
     }
 
     void toJson(JsonObject json) const override {
-        WriteDiscovery::toJson(json);
+        ValueDiscovery::toJson(json);
 
         json["min"] = min;
         json["max"] = max;
@@ -152,11 +164,25 @@ struct NumberDiscovery : WriteDiscovery {
     }
 
     void fromJson(JsonObject json) override {
-        WriteDiscovery::fromJson(json);
+        ValueDiscovery::fromJson(json);
 
         min = json["min"] | 0;
         max = json["max"] | 100;
         step = json["step"] | 1;
         mode = json["mode"] | "auto";
+    }
+};
+
+struct ButtonDiscovery : ControlDiscovery {
+    const char* component() const override {
+        return "button";
+    }
+
+    void toJson(JsonObject json) const override {
+        ControlDiscovery::toJson(json);
+    }
+
+    void fromJson(JsonObject json) override {
+        ControlDiscovery::fromJson(json);
     }
 };

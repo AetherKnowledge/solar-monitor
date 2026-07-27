@@ -179,6 +179,9 @@ namespace ModbusManager {
             }
 
             updateVirtualSensors(device);
+
+            // to prevent timeout
+            MqttManager::loop();
         }
 
         device.modbusConnected = success;

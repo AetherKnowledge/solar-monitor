@@ -6,6 +6,9 @@
 #include <Modbus/ModbusManager.h>
 
 namespace VirtualSensorManager {
+    static constexpr std::array GLOBAL_VARIABLES{
+        te_variable{"pollDeltaSeconds", &ModbusManager::pollDeltaSeconds, TE_VARIABLE, nullptr}};
+
     bool loadFile(File& file, std::vector<ModbusDevice>& devices) {
         JsonDocument doc;
         DeserializationError error = deserializeJson(doc, file);
@@ -159,12 +162,21 @@ namespace VirtualSensorManager {
         resetDevice(device);
 
         device.vars.clear();
-        device.vars.reserve(device.readRegisters.size() + device.virtualSensors.size() + 1);
-
-        device.vars.emplace_back(te_variable{
-            "pollDeltaSeconds", &ModbusManager::pollDeltaSeconds, TE_VARIABLE, nullptr});
+        device.vars.reserve(device.readRegisters.size() + device.virtualSensors.size() +
+                            GLOBAL_VARIABLES.size());
 
         unordered_set_t usedIds;
+        for (const auto& var : GLOBAL_VARIABLES) {
+            auto [_, inserted] = usedIds.insert(var.name);
+
+            if (!inserted) {
+                Log.printf("Duplicate variable '%s'\n", var.name);
+                continue;
+            }
+
+            device.vars.push_back(var);
+        }
+
         for (auto& readRegister : device.readRegisters) {
             addVariable(device, readRegister, usedIds);
         }
@@ -231,12 +243,12 @@ namespace VirtualSensorManager {
 
         double result = te_eval(reg.compiledExpression);
 
-        constexpr double EPSILON = 1e-9;
-        bool changed = fabs(result - reg.value) > EPSILON;
-
         if (reg.rounding > 0) {
             result = Numbers::applyRounding(result, reg.rounding);
         }
+
+        constexpr double EPSILON = 1e-9;
+        bool changed = fabs(result - reg.value) > EPSILON;
 
         reg.value = result;
 
