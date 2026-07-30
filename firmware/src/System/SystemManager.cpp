@@ -56,17 +56,17 @@ namespace SystemManager {
         systemDevice.sensors.clear();
         systemDevice.sensors.reserve(12);
 
-        systemDevice.sensors.push_back(&uptimeSensor);
-        systemDevice.sensors.push_back(&ramUsageSensor);
-        systemDevice.sensors.push_back(&ramTotalSensor);
-        systemDevice.sensors.push_back(&ramLargestFreeBlockSensor);
-        systemDevice.sensors.push_back(&temperatureSensor);
-        systemDevice.sensors.push_back(&flashUsedSensor);
-        systemDevice.sensors.push_back(&flashTotalSensor);
-        systemDevice.sensors.push_back(&webStorageUsedSensor);
-        systemDevice.sensors.push_back(&webStorageTotalSensor);
-        systemDevice.sensors.push_back(&configStorageUsedSensor);
-        systemDevice.sensors.push_back(&configStorageTotalSensor);
+        systemDevice.sensors.push_back(uptimeSensor);
+        systemDevice.sensors.push_back(ramUsageSensor);
+        systemDevice.sensors.push_back(ramTotalSensor);
+        systemDevice.sensors.push_back(ramLargestFreeBlockSensor);
+        systemDevice.sensors.push_back(temperatureSensor);
+        systemDevice.sensors.push_back(flashUsedSensor);
+        systemDevice.sensors.push_back(flashTotalSensor);
+        systemDevice.sensors.push_back(webStorageUsedSensor);
+        systemDevice.sensors.push_back(webStorageTotalSensor);
+        systemDevice.sensors.push_back(configStorageUsedSensor);
+        systemDevice.sensors.push_back(configStorageTotalSensor);
     }
 
     void setupControls() {
@@ -81,7 +81,7 @@ namespace SystemManager {
             return true;
         };
 
-        systemDevice.controls.push_back(&restartControl);
+        systemDevice.controls.push_back(restartControl);
     }
 
     void loop() {
@@ -123,10 +123,12 @@ namespace SystemManager {
         configStorageUsedSensor.value = ConfigManager::ConfigFS.usedBytes() / 1024.0;
         configStorageTotalSensor.value = ConfigManager::ConfigFS.totalBytes() / 1024.0;
 
-        for (auto& sensor : systemDevice.sensors) {
-            if (sensor->discovery.stateTopic.length() > 0 &&
-                sensor->discovery.uniqueId.length() > 0) {
-                MqttManager::publish(sensor->discovery.stateTopic, String(sensor->value), true);
+        for (auto& ref : systemDevice.sensors) {
+            auto& sensor = ref.get();
+
+            if (sensor.discovery.stateTopic.length() > 0 &&
+                sensor.discovery.uniqueId.length() > 0) {
+                MqttManager::publish(sensor.discovery.stateTopic, String(sensor.value), true);
             }
         }
     }

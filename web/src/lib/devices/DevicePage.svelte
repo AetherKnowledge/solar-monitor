@@ -23,7 +23,7 @@
 	const deviceId = $derived(page.params.id);
 	let newRegister: RegisterItem | null = $state(null);
 
-	const { query, save, cancel } = createDevicesController();
+	const { save, cancel } = createDevicesController();
 	let device = $derived(devicesState.devices?.find((d) => d.discovery.identifier === deviceId));
 	let showAddRegisterPopup = $state(false);
 
@@ -94,12 +94,6 @@
 	});
 
 	let selectedRegister: RegisterListItem | null = $state(null);
-
-	$effect(() => {
-		console.log('hasChanged:', devicesState.hasChanged);
-		console.log('Query Data:', JSON.stringify(query.data?.devices));
-		console.log('Device Data:', JSON.stringify(devicesState.devices));
-	});
 </script>
 
 {#if device}

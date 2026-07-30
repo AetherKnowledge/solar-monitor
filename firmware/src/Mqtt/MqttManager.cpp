@@ -155,7 +155,7 @@ namespace MqttManager {
         }
 
         for (const auto& control : SystemManager::systemDevice.controls) {
-            mqttClient.subscribe(control->discovery.commandTopic.c_str());
+            mqttClient.subscribe(control.get().discovery.commandTopic.c_str());
         }
     }
 

@@ -1,10 +1,5 @@
 <script lang="ts">
+	import Dashboard from '$lib/dashboard/Dashboard.svelte';
 </script>
 
-<main>
-	<div class="mockup-code w-full">
-		<pre data-prefix="1"><code>npm i daisyui</code></pre>
-		<pre data-prefix="2"><code>installing...</code></pre>
-		<pre data-prefix="3" class="bg-warning text-warning-content"><code>Error!</code></pre>
-	</div>
-</main>
+<Dashboard />

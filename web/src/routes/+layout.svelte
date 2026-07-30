@@ -17,8 +17,6 @@
 	} from '@lucide/svelte';
 	import { QueryClientProvider } from '@tanstack/svelte-query';
 	import type { Component } from 'svelte';
-	import { cubicOut } from 'svelte/easing';
-	import { fly } from 'svelte/transition';
 	import './layout.css';
 
 	type StaticRoute = Exclude<RouteId, '/devices/[id]' | '/test/[id]'>;
@@ -86,23 +84,19 @@
 			<!-- Navbar -->
 			<nav class="navbar z-11 w-full bg-base-300">
 				<label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost">
-					<!-- Sidebar toggle icon -->
-					{#key drawerOpen}
-						<span
-							transition:fly={{
-								x: drawerOpen ? -8 : 8,
-								opacity: 0.3,
-								duration: 180,
-								easing: cubicOut
-							}}
-						>
-							{#if drawerOpen}
-								<PanelLeftClose class="my-1.5 inline-block size-5" />
-							{:else}
-								<PanelLeftOpen class="my-1.5 inline-block size-5" />
-							{/if}
-						</span>
-					{/key}
+					<span class="relative block size-5">
+						<PanelLeftOpen
+							class={`absolute inset-0 transition-opacity duration-200 ${
+								drawerOpen ? 'opacity-0' : 'opacity-100'
+							}`}
+						/>
+
+						<PanelLeftClose
+							class={`absolute inset-0 transition-opacity duration-200 ${
+								drawerOpen ? 'opacity-100' : 'opacity-0'
+							}`}
+						/>
+					</span>
 				</label>
 				<div class="px-2 text-xl">{currentTitle}</div>
 				<div class="navbar-end w-full">
@@ -137,7 +131,9 @@
 			<!-- Page content here -->
 			<main class="flex h-full flex-1 overflow-auto p-4">
 				<div class="flex min-w-0 flex-1 flex-col">
-					{@render children()}
+					<div class="pb-4">
+						{@render children()}
+					</div>
 					<PopupHost />
 				</div>
 			</main>
@@ -153,7 +149,7 @@
 					<!-- List item -->
 
 					<div
-						class={`flex items-center py-2 font-bold ${
+						class={`flex items-center py-3 pb-4 font-bold ${
 							drawerOpen ? 'gap-2 px-4' : 'px-1'
 						} transition-all duration-300 ease-in-out`}
 					>

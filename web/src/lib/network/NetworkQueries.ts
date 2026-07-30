@@ -52,13 +52,11 @@ export function createNetworkConfigQuery() {
 }
 
 export async function updateNetworkConfig(config: NetworkConfig) {
-	const result = await apiFetch<SimpleResponse>(`/api/network/config`, {
+	await apiFetch<SimpleResponse>(`/api/network/config`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify(config)
 	});
-
-	console.log('Network config updated:', result.message);
 }

@@ -16,7 +16,7 @@
 		Microchip,
 		RefreshCw
 	} from '@lucide/svelte';
-	import { onMount } from 'svelte';
+	import { type Component, onMount } from 'svelte';
 	import {
 		checkForUpdates,
 		createUpdateController,
@@ -146,101 +146,21 @@
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2">
-			<div class="rounded-xl border border-base-300 bg-base-200/40 p-5">
-				<div class="flex items-start justify-between gap-4">
-					<div class="flex items-center gap-3">
-						<div class="rounded-lg bg-primary/10 p-2 text-primary">
-							<Microchip class="size-5" />
-						</div>
+			{@render versionCard(
+				Microchip,
+				'Firmware Version',
+				currentVersion.firmware,
+				latestVersion.firmware,
+				'Download firmware'
+			)}
 
-						<div>
-							<div class="text-sm text-base-content/60">Firmware Version</div>
-
-							<div class="font-mono text-lg font-semibold">
-								{currentVersion.firmware}
-							</div>
-
-							<div class="mt-1 text-sm text-base-content/60">
-								Latest:
-								<span class="font-mono">
-									{latestVersion.firmware}
-								</span>
-							</div>
-						</div>
-					</div>
-
-					<div class="flex flex-col items-end gap-3">
-						{#if isUpToDate(currentVersion.firmware, latestVersion.firmware)}
-							<div class="badge gap-1 badge-success">
-								<span class="size-2 rounded-full bg-current"></span>
-								Up to date
-							</div>
-						{:else}
-							<div class="badge gap-1 badge-warning">
-								<span class="size-2 rounded-full bg-current"></span>
-								Update Available
-							</div>
-
-							<div class="tooltip tooltip-left" data-tip="Download update">
-								<button
-									class="btn btn-square btn-ghost btn-primary btn-sm"
-									aria-label="Download update"
-								>
-									<Download class="size-4" />
-								</button>
-							</div>
-						{/if}
-					</div>
-				</div>
-			</div>
-
-			<div class="rounded-xl border border-base-300 bg-base-200/40 p-5">
-				<div class="flex items-start justify-between gap-4">
-					<div class="flex items-center gap-3">
-						<div class="rounded-lg bg-primary/10 p-2 text-primary">
-							<Globe class="size-5" />
-						</div>
-
-						<div>
-							<div class="text-sm text-base-content/60">Web Interface Version</div>
-
-							<div class="font-mono text-lg font-semibold">
-								{currentVersion.website}
-							</div>
-
-							<div class="mt-1 text-sm text-base-content/60">
-								Latest:
-								<span class="font-mono">
-									{latestVersion.website}
-								</span>
-							</div>
-						</div>
-					</div>
-
-					<div class="flex flex-col items-end gap-3">
-						{#if isUpToDate(currentVersion.website, latestVersion.website)}
-							<div class="badge gap-1 badge-success">
-								<span class="size-2 rounded-full bg-current"></span>
-								Up to date
-							</div>
-						{:else}
-							<div class="badge gap-1 badge-warning">
-								<span class="size-2 rounded-full bg-current"></span>
-								Update Available
-							</div>
-
-							<div class="tooltip tooltip-left" data-tip="Download update">
-								<button
-									class="btn btn-square btn-ghost btn-primary btn-sm"
-									aria-label="Download update"
-								>
-									<Download class="size-4" />
-								</button>
-							</div>
-						{/if}
-					</div>
-				</div>
-			</div>
+			{@render versionCard(
+				Globe,
+				'Web Interface Version',
+				currentVersion.website,
+				latestVersion.website,
+				'Download website'
+			)}
 		</div>
 
 		<button class="btn btn-primary" onclick={onCheckUpdate} disabled={checkingForUpdates}>
@@ -318,3 +238,81 @@
 		</div>
 	</div>
 </div>
+
+{#snippet versionCard(
+	Icon: Component,
+	title: string,
+	currentVersion: string,
+	latestVersion: string,
+	downloadTooltip: string,
+	onDownload?: () => void
+)}
+	<div class="rounded-xl border border-base-300 bg-base-200/40 p-5">
+		<div
+			class="flex flex-col gap-4
+		   lg:flex-row lg:items-start lg:justify-between"
+		>
+			<div class="flex items-center gap-3">
+				<div class="rounded-lg bg-primary/10 p-2 text-primary">
+					<Icon class="size-5" />
+				</div>
+
+				<div>
+					<div class="text-sm text-base-content/60">
+						{title}
+					</div>
+
+					<div class="font-mono text-lg font-semibold">
+						{currentVersion}
+					</div>
+
+					<div class="mt-1 text-sm text-base-content/60">
+						Latest:
+						<span class="font-mono">
+							{latestVersion}
+						</span>
+					</div>
+				</div>
+			</div>
+
+			<div
+				class="flex flex-col gap-3 border-t border-base-300 pt-4
+		   sm:border-0 sm:pt-0
+		   lg:items-end"
+			>
+				{#if isUpToDate(currentVersion, latestVersion)}
+					<div
+						class="badge w-full justify-center gap-1 badge-success
+			   lg:w-auto lg:self-auto"
+					>
+						<span class="size-2 rounded-full bg-current"></span>
+						Up to date
+					</div>
+				{:else}
+					<div
+						class="badge w-full justify-center gap-1 badge-warning
+			   lg:w-auto lg:self-auto"
+					>
+						<span class="size-2 rounded-full bg-current"></span>
+						Update Available
+					</div>
+
+					<button class="btn w-full btn-primary lg:hidden" onclick={onDownload}>
+						<Download class="size-4" />
+						Update
+					</button>
+
+					<div class="tooltip tooltip-left hidden lg:block" data-tip={downloadTooltip}>
+						<button
+							class="btn btn-square btn-ghost btn-primary btn-sm"
+							aria-label={downloadTooltip}
+							onclick={onDownload}
+						>
+							<Download class="size-4" />
+						</button>
+					</div>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/snippet}

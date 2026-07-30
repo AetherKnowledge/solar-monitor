@@ -11,13 +11,11 @@ export function createMqttConfigQuery() {
 }
 
 export async function updateMqttConfig(config: MqttConfig) {
-	const result = await apiFetch<SimpleResponse>(`/api/mqtt/config`, {
+	await apiFetch<SimpleResponse>(`/api/mqtt/config`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify(config)
 	});
-
-	console.log('MQTT config updated:', result.message);
 }

@@ -2,11 +2,17 @@
 
 #include <Modbus/ModbusTypes.h>
 #include <Mqtt/MqttTypes.h>
+#include <Common/Json.h>
+#include "ArduinoJson/Object/JsonObject.hpp"
 
 namespace SystemManager {
 
     struct SystemSensor : Entity {
         SensorDiscovery discovery;
+
+        void toJson(JsonObject json) const override {
+            json[discovery.uniqueId] = value;
+        }
 
         const SensorDiscovery& getDiscovery() const override {
             return discovery;
@@ -38,34 +44,41 @@ namespace SystemManager {
     };
 
     struct SystemDevice : Device {
-        std::vector<SystemSensor*> sensors;
-        std::vector<SystemControl*> controls;
+        std::vector<std::reference_wrapper<SystemSensor>> sensors;
+        std::vector<std::reference_wrapper<SystemControl>> controls;
+
+        void toJson(JsonDocument& doc) const {
+            JsonObject json = doc["sensors"].to<JsonObject>();
+            addValues(json, sensors, discovery.identifier.c_str());
+        }
 
         void forEachEntity(const std::function<void(Entity&)>& fn) override {
-            for (auto* r : sensors) fn(*r);
+            for (auto& r : sensors) fn(r);
 
-            for (auto* c : controls) fn(*c);
+            for (auto& c : controls) fn(c);
         }
 
         void forEachEntity(const std::function<void(const Entity&)>& fn) const override {
-            for (const auto* r : sensors) fn(*r);
+            for (const auto& r : sensors) fn(r);
 
-            for (const auto* c : controls) fn(*c);
+            for (const auto& c : controls) fn(c);
         }
 
         void forEachControlEntity(const std::function<void(ControlEntity&)>& fn) override {
-            for (auto* c : controls) fn(*c);
+            for (auto& c : controls) fn(c);
         }
 
         void forEachControlEntity(
             const std::function<void(const ControlEntity&)>& fn) const override {
-            for (const auto* c : controls) fn(*c);
+            for (const auto& c : controls) fn(c);
         }
 
-        ControlEntity* findControlEntity(const String& topic) override {
-            for (auto* c : controls) {
-                if (c->getDiscovery().commandTopic == topic) {
-                    return c;
+        SystemControl* findControlEntity(const String& topic) override {
+            for (auto& c : controls) {
+                auto& control = c.get();
+
+                if (control.getDiscovery().commandTopic == topic) {
+                    return &control;
                 }
             }
             return nullptr;

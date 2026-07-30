@@ -226,13 +226,6 @@ namespace ModbusManager {
         }
     }
 
-    template <typename T>
-    static void addValues(JsonObject& obj, const std::vector<T>& values) {
-        for (const auto& value : values) {
-            obj[value.discovery.uniqueId] = value.value;
-        }
-    }
-
     void getValues(JsonDocument& doc) {
         for (const auto& device : ConfigManager::config.modbusDevices) {
             JsonObject deviceJson = doc[device.discovery.identifier].to<JsonObject>();
