@@ -6,6 +6,8 @@ export interface SystemSensors {
 	temperature: number;
 	flash_used: number;
 	flash_total: number;
+	code_storage_used: number;
+	code_storage_total: number;
 	web_storage_used: number;
 	web_storage_total: number;
 	config_storage_used: number;
@@ -25,6 +27,8 @@ export const defaultSystemState: SystemState = {
 		temperature: 0,
 		flash_used: 0,
 		flash_total: 0,
+		code_storage_used: 0,
+		code_storage_total: 0,
 		web_storage_used: 0,
 		web_storage_total: 0,
 		config_storage_used: 0,

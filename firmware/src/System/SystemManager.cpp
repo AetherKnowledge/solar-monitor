@@ -9,6 +9,7 @@
 #include <WebServer/WebServer.h>
 #include <esp_heap_caps.h>
 #include <Mqtt/MqttManager.h>
+#include <esp_ota_ops.h>
 
 namespace SystemManager {
     volatile bool requestedRestart = false;
@@ -34,6 +35,13 @@ namespace SystemManager {
         makeSensor(systemDevice.discovery, "Flash Used", "flash_used", "data_size", "MiB");
     SystemSensor flashTotalSensor =
         makeSensor(systemDevice.discovery, "Flash Total", "flash_total", "data_size", "MiB");
+
+    SystemSensor codeStorageUsedSensor = makeSensor(
+        systemDevice.discovery, "Code Storage Used", "code_storage_used", "data_size", "KiB");
+
+    SystemSensor codeStorageTotalSensor = makeSensor(
+        systemDevice.discovery, "Code Storage Total", "code_storage_total", "data_size", "KiB");
+
     SystemSensor webStorageUsedSensor = makeSensor(
         systemDevice.discovery, "Web Storage Used", "web_storage_used", "data_size", "KiB");
     SystemSensor webStorageTotalSensor = makeSensor(
@@ -54,7 +62,7 @@ namespace SystemManager {
 
     void setupSensors() {
         systemDevice.sensors.clear();
-        systemDevice.sensors.reserve(12);
+        systemDevice.sensors.reserve(14);
 
         systemDevice.sensors.push_back(uptimeSensor);
         systemDevice.sensors.push_back(ramUsageSensor);
@@ -63,6 +71,8 @@ namespace SystemManager {
         systemDevice.sensors.push_back(temperatureSensor);
         systemDevice.sensors.push_back(flashUsedSensor);
         systemDevice.sensors.push_back(flashTotalSensor);
+        systemDevice.sensors.push_back(codeStorageUsedSensor);
+        systemDevice.sensors.push_back(codeStorageTotalSensor);
         systemDevice.sensors.push_back(webStorageUsedSensor);
         systemDevice.sensors.push_back(webStorageTotalSensor);
         systemDevice.sensors.push_back(configStorageUsedSensor);
@@ -113,9 +123,13 @@ namespace SystemManager {
         ramLargestFreeBlockSensor.value =
             heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT) / 1024.0;
 
-        flashUsedSensor.value =
-            (ESP.getFlashChipSize() - ESP.getFreeSketchSpace()) / (1024.0 * 1024.0);
-        flashTotalSensor.value = ESP.getFlashChipSize() / (1024.0 * 1024.0);
+        const esp_partition_t* runningPartition = esp_ota_get_running_partition();
+
+        if (runningPartition) {
+            codeStorageTotalSensor.value = runningPartition->size / 1024.0;
+            codeStorageUsedSensor.value =
+                (ESP.getSketchSize() + 1023) / 1024.0;  // Round up to nearest KiB
+        }
 
         webStorageUsedSensor.value = WebServer::getUsedBytes() / 1024.0;
         webStorageTotalSensor.value = WebServer::getTotalBytes() / 1024.0;
@@ -131,6 +145,15 @@ namespace SystemManager {
                 MqttManager::publish(sensor.discovery.stateTopic, String(sensor.value), true);
             }
         }
+
+        const size_t codeUsed = ESP.getSketchSize();
+        const size_t webUsed = WebServer::getUsedBytes();
+        const size_t configUsed = ConfigManager::ConfigFS.usedBytes();
+
+        const size_t totalUsed = codeUsed + webUsed + configUsed;
+
+        flashUsedSensor.value = totalUsed / (1024.0 * 1024.0);
+        flashTotalSensor.value = ESP.getFlashChipSize() / (1024.0 * 1024.0);
     }
 
     void requestRestart() {

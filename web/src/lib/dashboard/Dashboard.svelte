@@ -16,6 +16,7 @@
 
 	const ramPercent = $derived(percent(sensors.ram_usage, sensors.ram_total));
 	const flashPercent = $derived(percent(sensors.flash_used, sensors.flash_total));
+	const codePercent = $derived(percent(sensors.code_storage_used, sensors.code_storage_total));
 	const webPercent = $derived(percent(sensors.web_storage_used, sensors.web_storage_total));
 	const configPercent = $derived(
 		percent(sensors.config_storage_used, sensors.config_storage_total)
@@ -217,6 +218,20 @@
 
 				<progress class="progress w-full progress-warning" value={flashPercent} max="100"
 				></progress>
+			</div>
+
+			<div>
+				<div class="mb-2 flex justify-between">
+					<span>Code Storage</span>
+
+					<span class="font-mono">
+						{sensors.code_storage_used.toFixed(0)} /
+						{sensors.code_storage_total.toFixed(0)}
+						KiB
+					</span>
+				</div>
+
+				<progress class="progress w-full progress-info" value={codePercent} max="100"></progress>
 			</div>
 
 			<div>
