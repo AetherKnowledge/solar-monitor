@@ -1,6 +1,6 @@
 {
   "version": "v1.0.0",
-  "buildTime": "2026-07-30T17:04:41.157Z",
+  "buildTime": "2026-07-30T17:13:00.523Z",
   "firmware": {
     "version": "v1.0.0",
     "file": "firmware.bin",
@@ -13,6 +13,6 @@
     "file": "website.bin",
     "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.0.0/website.bin",
     "size": 524288,
-    "sha256": "a00fb8c2a79dcf60353031b2eec5e7fd2146a551c14ebd69b7a5d4a0a8f12ecc"
+    "sha256": "fddd7668f4d619ed5f27eedbb632767574aad6658e9ceb7ec46769cee4bfb7df"
   }
 }

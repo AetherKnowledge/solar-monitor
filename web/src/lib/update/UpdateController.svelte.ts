@@ -1,5 +1,6 @@
 import { apiFetch } from '$lib/common/CommonFunctions';
 import { createQuery } from '@tanstack/svelte-query';
+import { onMount } from 'svelte';
 
 export type ReleaseAsset = {
 	version: string;
@@ -39,6 +40,10 @@ export function createUpdateController() {
 		initialDataUpdatedAt: Date.now(),
 		staleTime: 0
 	}));
+
+	onMount(() => {
+		checkForUpdates();
+	});
 
 	return {
 		query
