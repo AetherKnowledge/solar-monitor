@@ -49,58 +49,60 @@
 
 <BlurPage>
 	<div
-		class="bg-base-100 animate-fade-up w-full max-w-3xl rounded-2xl border border-base-300 shadow-2xl"
+		class="animate-fade-up flex max-h-[calc(100dvh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-2xl"
 	>
 		<!-- Header -->
-		<div class="border-b border-base-300 p-6">
-			<div class="flex items-start justify-between">
-				<div class="flex items-center gap-4">
-					<div class="bg-primary/10 text-primary rounded-2xl p-4">
-						<Plus class="size-8" />
+		<div class="shrink-0 border-b border-base-300 p-4 sm:p-6">
+			<div class="flex items-start justify-between gap-3">
+				<div class="flex items-start gap-3 sm:gap-4">
+					<div class="rounded-2xl bg-primary/10 p-3 text-primary sm:p-4">
+						<Plus class="size-6 sm:size-8" />
 					</div>
 
 					<div>
-						<h2 class="text-xl font-semibold">Add Register</h2>
+						<h2 class="text-lg font-semibold sm:text-xl">Add Register</h2>
 
-						<p class="text-base-content/60 mt-1 text-sm">
+						<p class="mt-1 text-xs text-base-content/60 sm:text-sm">
 							Choose the type of register you would like to create.
 						</p>
 					</div>
 				</div>
 
-				<button class="btn btn-circle btn-ghost btn-sm" onclick={onCancel}>
+				<button class="btn btn-circle shrink-0 btn-ghost btn-sm" onclick={onCancel}>
 					<X class="size-5" />
 				</button>
 			</div>
 		</div>
 
 		<!-- Body -->
-		<div class="grid gap-5 p-6 md:grid-cols-2">
-			{#each registerTypes as item (item.type)}
-				<button
-					class="card bg-base-100 hover:border-primary hover:bg-base-200/40 border border-base-300 text-left transition-all duration-200"
-					onclick={() => onSelect(item.type)}
-				>
-					<div class="card-body">
-						<div class={`${item.bg} ${item.color} mb-2 w-fit rounded-xl p-3`}>
-							<item.icon class="size-6" />
+		<div class="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+			<div class="grid gap-4 md:grid-cols-2">
+				{#each registerTypes as item (item.type)}
+					<button
+						class="card border border-base-300 bg-base-100 text-left transition-all duration-200 hover:border-primary hover:bg-base-200/40"
+						onclick={() => onSelect(item.type)}
+					>
+						<div class="card-body gap-3 p-4">
+							<div class={`${item.bg} ${item.color} w-fit rounded-xl p-3`}>
+								<item.icon class="size-5 sm:size-6" />
+							</div>
+
+							<h3 class="text-base font-semibold sm:text-lg">
+								{item.title}
+							</h3>
+
+							<p class="text-xs text-base-content/60 sm:text-sm">
+								{item.description}
+							</p>
 						</div>
-
-						<h3 class="text-lg font-semibold">
-							{item.title}
-						</h3>
-
-						<p class="text-base-content/60 text-sm">
-							{item.description}
-						</p>
-					</div>
-				</button>
-			{/each}
+					</button>
+				{/each}
+			</div>
 		</div>
 
 		<!-- Footer -->
-		<div class="border-t border-base-300 bg-base-200/30 flex justify-end p-5">
-			<button class="btn btn-ghost" onclick={onCancel}> Cancel </button>
+		<div class="shrink-0 border-t border-base-300 bg-base-200/30 p-4 sm:p-5">
+			<button class="btn w-full btn-ghost sm:w-auto" onclick={onCancel}> Cancel </button>
 		</div>
 	</div>
 </BlurPage>

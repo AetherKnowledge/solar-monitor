@@ -63,34 +63,36 @@
 </script>
 
 <BlurPage>
-	<div class="bg-base-100 shadow-2xl border border-base-300 animate-fade-up w-[80%]">
-		<div class="flex max-h-[80vh] flex-col w-full">
-			<!-- Header -->
-			<div class="border-b border-base-300 p-6">
-				<div class="flex items-start justify-between gap-4">
-					<div class="flex items-center gap-4">
-						<div class={`${info.bg} ${info.color} rounded-2xl p-4`}>
-							<Icon class="size-8" />
-						</div>
-
-						<div>
-							<h2 class="text-xl font-semibold">
-								Edit {info.title}
-							</h2>
-
-							<p class="text-base-content/60 mt-1 max-w-lg text-sm">
-								{info.description}
-							</p>
-						</div>
+	<div
+		class="animate-fade-up flex max-h-[calc(100dvh-2rem)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-2xl"
+	>
+		<!-- Header -->
+		<div class="shrink-0 border-b border-base-300 p-4 sm:p-6">
+			<div class="flex items-start justify-between gap-3 sm:gap-4">
+				<div class="flex items-start gap-3 sm:gap-4">
+					<div class={`${info.bg} ${info.color} rounded-2xl p-3 sm:p-4`}>
+						<Icon class="size-6 sm:size-8" />
 					</div>
 
-					<button class="btn btn-circle btn-ghost btn-sm" onclick={onCancel}>
-						<X class="size-5" />
-					</button>
-				</div>
-			</div>
+					<div>
+						<h2 class="text-lg font-semibold sm:text-xl">
+							Edit {info.title}
+						</h2>
 
-			<!-- Body -->
+						<p class="mt-1 max-w-lg text-xs text-base-content/60 sm:text-sm">
+							{info.description}
+						</p>
+					</div>
+				</div>
+
+				<button class="btn btn-circle shrink-0 btn-ghost btn-sm" onclick={onCancel}>
+					<X class="size-5" />
+				</button>
+			</div>
+		</div>
+
+		<!-- Body -->
+		<div class="min-h-0 flex-1 overflow-y-auto">
 			{#if register.type === RegisterType.Read}
 				<ReadRegisterBody bind:register={register.register} />
 			{:else if register.type === RegisterType.Virtual}
@@ -100,20 +102,29 @@
 			{:else if register.type === RegisterType.Select}
 				<SelectWriteBody bind:register={register.register} />
 			{/if}
+		</div>
 
-			<!-- Footer -->
-			<div class="border-t border-base-300 bg-base-200/30 flex items-center justify-between p-5">
+		<!-- Footer -->
+		<div class="shrink-0 border-t border-base-300 bg-base-200/30 p-4 sm:p-5">
+			<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 				{#if !isNew}
-					<button class="btn btn-error btn-soft" onclick={() => onDelete?.(register)}>
+					<button
+						class="btn w-full btn-soft btn-error sm:w-auto"
+						onclick={() => onDelete?.(register)}
+					>
 						<Trash2 class="size-4" />
 						Delete
 					</button>
+				{:else}
+					<div class="hidden sm:block"></div>
 				{/if}
 
 				<div class="flex gap-2">
-					<button class="btn btn-ghost" onclick={onCancel}> Cancel </button>
+					<button class="btn flex-1 btn-ghost sm:flex-none" onclick={onCancel}> Cancel </button>
 
-					<button class="btn btn-primary" onclick={onSave}> Save Changes </button>
+					<button class="btn flex-1 btn-primary sm:flex-none" onclick={onSave}>
+						Save Changes
+					</button>
 				</div>
 			</div>
 		</div>

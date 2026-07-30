@@ -10,27 +10,29 @@
 </script>
 
 <div
-	class="sticky bottom-4 z-10 mt-8 rounded-2xl border border-base-300 bg-base-100/90 shadow-xl backdrop-blur"
+	class="sticky bottom-0 z-10 rounded-2xl border border-base-300 bg-base-100/90 shadow-xl backdrop-blur"
 >
-	<div class="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
-		<div class="flex items-center gap-3">
+	<div class="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
+		<div class="flex flex-col gap-2">
 			{#if hasChanged}
-				<div class="badge badge-warning badge-lg rounded-xl w-40">Unsaved Changes</div>
+				<div class="badge w-fit rounded-lg badge-sm badge-warning sm:badge-md">Unsaved Changes</div>
 
-				<p class="text-sm text-base-content/70">
+				<p class="text-xs text-base-content/70 sm:text-sm">
 					You have pending changes that haven't been saved.
 				</p>
 			{:else}
-				<div class="badge badge-success badge-lg rounded-xl w-40">Everything Saved</div>
+				<div class="badge w-fit rounded-lg badge-sm badge-success sm:badge-md">
+					Everything Saved
+				</div>
 
-				<p class="text-sm text-base-content/70">All changes have been saved.</p>
+				<p class="text-xs text-base-content/70 sm:text-sm">All changes have been saved.</p>
 			{/if}
 		</div>
 
-		<div class="flex gap-3">
+		<div class="flex w-full gap-2 lg:w-auto">
 			<button
 				type="button"
-				class="btn btn-outline"
+				class="btn flex-1 btn-outline btn-sm lg:flex-none"
 				disabled={!hasChanged || isSaving}
 				onclick={onCancel}
 			>
@@ -39,12 +41,12 @@
 
 			<button
 				type="button"
-				class="btn btn-primary min-w-28"
+				class="btn flex-1 btn-primary btn-sm lg:min-w-32 lg:flex-none"
 				disabled={!hasChanged || isSaving}
 				onclick={onSave}
 			>
 				{#if isSaving}
-					<span class="loading loading-spinner loading-sm"></span>
+					<span class="loading loading-xs loading-spinner"></span>
 					Saving...
 				{:else}
 					Save Changes

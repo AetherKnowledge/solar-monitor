@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Plus, Search, TableProperties } from '@lucide/svelte';
 	import { RegisterType, type RegisterListItem } from '../DeviceTypes';
+	import RegisterCard from './RegisterCard.svelte';
 	import RegisterTableRow from './RegisterTableRow.svelte';
 
 	type Props = {
@@ -51,10 +52,11 @@
 
 		<!-- Toolbar -->
 		<div class="flex flex-col gap-3 md:flex-row md:items-center">
-			<label class="input-bordered input flex-1">
+			<label class="input-bordered input w-full md:flex-1">
 				<Search class="size-4 opacity-60" />
 				<input
 					type="search"
+					class="w-full"
 					placeholder="Search by name, address, or unit..."
 					bind:value={searchQuery}
 				/>
@@ -69,34 +71,41 @@
 			</select>
 		</div>
 
-		<!-- Scrollable Table -->
-		<div class="h-128 overflow-auto rounded-box border border-base-300">
-			<table class="table table-zebra table-sm">
-				<thead class="sticky top-0 z-10 bg-base-100">
-					<tr>
-						<th>Name</th>
-						<th class="text-center">Type</th>
-						<th class="text-center">Address</th>
-						<th class="text-center">Value</th>
-						<th class="text-center">Unit</th>
-						<th class="w-40 pr-6 text-right">Actions</th>
-					</tr>
-				</thead>
+		<!-- Mobile -->
+		<div class="space-y-3 md:hidden">
+			{#if filteredRegisters.length === 0}
+				<div class="rounded-box border border-base-300 p-8 text-center text-base-content/60">
+					No registers found.
+				</div>
+			{:else}
+				{#each filteredRegisters as register, index (index)}
+					<RegisterCard {register} onEdit={(r) => onEdit?.(r)} />
+				{/each}
+			{/if}
+		</div>
 
-				<tbody>
-					{#if filteredRegisters.length === 0}
+		<!-- Desktop -->
+		<div class="hidden md:block">
+			<div class="h-128 overflow-auto rounded-box border border-base-300">
+				<table class="table table-zebra table-sm">
+					<thead class="sticky top-0 z-10 bg-base-100">
 						<tr>
-							<td colspan="6" class="h-48 text-center text-base-content/60">
-								No registers found.
-							</td>
+							<th>Name</th>
+							<th class="text-center">Type</th>
+							<th class="text-center">Address</th>
+							<th class="text-center">Value</th>
+							<th class="text-center">Unit</th>
+							<th class="w-40 pr-6 text-right">Actions</th>
 						</tr>
-					{:else}
+					</thead>
+
+					<tbody>
 						{#each filteredRegisters as register, index (index)}
 							<RegisterTableRow {register} onEdit={(r) => onEdit?.(r)} />
 						{/each}
-					{/if}
-				</tbody>
-			</table>
+					</tbody>
+				</table>
+			</div>
 		</div>
 	</div>
 </div>
