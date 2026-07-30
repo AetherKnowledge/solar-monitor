@@ -11,7 +11,7 @@ size_t Logger::write(uint8_t c) {
 
     buffer += static_cast<char>(c);
 
-    if (c == '\n') {
+    if (c == '\n' || c == '\r') {
         flushWebSocket();
     }
 
@@ -24,7 +24,7 @@ size_t Logger::write(const uint8_t* data, size_t size) {
     for (size_t i = 0; i < size; i++) {
         buffer += static_cast<char>(data[i]);
 
-        if (data[i] == '\n') {
+        if (data[i] == '\n' || data[i] == '\r') {
             flushWebSocket();
         }
     }

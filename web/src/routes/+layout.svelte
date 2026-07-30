@@ -129,14 +129,9 @@
 				</div>
 			</nav>
 			<!-- Page content here -->
-			<main class="flex h-full flex-1 overflow-auto p-4">
-				<div class="flex min-w-0 flex-1 flex-col">
-					<div class="pb-4">
-						{@render children()}
-					</div>
-					<PopupHost />
-				</div>
-			</main>
+
+			{@render children()}
+			<PopupHost />
 		</div>
 
 		<div class="drawer-side is-drawer-close:overflow-visible">
