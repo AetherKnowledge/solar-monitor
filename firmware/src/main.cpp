@@ -10,6 +10,7 @@
 #include <Common/Logger.h>
 #include "Config/ConfigManager.h"
 #include "Display/DisplayManager.h"
+#include "Update/UpdateHandler.h"
 
 #define LED_PIN 32
 
@@ -37,6 +38,7 @@ void setup() {
     DisplayManager::showLoadingProgress("Starting Web Server", 90);
     WebServer::start();
 
+    UpdateHandler::setup();
     DisplayManager::showLoadingProgress("Startup Complete", 100);
     DisplayManager::finishBoot();
     DisplayManager::showSuccess("Startup Complete");

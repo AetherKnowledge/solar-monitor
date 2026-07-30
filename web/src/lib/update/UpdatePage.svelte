@@ -23,7 +23,9 @@
 		isUpToDate,
 		latestVersion,
 		updateFirmware,
-		updateWebsite
+		updateFirmwareManual,
+		updateWebsite,
+		updateWebsiteManual
 	} from './UpdateController.svelte';
 
 	const { query } = createUpdateController();
@@ -61,7 +63,7 @@
 
 		showLoading('Uploading firmware...', 0);
 
-		const result = await updateFirmware(newFirmwareFile, (progress) => {
+		const result = await updateFirmwareManual(newFirmwareFile, (progress) => {
 			updateLoadingProgress(progress);
 		});
 
@@ -91,7 +93,7 @@
 
 		showLoading('Uploading web interface...', 0);
 
-		const result = await updateWebsite(newWebsiteFile, (progress) => {
+		const result = await updateWebsiteManual(newWebsiteFile, (progress) => {
 			updateLoadingProgress(progress);
 		});
 
@@ -151,7 +153,10 @@
 				'Firmware Version',
 				currentVersion.firmware,
 				latestVersion.firmware,
-				'Download firmware'
+				'Download firmware',
+				() => {
+					updateFirmware();
+				}
 			)}
 
 			{@render versionCard(
@@ -159,7 +164,10 @@
 				'Web Interface Version',
 				currentVersion.website,
 				latestVersion.website,
-				'Download website'
+				'Download website',
+				() => {
+					updateWebsite();
+				}
 			)}
 		</div>
 

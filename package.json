@@ -14,9 +14,12 @@
     "upload:ota:web": "pnpm build:web && node scripts/ota.js web",
     "upload:ota:config": "node scripts/ota.js config",
     "ota:restart": "node scripts/ota.js restart",
-    "flash": "pnpm build:web && pnpm upload && pnpm uploadfs && pnpm monitor"
+    "flash": "pnpm build:web && pnpm upload && pnpm uploadfs && pnpm monitor",
+    "manifest": "node scripts/generate-manifest.ts",
+    "release": "pnpm build && node scripts/generate-manifest.ts"
   },
   "devDependencies": {
+    "@types/node": "^24.13.3",
     "dotenv": "^17.4.2",
     "dotenv-cli": "^11.0.0"
   }

@@ -14,7 +14,7 @@ namespace WebServer {
     AsyncWebServer server(80);
     fs::LittleFSFS WebFS;
 
-    std::string WEBSITE_VERSION = "0.0.0";
+    String WEBSITE_VERSION = "0.0.0";
     static void setWebsiteVersion() {
         File file = WebFS.open("/version.json", "r");
         if (file) {
@@ -28,7 +28,7 @@ namespace WebServer {
             }
 
             WEBSITE_VERSION = doc["version"] | "0.0.0";
-            Log.println("Website version: " + String(WEBSITE_VERSION.c_str()));
+            Log.println("Website version: " + WEBSITE_VERSION);
         } else {
             Log.println("Failed to open version.json");
         }

@@ -1,6 +1,22 @@
 import { apiFetch } from '$lib/common/CommonFunctions';
 import { createQuery } from '@tanstack/svelte-query';
 
+export type ReleaseAsset = {
+	version: string;
+	file: string;
+	url: string;
+	size: number;
+	sha256: string;
+};
+
+export type Manifest = {
+	version: string;
+	buildTime: string;
+
+	firmware: ReleaseAsset;
+	website: ReleaseAsset;
+};
+
 export type VersionApiResponse = {
 	firmware: string;
 	website: string;
@@ -29,14 +45,14 @@ export function createUpdateController() {
 	};
 }
 
-export function updateFirmware(
+export function updateFirmwareManual(
 	file: File,
 	onProgress?: (progress: number) => void
 ): Promise<boolean> {
 	return new Promise((resolve) => {
 		const xhr = new XMLHttpRequest();
 
-		xhr.open('POST', '/api/update/firmware');
+		xhr.open('POST', '/api/update/firmware/manual');
 
 		xhr.setRequestHeader('Content-Type', 'application/octet-stream');
 
@@ -64,14 +80,14 @@ export function updateFirmware(
 	});
 }
 
-export async function updateWebsite(
+export async function updateWebsiteManual(
 	file: File,
 	onProgress?: (progress: number) => void
 ): Promise<boolean> {
 	return new Promise((resolve) => {
 		const xhr = new XMLHttpRequest();
 
-		xhr.open('POST', '/api/update/website');
+		xhr.open('POST', '/api/update/website/manual');
 
 		xhr.setRequestHeader('Content-Type', 'application/octet-stream');
 
@@ -99,12 +115,52 @@ export async function updateWebsite(
 	});
 }
 
-export async function checkForUpdates() {
-	await new Promise((resolve) => setTimeout(resolve, 5000));
+export async function checkForUpdates(): Promise<Manifest> {
+	const manifest = await apiFetch<Manifest>(
+		'https://raw.githubusercontent.com/AetherKnowledge/solar-monitor/main/manifest.json',
+		{
+			cache: 'no-store'
+		}
+	);
 
-	// Fake API response
-	latestVersion.firmware = '1.2.4';
-	latestVersion.website = '1.2.4';
+	latestVersion.firmware = manifest.firmware.version;
+	latestVersion.website = manifest.website.version;
+
+	return manifest;
+}
+
+export async function updateFirmware(): Promise<void> {
+	const manifest = await apiFetch<Manifest>(
+		'https://raw.githubusercontent.com/AetherKnowledge/solar-monitor/main/manifest.json',
+		{
+			cache: 'no-store'
+		}
+	);
+
+	await apiFetch('/api/update/firmware', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(manifest.firmware)
+	});
+}
+
+export async function updateWebsite(): Promise<void> {
+	const manifest = await apiFetch<Manifest>(
+		'https://raw.githubusercontent.com/AetherKnowledge/solar-monitor/main/manifest.json',
+		{
+			cache: 'no-store'
+		}
+	);
+
+	await apiFetch('/api/update/website', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(manifest.website)
+	});
 }
 
 function parseVersion(version: string): number[] {

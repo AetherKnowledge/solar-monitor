@@ -13,11 +13,11 @@ const [, , type] = process.argv;
 const targets = {
   firmware: {
     file: ".pio/build/esp32dev/firmware.bin",
-    endpoint: "/api/update/firmware",
+    endpoint: "/api/update/firmware/manual",
   },
   web: {
     file: ".pio/build/esp32dev/littlefs.bin",
-    endpoint: "/api/update/website",
+    endpoint: "/api/update/website/manual",
   },
   config: {
     file: "config.json",

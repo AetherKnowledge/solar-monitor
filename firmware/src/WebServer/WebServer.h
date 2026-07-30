@@ -4,7 +4,7 @@
 #include <string>
 
 namespace WebServer {
-    extern std::string WEBSITE_VERSION;
+    extern String WEBSITE_VERSION;
 
     bool start();
     bool stop();

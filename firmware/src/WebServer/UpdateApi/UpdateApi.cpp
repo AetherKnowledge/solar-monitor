@@ -6,11 +6,15 @@
 #include <Version.h>
 #include <WebServer/WebServer.h>
 #include <Common/Logger.h>
+#include <WiFiClientSecure.h>
+#include <HTTPClient.h>
+#include <Update/UpdateHandler.h>
+#include "ArduinoJson/Object/JsonObject.hpp"
 
 namespace UpdateApi {
     void registerApi(AsyncWebServer& server) {
         server.on(
-            "/api/update/firmware",
+            "/api/update/firmware/manual",
             HTTP_POST,
 
             // Called when request finishes
@@ -34,7 +38,7 @@ namespace UpdateApi {
             });
 
         server.on(
-            "/api/update/website",
+            "/api/update/website/manual",
             HTTP_POST,
 
             // Called when request finishes
@@ -59,6 +63,32 @@ namespace UpdateApi {
                 UpdateHandler::onChunk(data, len, index, index + len == total, total, false);
             });
 
+        server.on(
+            "/api/update/firmware",
+            HTTP_POST,
+            [](AsyncWebServerRequest* request) {
+                // response sent later
+            },
+            nullptr,
+            [](AsyncWebServerRequest* request,
+               uint8_t* data,
+               size_t len,
+               size_t index,
+               size_t total) { handleLatestUpdate(request, data, len, index, total, true); });
+
+        server.on(
+            "/api/update/website",
+            HTTP_POST,
+            [](AsyncWebServerRequest* request) {
+                // response sent later
+            },
+            nullptr,
+            [](AsyncWebServerRequest* request,
+               uint8_t* data,
+               size_t len,
+               size_t index,
+               size_t total) { handleLatestUpdate(request, data, len, index, total, false); });
+
         server.on("/api/version", HTTP_GET, [](AsyncWebServerRequest* request) {
             handleGetVersion(request);
         });
@@ -72,6 +102,51 @@ namespace UpdateApi {
         doc["website"] = WebServer::WEBSITE_VERSION;
 
         Response::sendJson(request, doc);
+    }
+
+    void handleLatestUpdate(AsyncWebServerRequest* request,
+                            uint8_t* data,
+                            size_t len,
+                            size_t index,
+                            size_t total,
+                            bool isFirmware) {
+        JsonDocument doc;
+
+        DeserializationError error = deserializeJson(doc, data, len);
+
+        if (error) {
+            Response::send(request, 400, "Invalid JSON");
+            return;
+        }
+
+        UpdateHandler::UpdateRequest updateRequest;
+        updateRequest.fromJson(doc);
+
+        Log.println("Received update request: " + updateRequest.toString());
+
+        const String latestVersion = updateRequest.version;
+
+        const String currentVersion =
+            isFirmware ? String("v") + Version::FIRMWARE : String("v") + WebServer::WEBSITE_VERSION;
+
+        switch (UpdateHandler::compareVersions(currentVersion, latestVersion)) {
+            case 1:
+                Response::send(request, 409, "Current version is newer than requested version");
+                return;
+
+            case 0:
+                Response::send(request, 409, "Already up to date");
+                return;
+
+            case -1:
+                break;  // Proceed with update
+        }
+
+        if (UpdateHandler::requestUpdate(updateRequest, isFirmware)) {
+            Response::send(request, 200, "Update started successfully");
+        } else {
+            Response::send(request, 500, "Failed to start update");
+        }
     }
 
 }  // namespace UpdateApi
