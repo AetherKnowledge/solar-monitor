@@ -9,6 +9,7 @@
     "build": "pnpm build:web && pnpm build:firmware",
     "upload": "pio run -t upload",
     "upload:config": "pio run -t uploadconfig",
+    "clang": "pio run -t compiledb",
     "uploadfs": "pio run -t uploadfs",
     "upload:ota:firmware": "pnpm build:firmware && node scripts/ota.js firmware",
     "upload:ota:web": "pnpm build:web && node scripts/ota.js web",
