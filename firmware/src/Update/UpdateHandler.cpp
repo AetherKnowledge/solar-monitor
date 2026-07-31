@@ -34,7 +34,7 @@ namespace UpdateHandler {
         }
     }
 
-    void onUpdateFinish(AsyncWebServerRequest* request, bool isFirmware) {
+    esp_err_t onUpdateFinish(PsychicRequest* request, PsychicResponse* response, bool isFirmware) {
         const String name = isFirmware ? "Firmware" : "Website";
 
         if (!Update.hasError() && Update.isFinished() &&
@@ -44,26 +44,32 @@ namespace UpdateHandler {
 
             String completeMessage = name + " update complete. Restarting...";
 
-            Response::success(request, 200, completeMessage, &Log);
-            return;
+            return Response::success(response, 200, completeMessage, &Log);
         }
 
         updateProgress.status = UpdateStatus::NotStarted;
         String errorMessage = name + " update failed. Please check the logs for more information.";
-        Response::error(request, 500, errorMessage, &Log);
+        return Response::error(response, 500, errorMessage, &Log);
     }
 
-    void onChunk(uint8_t* data,
-                 size_t len,
-                 size_t index,
-                 bool final,
-                 std::optional<size_t> total,
-                 bool isFirmware) {
+    esp_err_t onChunk(PsychicRequest* request,
+                      uint8_t* data,
+                      size_t len,
+                      uint64_t index,
+                      bool final,
+                      bool isFirmware) {
         const char* name = isFirmware ? "Firmware" : "Website";
         const auto partition = isFirmware ? U_FLASH : U_SPIFFS;
 
+        std::optional<size_t> total;
+
+        // Only basic uploads have a meaningful content length.
+        if (index == 0 && !request->isMultipart()) {
+            total = request->contentLength();
+        }
+
         if (updateProgress.status == UpdateStatus::UpdateFailed) {
-            return;
+            return ESP_FAIL;
         }
 
         // First chunk
@@ -71,23 +77,17 @@ namespace UpdateHandler {
             if (updateProgress.status == UpdateStatus::InProgress ||
                 updateProgress.status == UpdateStatus::Requested) {
                 Log.println("Update already in progress");
-                return;
+                return ESP_FAIL;
             }
 
             updateProgress.status = UpdateStatus::Requested;
             Log.printf("Starting %s update\n", name);
+
             if (total) {
-                Log.printf("%s size: %u bytes\n", name, total.value());
+                Log.printf("%s size: %u bytes\n", name, *total);
             }
 
-            /*
-             * U_SPIFFS tells Update that we're updating
-             * the filesystem/data partition rather than
-             * an application partition.
-             */
-
-            bool hasStarted = total ? Update.begin(*total, partition)
-                                    : Update.begin(UPDATE_SIZE_UNKNOWN, partition);
+            bool hasStarted = Update.begin(total ? *total : UPDATE_SIZE_UNKNOWN, partition);
 
             if (!hasStarted) {
                 updateProgress.status = UpdateStatus::UpdateFailed;
@@ -95,7 +95,7 @@ namespace UpdateHandler {
                 Log.println("Failed to begin " + String(name) + " update");
                 Log.printf("Update error: %d\n", Update.getError());
                 Update.printError(Log);
-                return;
+                return ESP_FAIL;
             }
         }
 
@@ -106,7 +106,7 @@ namespace UpdateHandler {
             Log.println("Failed to write " + String(name) + " chunk");
             Log.printf("Update error: %d\n", Update.getError());
             Update.printError(Log);
-            return;
+            return ESP_FAIL;
         }
 
         if (updateProgress.status != UpdateStatus::InProgress) {
@@ -114,11 +114,16 @@ namespace UpdateHandler {
         }
 
         if (total) {
-            Log.printf("%s: %u / %u bytes\r", name, index + len, total.value());
-            updateProgress.progress = static_cast<uint8_t>((index + len) * 100 / total.value());
+            Log.printf("%s: %llu / %u bytes\r",
+                       name,
+                       static_cast<unsigned long long>(index + len),
+                       *total);
+
+            updateProgress.progress = static_cast<uint8_t>(((index + len) * 100) / *total);
             updateProgress.hasTotalSize = true;
         } else {
-            Log.printf("%s: %u bytes\r", name, index + len);
+            Log.printf("%s: %llu bytes\r", name, static_cast<unsigned long long>(index + len));
+
             updateProgress.progress = 0;
             updateProgress.hasTotalSize = false;
         }
@@ -132,12 +137,14 @@ namespace UpdateHandler {
 
                 Log.println("Failed to finish " + String(name) + " update");
                 Update.printError(Log);
-                return;
+                return ESP_FAIL;
             }
 
             updateProgress.status = UpdateStatus::UpdateComplete;
             Log.println(String(name) + " written successfully");
         }
+
+        return ESP_OK;
     }
 
     bool downloadAndInstall(const UpdateRequest& request, bool isFirmware) {

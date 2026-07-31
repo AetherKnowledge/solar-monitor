@@ -1,11 +1,13 @@
 #pragma once
 
-#include <ESPAsyncWebServer.h>
+#include <PsychicHttp.h>
 
 namespace NetworkApi {
-    void registerApi(AsyncWebServer& server);
-    void handleGetNetworks(AsyncWebServerRequest* request);
-    void handleScanNetworks(AsyncWebServerRequest* request);
-    void handleGetConfig(AsyncWebServerRequest* request);
-    void handleUpdateConfig(AsyncWebServerRequest* request, JsonVariant& json);
+    void registerApi(PsychicHttpServer& server);
+    esp_err_t handleGetNetworks(PsychicRequest* request, PsychicResponse* response);
+    esp_err_t handleScanNetworks(PsychicRequest* request, PsychicResponse* response);
+    esp_err_t handleGetConfig(PsychicRequest* request, PsychicResponse* response);
+    esp_err_t handleUpdateConfig(PsychicRequest* request,
+                                 PsychicResponse* response,
+                                 JsonVariant& json);
 }  // namespace NetworkApi

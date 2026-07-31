@@ -1,9 +1,9 @@
 #pragma once
 
-#include <ESPAsyncWebServer.h>
+#include <PsychicHttp.h>
 
 namespace SystemApi {
-    void registerApi(AsyncWebServer& server);
-    void handleRestartRequest(AsyncWebServerRequest* request);
-    void handleGetSystemData(AsyncWebServerRequest* request);
+    void registerApi(PsychicHttpServer& server);
+    esp_err_t handleRestartRequest(PsychicRequest* request, PsychicResponse* response);
+    esp_err_t handleGetSystemData(PsychicRequest* request, PsychicResponse* response);
 }  // namespace SystemApi

@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 #include <Update.h>
-#include <ESPAsyncWebServer.h>
+#include <PsychicHttp.h>
 #include <Common/UpdateStatus.h>
 #include <optional>
 #include "SignatureHandler.h"
@@ -30,7 +30,7 @@ namespace UpdateHandler {
         String signature;
         bool isFirmware = false;
 
-        void fromJson(JsonDocument json) {
+        void fromJson(JsonVariant json) {
             url = json["url"] | "";
             size = json["size"] | 0;
             file = json["file"] | "";
@@ -56,13 +56,14 @@ namespace UpdateHandler {
 
     void setup();
 
-    void onUpdateFinish(AsyncWebServerRequest* request, bool isFirmware);
-    void onChunk(uint8_t* data,
-                 size_t len,
-                 size_t index,
-                 bool final,
-                 std::optional<size_t> total,
-                 bool isFirmware);
+    esp_err_t onUpdateFinish(PsychicRequest* request, PsychicResponse* response, bool isFirmware);
+    esp_err_t onChunk(PsychicRequest* request,
+                      uint8_t* data,
+                      size_t len,
+                      uint64_t index,
+                      bool final,
+                      bool isFirmware);
+    ;
 
     int compareVersions(String a, String b);
 

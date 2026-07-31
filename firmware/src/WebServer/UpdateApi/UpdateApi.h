@@ -1,17 +1,15 @@
 #pragma once
 
 #include <Arduino.h>
-#include <ESPAsyncWebServer.h>
+#include <PsychicHttp.h>
 
 namespace UpdateApi {
-    void registerApi(AsyncWebServer& server);
-    void handleGetVersion(AsyncWebServerRequest* request);
-    void handleLatestUpdate(AsyncWebServerRequest* request,
-                            uint8_t* data,
-                            size_t len,
-                            size_t index,
-                            size_t total,
-                            bool isFirmware);
-    void handleGetStatus(AsyncWebServerRequest* request);
+    void registerApi(PsychicHttpServer& server);
+    esp_err_t handleGetVersion(PsychicRequest* request, PsychicResponse* response);
+    esp_err_t handleLatestUpdate(PsychicRequest* request,
+                                 PsychicResponse* response,
+                                 JsonVariant& json,
+                                 bool isFirmware);
+    esp_err_t handleGetStatus(PsychicRequest* request, PsychicResponse* response);
 
 }  // namespace UpdateApi

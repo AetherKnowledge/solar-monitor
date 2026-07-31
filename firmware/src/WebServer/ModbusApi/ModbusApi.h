@@ -1,13 +1,15 @@
 #pragma once
 
 #include <Arduino.h>
-#include <ESPAsyncWebServer.h>
+#include <PsychicHttp.h>
 
 namespace ModbusApi {
-    void registerApi(AsyncWebServer& server);
-    void handleGetDevices(AsyncWebServerRequest* request);
-    void handleGetDevice(AsyncWebServerRequest* request, String id);
-    void handleUpdateDevice(AsyncWebServerRequest* request, JsonVariant& json, String id);
-    void handleGetValues(AsyncWebServerRequest* request, String id);
-    void handleGetStatus(AsyncWebServerRequest* request);
+    void registerApi(PsychicHttpServer& server);
+    esp_err_t handleGetDevices(PsychicRequest* request, PsychicResponse* response);
+    esp_err_t handleGetDevice(PsychicRequest* request, PsychicResponse* response, String id);
+    esp_err_t handleUpdateDevice(PsychicRequest* request,
+                                 PsychicResponse* response,
+                                 JsonVariant& json);
+    esp_err_t handleGetValues(PsychicRequest* request, PsychicResponse* response);
+    esp_err_t handleGetStatus(PsychicRequest* request, PsychicResponse* response);
 }  // namespace ModbusApi

@@ -2,35 +2,30 @@
 #include <Common/Logger.h>
 
 namespace WebSocket {
-    AsyncWebSocket websocket("/api/ws");
 
-    void setup(AsyncWebServer& server) {
-        websocket.onEvent([](AsyncWebSocket* server,
-                             AsyncWebSocketClient* client,
-                             AwsEventType type,
-                             void* arg,
-                             uint8_t* data,
-                             size_t len) {
-            switch (type) {
-                case WS_EVT_CONNECT:
-                    Log.printf("WebSocket client #%u connected\n", client->id());
-                    break;
+    PsychicWebSocketHandler websocket;
 
-                case WS_EVT_DISCONNECT:
-                    Log.printf("WebSocket client #%u disconnected\n", client->id());
-                    break;
-
-                case WS_EVT_DATA:
-                    // Handle messages from the browser here if needed
-                    break;
-
-                case WS_EVT_PONG:
-                case WS_EVT_ERROR:
-                    break;
-            }
+    void setup(PsychicHttpServer& server) {
+        websocket.onOpen([](PsychicWebSocketClient* client) {
+            Log.printf("WebSocket client #%u connected\n", client->socket());
         });
 
-        server.addHandler(&websocket);
+        websocket.onClose([](PsychicWebSocketClient* client) {
+            Log.printf("WebSocket client #%u disconnected\n", client->socket());
+        });
+
+        websocket.onFrame(
+            [](PsychicWebSocketRequest* request, httpd_ws_frame_t* frame) -> esp_err_t {
+                // Handle incoming messages here if needed.
+
+                // If you don't care about incoming messages:
+                return ESP_OK;
+
+                // Or echo them back:
+                // return request->reply(frame);
+            });
+
+        server.on("/api/ws", &websocket);
 
         // Send Logger output to this websocket
         Log.begin(&websocket);
@@ -39,6 +34,7 @@ namespace WebSocket {
     }
 
     void loop() {
-        websocket.cleanupClients();
+        // Nothing to do.
     }
+
 }  // namespace WebSocket

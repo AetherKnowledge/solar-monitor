@@ -1,20 +1,20 @@
 #pragma once
 
 #include <Arduino.h>
-#include <ESPAsyncWebServer.h>
+#include <PsychicHttp.h>
 
 namespace ConfigApi {
-    void registerApi(AsyncWebServer& server);
-    void handleUploadConfig(AsyncWebServerRequest* request, JsonVariant& json);
-    void handleGetConfig(AsyncWebServerRequest* request);
+    void registerApi(PsychicHttpServer& server);
+    esp_err_t handleUploadConfig(PsychicRequest* request, JsonVariant& json);
+    esp_err_t handleGetConfig(PsychicRequest* request, PsychicResponse* response);
 
-    void onUpload(AsyncWebServerRequest* request,
-                  String filename,
-                  size_t index,
-                  uint8_t* data,
-                  size_t len,
-                  bool final);
+    esp_err_t onUpload(PsychicRequest* request,
+                       const String& filename,
+                       uint64_t index,
+                       uint8_t* data,
+                       size_t len,
+                       bool final);
 
-    void onUploadFinish(AsyncWebServerRequest* request);
+    esp_err_t onUploadFinish(PsychicRequest* request, PsychicResponse* response);
     bool validateConfig();
 }  // namespace ConfigApi

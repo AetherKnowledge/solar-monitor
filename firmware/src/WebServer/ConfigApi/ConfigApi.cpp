@@ -9,29 +9,18 @@ namespace ConfigApi {
     File uploadFile;
     bool uploadFailed = false;
 
-    void registerApi(AsyncWebServer& server) {
-        server.on(
-            "/api/config",
-            HTTP_POST,
+    void registerApi(PsychicHttpServer& server) {
+        server.on("/api/config", HTTP_GET, handleGetConfig);
 
-            // Called when upload finishes
-            [](AsyncWebServerRequest* request) { onUploadFinish(request); },
-
-            // Called for every uploaded chunk
-            [](AsyncWebServerRequest* request,
-               String filename,
-               size_t index,
-               uint8_t* data,
-               size_t len,
-               bool final) { onUpload(request, filename, index, data, len, final); });
-        server.on("/api/config", HTTP_GET, [](AsyncWebServerRequest* request) {
-            handleGetConfig(request);
-        });
+        auto* uploadHandler = new PsychicUploadHandler();
+        uploadHandler->onUpload(onUpload);
+        uploadHandler->onRequest(onUploadFinish);
+        server.on("/api/config", HTTP_POST, uploadHandler);
 
         Log.println("Config API registered");
     }
 
-    void handleGetConfig(AsyncWebServerRequest* request) {
+    esp_err_t handleGetConfig(PsychicRequest* request, PsychicResponse* response) {
         JsonDocument doc;
         File configFile = ConfigManager::ConfigFS.open(ConfigManager::CONFIG_LOCATION, "r");
 
@@ -40,18 +29,18 @@ namespace ConfigApi {
 
         if (error) {
             Log.printf("Failed to deserialize config: %s\n", error.c_str());
-            return;
+            return Response::error(response, 500, "Failed to deserialize config");
         }
 
-        Response::sendJson(request, doc);
+        return Response::sendJson(response, doc);
     }
 
-    void onUpload(AsyncWebServerRequest* request,
-                  String filename,
-                  size_t index,
-                  uint8_t* data,
-                  size_t len,
-                  bool final) {
+    esp_err_t onUpload(PsychicRequest* request,
+                       const String& filename,
+                       uint64_t index,
+                       uint8_t* data,
+                       size_t len,
+                       bool final) {
         if (index == 0) {
             Log.printf("Uploading %s\n", filename.c_str());
             uploadFailed = false;
@@ -62,7 +51,7 @@ namespace ConfigApi {
             if (!uploadFile) {
                 Log.println("Failed to open config.tmp");
                 uploadFailed = true;
-                return;
+                return ESP_FAIL;
             }
         }
 
@@ -78,6 +67,7 @@ namespace ConfigApi {
             if (written != len) {
                 Log.println("Write failed");
                 uploadFailed = true;
+                return ESP_FAIL;
             }
         }
 
@@ -87,6 +77,26 @@ namespace ConfigApi {
 
             Log.printf("Final upload size: %u\n", (unsigned)(index + len));
         }
+        return ESP_OK;
+    }
+
+    esp_err_t onUploadFinish(PsychicRequest* request, PsychicResponse* response) {
+        if (uploadFailed) {
+            ConfigManager::ConfigFS.remove("/config.tmp");
+            return Response::error(response, 500, "Upload failed");
+        }
+
+        if (!validateConfig()) {
+            ConfigManager::ConfigFS.remove("/config.tmp");
+            return Response::error(response, 400, "Invalid config");
+        }
+
+        ConfigManager::ConfigFS.remove("/config.json");
+        ConfigManager::ConfigFS.rename("/config.tmp", "/config.json");
+
+        SystemManager::requestRestart();
+
+        return Response::success(response, 200, "Config updated");
     }
 
     bool validateConfig() {
@@ -104,24 +114,4 @@ namespace ConfigApi {
         return !err;
     }
 
-    void onUploadFinish(AsyncWebServerRequest* request) {
-        if (uploadFailed) {
-            ConfigManager::ConfigFS.remove("/config.tmp");
-            Response::error(request, 500, "Upload failed");
-            return;
-        }
-
-        if (!validateConfig()) {
-            ConfigManager::ConfigFS.remove("/config.tmp");
-            Response::error(request, 400, "Invalid config");
-            return;
-        }
-
-        ConfigManager::ConfigFS.remove("/config.json");
-        ConfigManager::ConfigFS.rename("/config.tmp", "/config.json");
-
-        SystemManager::requestRestart();
-
-        Response::success(request, 200, "Config updated");
-    }
 }  // namespace ConfigApi

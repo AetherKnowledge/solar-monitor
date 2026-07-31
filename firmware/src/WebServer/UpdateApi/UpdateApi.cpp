@@ -7,125 +7,74 @@
 #include <Update/UpdateHandler.h>
 
 namespace UpdateApi {
-    void registerApi(AsyncWebServer& server) {
-        server.on("/api/update/status", HTTP_GET, [](AsyncWebServerRequest* request) {
-            handleGetStatus(request);
+    void registerApi(PsychicHttpServer& server) {
+        server.on("/api/update/status", HTTP_GET, handleGetStatus);
+
+        auto* firmwareUploadHandler = new PsychicUploadHandler();
+        firmwareUploadHandler->onUpload([](PsychicRequest* request,
+                                           const String& filename,
+                                           uint64_t index,
+                                           uint8_t* data,
+                                           size_t len,
+                                           bool last) {
+            return UpdateHandler::onChunk(request, data, len, index, last, true);
         });
-
-        server.on(
-            "/api/update/firmware/manual",
-            HTTP_POST,
-
-            // Called when request finishes
-            [](AsyncWebServerRequest* request) { UpdateHandler::onUpdateFinish(request, true); },
-
-            // Upload callback - unused when sending raw octet-stream
-            [](AsyncWebServerRequest* request,
-               const String& filename,
-               size_t index,
-               uint8_t* data,
-               size_t len,
-               bool final) { UpdateHandler::onChunk(data, len, index, final, std::nullopt, true); },
-
-            // Body callback
-            [](AsyncWebServerRequest* request,
-               uint8_t* data,
-               size_t len,
-               size_t index,
-               size_t total) {
-                UpdateHandler::onChunk(data, len, index, index + len == total, total, true);
-            });
-
-        server.on(
-            "/api/update/website/manual",
-            HTTP_POST,
-
-            // Called when request finishes
-            [](AsyncWebServerRequest* request) { UpdateHandler::onUpdateFinish(request, false); },
-
-            // Upload callback
-            [](AsyncWebServerRequest* request,
-               const String& filename,
-               size_t index,
-               uint8_t* data,
-               size_t len,
-               bool final) {
-                UpdateHandler::onChunk(data, len, index, final, std::nullopt, false);
-            },
-
-            // Raw body callback
-            [](AsyncWebServerRequest* request,
-               uint8_t* data,
-               size_t len,
-               size_t index,
-               size_t total) {
-                UpdateHandler::onChunk(data, len, index, index + len == total, total, false);
-            });
-
-        server.on(
-            "/api/update/firmware",
-            HTTP_POST,
-            [](AsyncWebServerRequest* request) {
-                // response sent later
-            },
-            nullptr,
-            [](AsyncWebServerRequest* request,
-               uint8_t* data,
-               size_t len,
-               size_t index,
-               size_t total) { handleLatestUpdate(request, data, len, index, total, true); });
-
-        server.on(
-            "/api/update/website",
-            HTTP_POST,
-            [](AsyncWebServerRequest* request) {
-                // response sent later
-            },
-            nullptr,
-            [](AsyncWebServerRequest* request,
-               uint8_t* data,
-               size_t len,
-               size_t index,
-               size_t total) { handleLatestUpdate(request, data, len, index, total, false); });
-
-        server.on("/api/version", HTTP_GET, [](AsyncWebServerRequest* request) {
-            handleGetVersion(request);
+        firmwareUploadHandler->onRequest([](PsychicRequest* request, PsychicResponse* response) {
+            return UpdateHandler::onUpdateFinish(request, response, true);
         });
+        server.on("/api/update/firmware/manual", HTTP_POST, firmwareUploadHandler);
+
+        auto* websiteUploadHandler = new PsychicUploadHandler();
+        websiteUploadHandler->onUpload([](PsychicRequest* request,
+                                          const String& filename,
+                                          uint64_t index,
+                                          uint8_t* data,
+                                          size_t len,
+                                          bool last) {
+            return UpdateHandler::onChunk(request, data, len, index, last, false);
+        });
+        websiteUploadHandler->onRequest([](PsychicRequest* request, PsychicResponse* response) {
+            return UpdateHandler::onUpdateFinish(request, response, false);
+        });
+        server.on("/api/update/website/manual", HTTP_POST, websiteUploadHandler);
+
+        server.on("/api/update/firmware",
+                  HTTP_POST,
+                  [](PsychicRequest* request, PsychicResponse* response, JsonVariant& json) {
+                      return handleLatestUpdate(request, response, json, true);
+                  });
+
+        server.on("/api/update/website",
+                  HTTP_POST,
+                  [](PsychicRequest* request, PsychicResponse* response, JsonVariant& json) {
+                      return handleLatestUpdate(request, response, json, false);
+                  });
+
+        server.on("/api/version", HTTP_GET, handleGetVersion);
 
         Log.println("Update API registered");
     }
 
-    void handleGetStatus(AsyncWebServerRequest* request) {
+    esp_err_t handleGetStatus(PsychicRequest* request, PsychicResponse* response) {
         JsonDocument doc;
         UpdateHandler::getUpdateProgress().toJson(doc.to<JsonObject>());
-        Response::sendJson(request, doc);
+        return Response::sendJson(response, doc);
     }
 
-    void handleGetVersion(AsyncWebServerRequest* request) {
+    esp_err_t handleGetVersion(PsychicRequest* request, PsychicResponse* response) {
         JsonDocument doc;
         doc["firmware"] = Version::FIRMWARE;
         doc["website"] = WebServer::WEBSITE_VERSION;
 
-        Response::sendJson(request, doc);
+        return Response::sendJson(response, doc);
     }
 
-    void handleLatestUpdate(AsyncWebServerRequest* request,
-                            uint8_t* data,
-                            size_t len,
-                            size_t index,
-                            size_t total,
-                            bool isFirmware) {
-        JsonDocument doc;
-
-        DeserializationError error = deserializeJson(doc, data, len);
-
-        if (error) {
-            Response::send(request, 400, "Invalid JSON");
-            return;
-        }
-
+    esp_err_t handleLatestUpdate(PsychicRequest* request,
+                                 PsychicResponse* response,
+                                 JsonVariant& json,
+                                 bool isFirmware) {
         UpdateHandler::UpdateRequest updateRequest;
-        updateRequest.fromJson(doc);
+        updateRequest.fromJson(json);
 
         Log.println("Received update request: " + updateRequest.toString());
 
@@ -136,21 +85,20 @@ namespace UpdateApi {
 
         switch (UpdateHandler::compareVersions(currentVersion, latestVersion)) {
             case 1:
-                Response::send(request, 409, "Current version is newer than requested version");
-                return;
+                return Response::send(
+                    response, 409, "Current version is newer than requested version");
 
             case 0:
-                Response::send(request, 409, "Already up to date");
-                return;
+                return Response::send(response, 409, "Already up to date");
 
             case -1:
                 break;  // Proceed with update
         }
 
         if (UpdateHandler::requestUpdate(updateRequest, isFirmware)) {
-            Response::send(request, 200, "Update started successfully");
+            return Response::send(response, 200, "Update started successfully");
         } else {
-            Response::send(request, 500, "Failed to start update");
+            return Response::send(response, 500, "Failed to start update");
         }
     }
 

@@ -172,7 +172,7 @@ pio run -t uploadfs
 - ArduinoJson
 - ModbusMaster
 - PubSubClient
-- ESPAsyncWebServer
+- PsychicHttp
 - TinyExpr
 - mbedTLS
 

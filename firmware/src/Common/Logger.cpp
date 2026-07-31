@@ -2,8 +2,9 @@
 
 Logger Log;
 
-void Logger::begin(AsyncWebSocket* websocket) {
+void Logger::begin(PsychicWebSocketHandler* websocket) {
     this->websocket = websocket;
+    buffer.reserve(256);
 }
 
 size_t Logger::write(uint8_t c) {
@@ -34,7 +35,7 @@ size_t Logger::write(const uint8_t* data, size_t size) {
 
 void Logger::flushWebSocket() {
     if (websocket && !buffer.isEmpty()) {
-        websocket->textAll(buffer);
+        websocket->sendAll(buffer.c_str());
     }
 
     buffer.clear();

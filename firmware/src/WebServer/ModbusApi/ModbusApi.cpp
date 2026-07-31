@@ -10,43 +10,27 @@
 #include <algorithm>
 
 namespace ModbusApi {
-    void registerApi(AsyncWebServer& server) {
-        server.on("/api/modbus/devices/status", HTTP_GET, [](AsyncWebServerRequest* request) {
-            handleGetStatus(request);
-        });
+    void registerApi(PsychicHttpServer& server) {
+        server.on("/api/modbus/devices/status", HTTP_GET, handleGetStatus);
 
-        server.on("/api/modbus/devices", HTTP_GET, [](AsyncWebServerRequest* request) {
-            if (!request->hasParam("id")) {
-                handleGetDevices(request);
-                return;
-            }
+        server.on("/api/modbus/devices",
+                  HTTP_GET,
+                  [](PsychicRequest* request, PsychicResponse* response) {
+                      if (!request->hasParam("id")) {
+                          return handleGetDevices(request, response);
+                      }
 
-            handleGetDevice(request, request->getParam("id")->value());
-        });
+                      return handleGetDevice(request, response, request->getParam("id")->value());
+                  });
 
-        server.on("/api/modbus/values", HTTP_GET, [](AsyncWebServerRequest* request) {
-            if (!request->hasParam("id")) {
-                Response::error(request, 400, "Missing device id");
-                return;
-            }
+        server.on("/api/modbus/values", HTTP_GET, handleGetValues);
 
-            handleGetValues(request, request->getParam("id")->value());
-        });
-
-        server.addHandler(new AsyncCallbackJsonWebHandler(
-            "/api/modbus/devices", [](AsyncWebServerRequest* request, JsonVariant& json) {
-                if (!request->hasParam("id")) {
-                    Response::error(request, 400, "Missing device id");
-                    return;
-                }
-
-                handleUpdateDevice(request, json, request->getParam("id")->value());
-            }));
+        server.on("/api/modbus/devices", HTTP_POST, handleUpdateDevice);
 
         Log.println("Modbus API registered");
     }
 
-    void handleGetDevices(AsyncWebServerRequest* request) {
+    esp_err_t handleGetDevices(PsychicRequest* request, PsychicResponse* response) {
         JsonDocument doc;
 
         serializeVector(
@@ -55,46 +39,54 @@ namespace ModbusApi {
         Log.println("Sending Modbus Devices: " +
                     String(ConfigManager::config.modbusDevices.size()) + " devices");
 
-        Response::sendJson(request, doc);
+        return Response::sendJson(response, doc);
     }
 
-    void handleGetStatus(AsyncWebServerRequest* request) {
+    esp_err_t handleGetStatus(PsychicRequest* request, PsychicResponse* response) {
         JsonDocument doc;
 
         doc["updateStatus"] = Enum::toString(ModbusManager::updateStatus);
 
-        Response::sendJson(request, doc);
+        return Response::sendJson(response, doc);
     }
 
-    void handleGetDevice(AsyncWebServerRequest* request, String id) {
+    esp_err_t handleGetDevice(PsychicRequest* request, PsychicResponse* response, String id) {
         JsonDocument doc;
 
         const ModbusDevice* device = ConfigManager::config.getDeviceById(id);
         if (!device) {
-            Response::error(request, 404, "Device not found");
-            return;
+            return Response::error(response, 404, "Device not found");
         }
         device->toJson(doc["device"].to<JsonObject>());
 
-        Response::sendJson(request, doc);
+        return Response::sendJson(response, doc);
     }
 
-    void handleGetValues(AsyncWebServerRequest* request, String id) {
+    esp_err_t handleGetValues(PsychicRequest* request, PsychicResponse* response) {
+        String id = request->getParam("id")->value();
+
         JsonDocument doc;
         ModbusManager::getValues(doc, id);
-        Response::sendJson(request, doc);
+        return Response::sendJson(response, doc);
     }
 
-    void handleUpdateDevice(AsyncWebServerRequest* request, JsonVariant& json, String id) {
+    esp_err_t handleUpdateDevice(PsychicRequest* request,
+                                 PsychicResponse* response,
+                                 JsonVariant& json) {
+        if (!request->hasParam("id")) {
+            return Response::error(response, 400, "Missing device id");
+        }
+
+        String id = request->getParam("id")->value();
+
         auto device = ConfigManager::config.getDeviceById(id);
         if (!device) {
-            Response::error(request, 404, "Device not found");
-            return;
+            return Response::error(response, 404, "Device not found");
         }
 
         Log.println("Recieved Modbus Update for device: " + id);
 
         ModbusManager::requestUpdate(id, json);
-        Response::success(request, 202, "OK");
+        return Response::success(response, 202, "OK");
     }
 }  // namespace ModbusApi

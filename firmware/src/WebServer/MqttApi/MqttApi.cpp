@@ -5,32 +5,29 @@
 #include <Common/Logger.h>
 
 namespace MqttApi {
-    void registerApi(AsyncWebServer& server) {
-        server.on("/api/mqtt/config", HTTP_GET, [](AsyncWebServerRequest* request) {
-            handleGetConfig(request);
-        });
+    void registerApi(PsychicHttpServer& server) {
+        server.on("/api/mqtt/config", HTTP_GET, handleGetConfig);
 
-        server.addHandler(new AsyncCallbackJsonWebHandler(
-            "/api/mqtt/config", [](AsyncWebServerRequest* request, JsonVariant& json) {
-                handleUpdateConfig(request, json);
-            }));
+        server.on("/api/mqtt/config", HTTP_POST, handleUpdateConfig);
 
         Log.println("MQTT API registered");
     }
 
-    void handleGetConfig(AsyncWebServerRequest* request) {
+    esp_err_t handleGetConfig(PsychicRequest* request, PsychicResponse* response) {
         JsonDocument doc;
         ConfigManager::config.mqtt.toJson(doc.to<JsonObject>());
 
-        Response::sendJson(request, doc);
+        return Response::sendJson(response, doc);
     }
 
-    void handleUpdateConfig(AsyncWebServerRequest* request, JsonVariant& json) {
+    esp_err_t handleUpdateConfig(PsychicRequest* request,
+                                 PsychicResponse* response,
+                                 JsonVariant& json) {
         MQTTConfig newConfig;
         newConfig.fromJson(json);
 
         MqttManager::requestUpdate(newConfig);
 
-        Response::success(request, 202, "OK");
+        return Response::success(response, 202, "OK");
     }
 }  // namespace MqttApi

@@ -4,27 +4,23 @@
 #include <Common/Logger.h>
 
 namespace SystemApi {
-    void registerApi(AsyncWebServer& server) {
-        server.on("/api/system/restart", HTTP_POST, [](AsyncWebServerRequest* request) {
-            handleRestartRequest(request);
-        });
+    void registerApi(PsychicHttpServer& server) {
+        server.on("/api/system/restart", HTTP_POST, handleRestartRequest);
 
-        server.on("/api/system", HTTP_GET, [](AsyncWebServerRequest* request) {
-            handleGetSystemData(request);
-        });
+        server.on("/api/system", HTTP_GET, handleGetSystemData);
 
         Log.println("System API registered");
     }
-    void handleRestartRequest(AsyncWebServerRequest* request) {
+    esp_err_t handleRestartRequest(PsychicRequest* request, PsychicResponse* response) {
         // Set the requestRestart flag in SystemManager
         SystemManager::requestRestart();
-        Response::success(request);
+        return Response::success(response, 202, "OK");
     }
 
-    void handleGetSystemData(AsyncWebServerRequest* request) {
+    esp_err_t handleGetSystemData(PsychicRequest* request, PsychicResponse* response) {
         JsonDocument doc;
         SystemManager::systemDevice.toJson(doc);
 
-        Response::sendJson(request, doc);
+        return Response::sendJson(response, doc);
     }
 }  // namespace SystemApi
