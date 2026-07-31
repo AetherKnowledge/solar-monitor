@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createPatch } from '$lib/common/Patcher.svelte';
 	import { hidePopup, showError, showLoading, showSuccess } from '$lib/popup/Popup.svelte';
 	import MqttFillIcon from '@iconify-svelte/mingcute/mqtt-fill';
 	import { EthernetPort, Eye, EyeOff, KeyRound, SearchCode, User } from '@lucide/svelte';
@@ -37,10 +38,6 @@
 		isValid = form.checkValidity();
 	}
 
-	let hasChanged = $derived.by(
-		() => JSON.stringify(mqttConfig) !== JSON.stringify(savedMqttConfig)
-	);
-
 	onMount(() => {
 		isValid = form.checkValidity();
 	});
@@ -57,10 +54,28 @@
 		};
 	});
 
+	const hasChanged = $derived.by(() => {
+		if (!savedMqttConfig || !mqttConfig) {
+			return false;
+		}
+
+		return createPatch(savedMqttConfig, mqttConfig) !== undefined;
+	});
+
 	async function saveChanges() {
+		if (!savedMqttConfig) {
+			return;
+		}
+
+		const patch = createPatch(savedMqttConfig, mqttConfig);
+
+		if (!patch) {
+			return;
+		}
+
 		showLoading('Saving MQTT configuration...');
 		try {
-			await updateMqttConfig(mqttConfig);
+			await updateMqttConfig(patch);
 			await mqttConfigQuery.refetch();
 		} catch {
 			showError('Failed to save MQTT configuration. Please try again.');
@@ -187,7 +202,7 @@
 						<input
 							class="grow"
 							type={showPassword ? 'text' : 'password'}
-							placeholder="Enter password"
+							placeholder={mqttConfig.hasPassword ? 'Password is configured' : 'Enter password'}
 							bind:value={mqttConfig.password}
 						/>
 					</label>
@@ -204,6 +219,12 @@
 						{/if}
 					</button>
 				</div>
+
+				{#if mqttConfig.hasPassword && mqttConfig.password === ''}
+					<span class="mt-1 text-xs text-base-content/60">
+						A password is already configured. Leave this field empty to keep the current password.
+					</span>
+				{/if}
 			</div>
 
 			<div class="flex items-center justify-between">

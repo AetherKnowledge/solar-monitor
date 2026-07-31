@@ -7,7 +7,7 @@
 #include <Update/UpdateHandler.h>
 
 namespace UpdateApi {
-    void registerApi(PsychicHttpServer& server) {
+    void registerRoutes(PsychicHttpServer& server) {
         server.on("/api/update/status", HTTP_GET, handleGetStatus);
 
         auto* firmwareUploadHandler = new PsychicUploadHandler();

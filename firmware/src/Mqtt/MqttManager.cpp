@@ -109,8 +109,8 @@ namespace MqttManager {
         mqttClient.loop();
     }
 
-    bool requestUpdate(const MQTTConfig& newConfig) {
-        ConfigManager::config.mqtt = newConfig;
+    bool requestUpdate(const JsonVariant& json) {
+        ConfigManager::config.mqtt.fromJson(json);
         ConfigManager::save();
         reload();
 

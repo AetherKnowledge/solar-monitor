@@ -6,6 +6,7 @@
 #include <Networking/WifiMode.h>
 #include <WiFiType.h>
 #include <vector>
+#include "Common/Enum.h"
 
 struct NetworkConfig {
     WiFiMode_t mode = WiFiMode_t::WIFI_MODE_APSTA;
@@ -19,22 +20,31 @@ struct NetworkConfig {
         return "Mode: " + String(mode) + "\nSSID: " + wifiSsid + "\nPassword: ***";
     }
 
-    void toJson(JsonObject json) const {
+    void toJson(JsonObject json, bool withPassword = false) const {
         json["mode"] = Enum::toString(mode);
         json["wifiSsid"] = wifiSsid;
-        json["wifiPassword"] = wifiPassword;
+
         json["apSsid"] = apSsid;
-        json["apPassword"] = apPassword;
         json["apPasswordEnabled"] = apPasswordEnabled;
+
+        if (withPassword) {
+            json["wifiPassword"] = wifiPassword;
+            json["apPassword"] = apPassword;
+        } else {
+            json["hasWifiPassword"] = !wifiPassword.isEmpty();
+            json["hasApPassword"] = !apPassword.isEmpty();
+            json["wifiPassword"] = "";
+            json["apPassword"] = "";
+        }
     }
 
     void fromJson(JsonObjectConst json) {
-        mode = Enum::fromString<WiFiMode_t>(json["mode"] | "ap+sta");
-        wifiSsid = json["wifiSsid"] | "";
-        wifiPassword = json["wifiPassword"] | "";
-        apSsid = json["apSsid"] | "";
-        apPassword = json["apPassword"] | "";
-        apPasswordEnabled = json["apPasswordEnabled"] | false;
+        mode = Enum::fromString<WiFiMode_t>(json["mode"] | Enum::toString(mode));
+        wifiSsid = json["wifiSsid"] | wifiSsid;
+        wifiPassword = json["wifiPassword"] | wifiPassword;
+        apSsid = json["apSsid"] | apSsid;
+        apPassword = json["apPassword"] | apPassword;
+        apPasswordEnabled = json["apPasswordEnabled"] | apPasswordEnabled;
     }
 };
 
@@ -55,26 +65,33 @@ struct MQTTConfig {
                "\nAuto Discovery Prefix: " + autoDiscoveryPrefix + "\nClient ID: " + clientId;
     }
 
-    void toJson(JsonObject json) const {
+    void toJson(JsonObject json, bool withPassword = false) const {
         json["enabled"] = enabled;
         json["host"] = host;
         json["port"] = port;
         json["username"] = username;
-        json["password"] = password;
+
+        if (withPassword) {
+            json["password"] = password;
+        } else {
+            json["hasPassword"] = !password.isEmpty();
+            json["password"] = "";
+        }
+
         json["autoDiscoveryEnabled"] = autoDiscoveryEnabled;
         json["autoDiscoveryPrefix"] = autoDiscoveryPrefix;
         json["clientId"] = clientId;
     }
 
     void fromJson(JsonObjectConst json) {
-        enabled = json["enabled"] | false;
-        host = json["host"] | "";
-        port = json["port"] | 1883;
-        username = json["username"] | "";
-        password = json["password"] | "";
-        autoDiscoveryEnabled = json["autoDiscoveryEnabled"] | false;
-        autoDiscoveryPrefix = json["autoDiscoveryPrefix"] | "";
-        clientId = json["clientId"] | "";
+        enabled = json["enabled"] | enabled;
+        host = json["host"] | host;
+        port = json["port"] | port;
+        username = json["username"] | username;
+        password = json["password"] | password;
+        autoDiscoveryEnabled = json["autoDiscoveryEnabled"] | autoDiscoveryEnabled;
+        autoDiscoveryPrefix = json["autoDiscoveryPrefix"] | autoDiscoveryPrefix;
+        clientId = json["clientId"] | clientId;
     }
 };
 
@@ -97,9 +114,9 @@ struct Config {
         return nullptr;
     }
 
-    void toJson(JsonObject json) const {
-        network.toJson(json["network"].to<JsonObject>());
-        mqtt.toJson(json["mqtt"].to<JsonObject>());
+    void toJson(JsonObject json, bool withPassword = false) const {
+        network.toJson(json["network"].to<JsonObject>(), withPassword);
+        mqtt.toJson(json["mqtt"].to<JsonObject>(), withPassword);
 
         serializeVector(json["modbusDevices"], modbusDevices);
     }

@@ -5,13 +5,25 @@ import type {
 	ReadRegister,
 	SelectWriteRegister,
 	VirtualSensor
-} from './DeviceTypes';
+} from '../devices/DeviceTypes';
 
 type RegisterEntity = ReadRegister | VirtualSensor | SelectWriteRegister | NumberWriteRegister;
 
 export type Patch<T> = {
 	[K in keyof T]?: T[K] extends object ? Patch<T[K]> : T[K];
 };
+
+export function createPatch<T extends object>(original: T, current: T): Patch<T> | undefined {
+	const patch: Patch<T> = {};
+
+	for (const key in current) {
+		if (Object.is(original[key], current[key])) continue;
+
+		patch[key] = current[key] as Patch<T>[typeof key];
+	}
+
+	return Object.keys(patch).length ? patch : undefined;
+}
 
 export function createDevicePatch(
 	original: ModbusDevice,

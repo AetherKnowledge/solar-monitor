@@ -5,7 +5,7 @@
 #include <Common/Logger.h>
 
 namespace MqttApi {
-    void registerApi(PsychicHttpServer& server) {
+    void registerRoutes(PsychicHttpServer& server) {
         server.on("/api/mqtt/config", HTTP_GET, handleGetConfig);
 
         server.on("/api/mqtt/config", HTTP_POST, handleUpdateConfig);
@@ -23,11 +23,7 @@ namespace MqttApi {
     esp_err_t handleUpdateConfig(PsychicRequest* request,
                                  PsychicResponse* response,
                                  JsonVariant& json) {
-        MQTTConfig newConfig;
-        newConfig.fromJson(json);
-
-        MqttManager::requestUpdate(newConfig);
-
+        MqttManager::requestUpdate(json);
         return Response::success(response, 202, "OK");
     }
 }  // namespace MqttApi

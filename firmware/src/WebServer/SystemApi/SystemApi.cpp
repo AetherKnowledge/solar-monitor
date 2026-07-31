@@ -4,7 +4,7 @@
 #include <Common/Logger.h>
 
 namespace SystemApi {
-    void registerApi(PsychicHttpServer& server) {
+    void registerRoutes(PsychicHttpServer& server) {
         server.on("/api/system/restart", HTTP_POST, handleRestartRequest);
 
         server.on("/api/system", HTTP_GET, handleGetSystemData);

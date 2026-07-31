@@ -24,7 +24,7 @@ namespace NetworkManager {
     void loop();
     void startScanning();
     void pollNetworkScan();
-    void requestUpdate(NetworkConfig& newConfig);
+    void requestUpdate(const JsonVariantConst& json);
     uint8_t rssiToWifiStrength(int8_t rssi);
     const NetworkStatus& getNetworkStatus();
 }  // namespace NetworkManager

@@ -3,8 +3,8 @@ import { UpdateStatus, type SimpleResponse } from '$lib/common/CommonTypes';
 import { hidePopup, showError, showLoading, showSuccess } from '$lib/popup/Popup.svelte';
 import { createQuery } from '@tanstack/svelte-query';
 import { onMount } from 'svelte';
+import { createDevicePatch, type Patch } from '../common/Patcher.svelte';
 import { RegisterType, type ModbusDevice, type ModbusDeviceInfo } from './DeviceTypes';
-import { createDevicePatch, type Patch } from './Patcher.svelte';
 
 export type ModbusDevices = {
 	devices: ModbusDeviceInfo[];

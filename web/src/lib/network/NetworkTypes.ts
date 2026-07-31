@@ -22,16 +22,20 @@ export type NetworkConfig = {
 	mode: WifiMode;
 	wifiSsid?: string;
 	wifiPassword?: string;
+	hasWifiPassword: boolean;
 	apSsid?: string;
 	apPasswordEnabled?: boolean;
 	apPassword?: string;
+	hasApPassword: boolean;
 };
 
 export const defaultNetworkConfig: NetworkConfig = {
 	mode: WifiMode.AP_STA,
 	wifiSsid: '',
 	wifiPassword: '',
+	hasWifiPassword: false,
 	apSsid: '',
 	apPassword: '',
+	hasApPassword: false,
 	apPasswordEnabled: false
 };

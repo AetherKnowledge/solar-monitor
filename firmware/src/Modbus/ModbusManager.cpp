@@ -93,7 +93,7 @@ namespace ModbusManager {
         }
     }
 
-    void requestUpdate(const String& id, JsonVariantConst json) {
+    void requestUpdate(const String& id, const JsonVariantConst& json) {
         pendingUpdate.emplace();
 
         pendingUpdate->identifier = id;

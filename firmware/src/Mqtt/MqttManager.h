@@ -17,7 +17,7 @@ namespace MqttManager {
 
     bool publish(const String& topic, const String& payload, bool retain = true);
     bool publish(const String& topic, const JsonDocument& payload, bool retain = true);
-    bool requestUpdate(const MQTTConfig& newConfig);
+    bool requestUpdate(const JsonVariant& json);
 
     void publishAll();
     void subscribeAll();

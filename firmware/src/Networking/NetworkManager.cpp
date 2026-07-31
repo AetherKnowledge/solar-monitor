@@ -167,9 +167,10 @@ namespace NetworkManager {
         return status;
     }
 
-    void requestUpdate(NetworkConfig& newConfig) {
-        pendingConfig = newConfig;
-        ConfigManager::save();
+    void requestUpdate(const JsonVariantConst& json) {
+        pendingConfig = ConfigManager::config.network;
+        pendingConfig.fromJson(json);
+
         updateStatus = UpdateStatus::Requested;
 
         Log.println("\nNetwork configuration updating");

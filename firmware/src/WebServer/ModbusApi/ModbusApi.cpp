@@ -10,7 +10,7 @@
 #include <algorithm>
 
 namespace ModbusApi {
-    void registerApi(PsychicHttpServer& server) {
+    void registerRoutes(PsychicHttpServer& server) {
         server.on("/api/modbus/devices/status", HTTP_GET, handleGetStatus);
 
         server.on("/api/modbus/devices",

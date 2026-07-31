@@ -9,7 +9,7 @@ namespace ConfigApi {
     File uploadFile;
     bool uploadFailed = false;
 
-    void registerApi(PsychicHttpServer& server) {
+    void registerRoutes(PsychicHttpServer& server) {
         server.on("/api/config", HTTP_GET, handleGetConfig);
 
         auto* uploadHandler = new PsychicUploadHandler();

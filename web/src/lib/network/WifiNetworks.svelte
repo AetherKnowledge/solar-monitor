@@ -82,21 +82,23 @@
 		refreshNetworks();
 	});
 
-	const selectedNetwork = $derived.by(() => networks.find((n) => n.ssid === networkConfig.wifiSsid));
+	const selectedNetwork = $derived.by(() =>
+		networks.find((n) => n.ssid === networkConfig.wifiSsid)
+	);
 </script>
 
-<fieldset class="fieldset bg-base-100 border border-base-300 rounded-box p-4 gap-5">
+<fieldset class="fieldset gap-5 rounded-box border border-base-300 bg-base-100 p-4">
 	<legend class="fieldset-legend">Wifi Networks</legend>
 
 	<div class="flex flex-col">
 		<div class="flex flex-col">
 			<span class="font-medium">Wi-Fi Network</span>
-			<span class="text-base-content/50 text-sm">
+			<span class="text-sm text-base-content/50">
 				Select the wireless network the device will connect to.
 			</span>
 		</div>
 		<div class="join pb-2" style="anchor-name:--anchor-1">
-			<label class="input w-full join-item">
+			<label class="input join-item w-full">
 				<Wifi class="size-4 opacity-60" />
 				<input
 					value={selectedNetwork?.ssid || networkConfig.wifiSsid || ''}
@@ -113,14 +115,14 @@
 				</div>
 			</label>
 			<button
-				class="btn btn-outline border-base-content/20 join-item w-15"
+				class="btn join-item w-15 border-base-content/20 btn-outline"
 				type="button"
 				popovertarget="popover-1"
 			>
 				<ChevronDown />
 			</button>
 			<ul
-				class="dropdown dropdown-end menu w-200 rounded-box bg-base-100 shadow-sm p-2"
+				class="menu dropdown dropdown-end w-200 rounded-box bg-base-100 p-2 shadow-sm"
 				bind:this={popover}
 				popover
 				id="popover-1"
@@ -131,15 +133,15 @@
 				class:dropdown-open={open}
 			>
 				<li class="w-full py-2">
-					<div class="join gap-0 p-0 bg-base-100">
-						<label class="input w-full join-item">
+					<div class="join gap-0 bg-base-100 p-0">
+						<label class="input join-item w-full">
 							<Search class="size-4 opacity-60" />
 							<input bind:value={searchInput} type="search" placeholder="Search" />
 						</label>
 
 						<button
 							type="button"
-							class="btn btn-outline border-base-content/20 join-item w-15"
+							class="btn join-item w-15 border-base-content/20 btn-outline"
 							onclick={refreshNetworks}
 						>
 							<RefreshCcw class="size-4" />
@@ -148,7 +150,7 @@
 				</li>
 				{#if status === UpdateStatus.InProgress}
 					<li class="menu-disabled flex flex-col items-center gap-2 py-4">
-						<span class="loading loading-spinner loading-xl text-base-content">wew</span>
+						<span class="loading loading-xl loading-spinner text-base-content">wew</span>
 						<span>Loading</span>
 					</li>
 				{:else if filtered.length === 0}
@@ -168,18 +170,20 @@
 		<div class="flex flex-col">
 			<div class="flex flex-col">
 				<span class="font-medium">Wi-Fi Password</span>
-				<span class="text-base-content/50 text-sm">
+				<span class="text-sm text-base-content/50">
 					Enter the password for the selected Wi-Fi network.
 				</span>
 			</div>
 			<div class="join">
-				<label class="input w-full join-item">
+				<label class="input join-item w-full">
 					<KeyRound class="size-4 opacity-60" />
 
 					<input
 						class="grow"
 						type={showPassword ? 'text' : 'password'}
-						placeholder="Enter Wi-Fi password"
+						placeholder={networkConfig.hasWifiPassword
+							? 'Password is configured'
+							: 'Enter Wi-Fi password'}
 						required
 						bind:value={networkConfig.wifiPassword}
 					/>
@@ -187,7 +191,7 @@
 
 				<button
 					type="button"
-					class="btn btn-outline border-base-content/20 join-item w-15"
+					class="btn join-item w-15 border-base-content/20 btn-outline"
 					onclick={() => (showPassword = !showPassword)}
 				>
 					{#if showPassword}
@@ -197,6 +201,11 @@
 					{/if}
 				</button>
 			</div>
+			{#if networkConfig.hasWifiPassword && networkConfig.wifiPassword === ''}
+				<span class="mt-1 text-xs text-base-content/60">
+					A password is already configured. Leave this field empty to keep the current password.
+				</span>
+			{/if}
 		</div>
 	{/if}
 </fieldset>
@@ -216,13 +225,13 @@
 						{network.ssid}
 					</div>
 
-					<div class="flex gap-1 mt-1">
+					<div class="mt-1 flex gap-1">
 						{#if networkConfig.wifiSsid === network.ssid}
-							<div class="badge badge-success badge-xs">Connected</div>
+							<div class="badge badge-xs badge-success">Connected</div>
 						{/if}
 
 						{#if network.saved}
-							<div class="badge badge-info badge-xs">Saved</div>
+							<div class="badge badge-xs badge-info">Saved</div>
 						{/if}
 					</div>
 				</div>
@@ -242,5 +251,5 @@
 {#snippet SignalIcon(rssi: number)}
 	{@const Icon = signalIcon(rssi)}
 
-	<Icon class="size-4 opacity-70 text-green-500" />
+	<Icon class="size-4 text-green-500 opacity-70" />
 {/snippet}

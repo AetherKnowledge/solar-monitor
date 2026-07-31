@@ -7,7 +7,7 @@
 #include <Common/Logger.h>
 
 namespace NetworkApi {
-    void registerApi(PsychicHttpServer& server) {
+    void registerRoutes(PsychicHttpServer& server) {
         server.on("/api/network/wifinetworks", HTTP_GET, handleGetNetworks);
 
         server.on("/api/network/wifinetworks/scan", HTTP_POST, handleScanNetworks);
@@ -49,11 +49,7 @@ namespace NetworkApi {
     esp_err_t handleUpdateConfig(PsychicRequest* request,
                                  PsychicResponse* response,
                                  JsonVariant& json) {
-        NetworkConfig newConfig;
-        newConfig.fromJson(json);
-
-        NetworkManager::requestUpdate(newConfig);
-
+        NetworkManager::requestUpdate(json);
         return Response::success(response, 202, "OK");
     }
 }  // namespace NetworkApi
