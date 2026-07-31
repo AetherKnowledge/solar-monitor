@@ -63,7 +63,7 @@
 	});
 
 	async function saveChanges() {
-		if (!savedMqttConfig) {
+		if (!savedMqttConfig || !mqttConfig) {
 			return;
 		}
 

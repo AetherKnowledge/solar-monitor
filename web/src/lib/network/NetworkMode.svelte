@@ -84,7 +84,7 @@
 				<DataInput
 					label="Access Point Password"
 					placeholder={networkConfig.hasApPassword ? 'Password is configured' : 'Enter AP password'}
-					required
+					required={networkConfig.hasApPassword ? false : true}
 					type="password"
 					icon={Lock}
 					bind:value={networkConfig.apPassword}

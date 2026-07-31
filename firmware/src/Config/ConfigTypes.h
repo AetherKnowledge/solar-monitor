@@ -8,6 +8,27 @@
 #include <vector>
 #include "Common/Enum.h"
 
+struct SiteConfig {
+    bool passwordEnabled = false;
+    String password = "";
+
+    void toJson(JsonObject json, bool withPassword = false) const {
+        json["passwordEnabled"] = passwordEnabled;
+
+        if (withPassword) {
+            json["password"] = password;
+        } else {
+            json["hasPassword"] = !password.isEmpty();
+            json["password"] = "";
+        }
+    }
+
+    void fromJson(JsonObjectConst json) {
+        passwordEnabled = json["passwordEnabled"] | passwordEnabled;
+        password = json["password"] | password;
+    }
+};
+
 struct NetworkConfig {
     WiFiMode_t mode = WiFiMode_t::WIFI_MODE_APSTA;
     String wifiSsid = "SolarMonitor";
@@ -96,6 +117,7 @@ struct MQTTConfig {
 };
 
 struct Config {
+    SiteConfig site;
     NetworkConfig network;
     MQTTConfig mqtt;
     std::vector<ModbusDevice> modbusDevices;

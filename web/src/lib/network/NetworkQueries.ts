@@ -1,5 +1,6 @@
 import { apiFetch } from '$lib/common/CommonFunctions';
 import { UpdateStatus, type SimpleResponse, type WithUpdateStatus } from '$lib/common/CommonTypes';
+import type { Patch } from '$lib/common/Patcher.svelte';
 import { type ScanRequestResponse } from '$lib/network/NetworkTypes';
 import { createQuery } from '@tanstack/svelte-query';
 import type { NetworkConfig } from './NetworkTypes';
@@ -51,12 +52,12 @@ export function createNetworkConfigQuery() {
 	}));
 }
 
-export async function updateNetworkConfig(config: NetworkConfig) {
+export async function updateNetworkConfig(patch: Patch<NetworkConfig>): Promise<void> {
 	await apiFetch<SimpleResponse>(`/api/network/config`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		body: JSON.stringify(config)
+		body: JSON.stringify(patch)
 	});
 }

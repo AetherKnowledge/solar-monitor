@@ -9,6 +9,7 @@
 <svelte:head>
 	<link rel="icon" href={favicon} />
 	<link rel="preload" href="/roboto.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+	<title>Solar Monitor</title>
 </svelte:head>
 
 {@render children()}

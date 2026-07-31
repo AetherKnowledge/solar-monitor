@@ -184,7 +184,7 @@
 						placeholder={networkConfig.hasWifiPassword
 							? 'Password is configured'
 							: 'Enter Wi-Fi password'}
-						required
+						required={networkConfig.hasWifiPassword ? false : true}
 						bind:value={networkConfig.wifiPassword}
 					/>
 				</label>
