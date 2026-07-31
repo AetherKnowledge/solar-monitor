@@ -6,12 +6,19 @@
 #include <Common/UpdateStatus.h>
 #include <optional>
 #include "SignatureHandler.h"
+#include <Common/Enum.h>
 
 namespace UpdateHandler {
     struct UpdateProgress {
         UpdateStatus status;
         uint8_t progress;
         bool hasTotalSize;
+
+        void toJson(JsonObject json) const {
+            json["status"] = Enum::toString(status);
+            json["progress"] = progress;
+            json["hasTotalSize"] = hasTotalSize;
+        }
     };
 
     struct UpdateRequest {

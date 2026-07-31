@@ -1,6 +1,6 @@
 import { apiFetch } from '$lib/common/CommonFunctions';
 import { UpdateStatus, type SimpleResponse } from '$lib/common/CommonTypes';
-import { hidePopup, showLoading } from '$lib/popup/Popup.svelte';
+import { hidePopup, showError, showLoading, showSuccess } from '$lib/popup/Popup.svelte';
 import { createQuery } from '@tanstack/svelte-query';
 import { onMount } from 'svelte';
 import { RegisterType, type ModbusDevice, type ModbusDeviceInfo } from './DeviceTypes';
@@ -72,6 +72,7 @@ export function createDeviceController(deviceId: string) {
 	}));
 
 	const savedDevice = $derived(query.data);
+	let hasUpdated: boolean = $state(false);
 
 	const deviceState = $state({
 		device: undefined as ModbusDevice | undefined,
@@ -98,10 +99,16 @@ export function createDeviceController(deviceId: string) {
 			statusQuery.data?.updateStatus === UpdateStatus.InProgress ||
 			statusQuery.data?.updateStatus === UpdateStatus.Requested
 		) {
+			hasUpdated = true;
 			showLoading('Updating device configuration...');
-		} else {
+		} else if (statusQuery.data?.updateStatus === UpdateStatus.UpdateComplete && hasUpdated) {
+			showSuccess('Update completed successfully.');
 			query.refetch();
-			hidePopup();
+			hasUpdated = false;
+		} else if (statusQuery.data?.updateStatus === UpdateStatus.UpdateFailed && hasUpdated) {
+			showError('Update failed. Please try again.');
+			cancel();
+			hasUpdated = false;
 		}
 	});
 
@@ -154,6 +161,8 @@ export function createDeviceController(deviceId: string) {
 		}
 
 		await updateDeviceConfig(savedDevice.device.discovery.identifier, patch);
+
+		showLoading('Updating device configuration...');
 		await statusQuery.refetch();
 	}
 

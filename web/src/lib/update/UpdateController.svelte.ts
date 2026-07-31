@@ -1,6 +1,14 @@
 import { apiFetch } from '$lib/common/CommonFunctions';
+import { UpdateStatus } from '$lib/common/CommonTypes';
+import { showError, showLoading, showSuccess } from '$lib/popup/Popup.svelte';
 import { createQuery } from '@tanstack/svelte-query';
 import { onMount } from 'svelte';
+
+export type UpdateProgress = {
+	status: UpdateStatus;
+	progress: number;
+	hasTotalSize: boolean;
+};
 
 export type ReleaseAsset = {
 	version: string;
@@ -29,7 +37,7 @@ export const latestVersion = $state<VersionApiResponse>({
 });
 
 export function createUpdateController() {
-	const query = createQuery<VersionApiResponse>(() => ({
+	const versionQuery = createQuery<VersionApiResponse>(() => ({
 		queryKey: ['version'],
 		queryFn: async () => apiFetch(`/api/version`),
 		initialData: {
@@ -41,12 +49,51 @@ export function createUpdateController() {
 		staleTime: 0
 	}));
 
+	const statusQuery = createQuery<UpdateProgress>(() => ({
+		queryKey: ['updateStatus'],
+		queryFn: async () => apiFetch(`/api/update/status`),
+		initialData: { status: UpdateStatus.NotStarted, progress: 0, hasTotalSize: false },
+		initialDataUpdatedAt: Date.now(),
+		staleTime: 0,
+		refetchInterval: (query) => {
+			const status = query.state.data?.status;
+			if (status === UpdateStatus.InProgress || status === UpdateStatus.Requested) {
+				return 1000;
+			}
+		}
+	}));
+
+	let hasUpdated: boolean = $state(false);
+
+	$effect(() => {
+		// let the manual update do the loading progress
+		if (statusQuery.data?.hasTotalSize) {
+			return;
+		}
+
+		if (
+			statusQuery.data?.status === UpdateStatus.InProgress ||
+			statusQuery.data?.status === UpdateStatus.Requested
+		) {
+			hasUpdated = true;
+			showLoading('Updating device configuration...');
+		} else if (statusQuery.data?.status === UpdateStatus.UpdateComplete && hasUpdated) {
+			showSuccess('Update completed successfully.');
+			versionQuery.refetch();
+			hasUpdated = false;
+		} else if (statusQuery.data?.status === UpdateStatus.UpdateFailed && hasUpdated) {
+			showError('Update failed. Please try again.');
+			hasUpdated = false;
+		}
+	});
+
 	onMount(() => {
 		checkForUpdates();
 	});
 
 	return {
-		query
+		versionQuery,
+		statusQuery
 	};
 }
 

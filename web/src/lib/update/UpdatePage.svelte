@@ -28,7 +28,7 @@
 		updateWebsiteManual
 	} from './UpdateController.svelte';
 
-	const { query } = createUpdateController();
+	const controller = createUpdateController();
 
 	let checkingForUpdates = $state(false);
 	let firmwareFiles = $state<FileList>();
@@ -36,7 +36,7 @@
 
 	let newFirmwareFile = $derived(firmwareFiles?.[0] ?? null);
 	let newWebsiteFile = $derived(websiteFiles?.[0] ?? null);
-	let currentVersion = $derived(query.data);
+	let currentVersion = $derived(controller.versionQuery.data);
 
 	async function onCheckUpdate() {
 		if (checkingForUpdates) return;
@@ -46,7 +46,7 @@
 		checkingForUpdates = false;
 	}
 
-	async function onUpdateFirmware() {
+	async function onUpdateFirmwareManual() {
 		if (!newFirmwareFile) return;
 
 		if (
@@ -76,7 +76,7 @@
 		showSuccess('Firmware updated successfully.');
 	}
 
-	async function onUpdateWebsite() {
+	async function onUpdateWebsiteManual() {
 		if (!newWebsiteFile) return;
 
 		if (
@@ -104,6 +104,42 @@
 
 		websiteFiles = undefined;
 		showSuccess('Web interface updated successfully.');
+	}
+
+	async function onUpdateFirmware() {
+		if (
+			!(await showYesNo({
+				message:
+					'Are you sure you want to update the firmware? This will overwrite the existing firmware.',
+				hintText:
+					'This process is not reversible. Make sure to backup your config files before proceeding.',
+				warning: true
+			}))
+		) {
+			return;
+		}
+
+		showLoading('Updating firmware...');
+		await updateFirmware();
+		await controller.statusQuery.refetch();
+	}
+
+	async function onUpdateWebsite() {
+		if (
+			!(await showYesNo({
+				message:
+					'Are you sure you want to update the web interface? This will overwrite the existing files.',
+				hintText:
+					'This process is not reversible. Make sure to backup your config files before proceeding.',
+				warning: true
+			}))
+		) {
+			return;
+		}
+
+		showLoading('Updating web interface...');
+		await updateWebsite();
+		await controller.statusQuery.refetch();
 	}
 
 	onMount(() => {
@@ -154,9 +190,7 @@
 				currentVersion.firmware,
 				latestVersion.firmware,
 				'Download firmware',
-				() => {
-					updateFirmware();
-				}
+				onUpdateFirmware
 			)}
 
 			{@render versionCard(
@@ -165,9 +199,7 @@
 				currentVersion.website,
 				latestVersion.website,
 				'Download website',
-				() => {
-					updateWebsite();
-				}
+				onUpdateWebsite
 			)}
 		</div>
 
@@ -215,7 +247,7 @@
 				<button
 					class="btn mt-4 w-full btn-primary"
 					disabled={!newFirmwareFile}
-					onclick={onUpdateFirmware}
+					onclick={onUpdateFirmwareManual}
 				>
 					Upload Firmware
 				</button>
@@ -238,7 +270,7 @@
 				<button
 					class="btn mt-4 w-full btn-primary"
 					disabled={!newWebsiteFile}
-					onclick={onUpdateWebsite}
+					onclick={onUpdateWebsiteManual}
 				>
 					Upload Website
 				</button>

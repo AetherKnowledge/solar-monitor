@@ -151,7 +151,7 @@ namespace UpdateHandler {
 
         updateProgress.status = UpdateStatus::Requested;
         updateProgress.progress = 0;
-        updateProgress.hasTotalSize = true;
+        updateProgress.hasTotalSize = false;
 
         Log.printf("Starting %s update\n", name);
         Log.printf("%s size: %u bytes\n", name, request.size);
@@ -261,9 +261,6 @@ namespace UpdateHandler {
             }
 
             written += len;
-
-            updateProgress.progress = static_cast<uint8_t>((written * 100) / request.size);
-
             Log.printf("%s: %u / %u bytes\r", name, written, request.size);
         }
 
@@ -328,7 +325,6 @@ namespace UpdateHandler {
         }
 
         updateProgress.status = UpdateStatus::UpdateComplete;
-        updateProgress.progress = 100;
 
         Log.println(String(name) + " written successfully");
         Log.println("Restarting...");

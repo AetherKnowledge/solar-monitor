@@ -12,5 +12,6 @@ namespace UpdateApi {
                             size_t index,
                             size_t total,
                             bool isFirmware);
+    void handleGetStatus(AsyncWebServerRequest* request);
 
 }  // namespace UpdateApi

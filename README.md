@@ -1,68 +1,125 @@
 # Solar Monitor
 
-A lightweight, self-hosted solar inverter monitoring and management system for the **ESP32**, featuring a modern web interface built with **SvelteKit**. The frontend is compiled into static assets and served directly from the ESP32 using **LittleFS**, eliminating the need for an external web server while providing a fast and responsive user experience.
+> A lightweight, self-hosted monitoring and management system for Modbus-based solar inverters powered by the ESP32.
 
-The firmware communicates with Modbus devices, publishes data to MQTT with Home Assistant auto-discovery support, and allows configuration entirely through the web interface.
+Solar Monitor combines an ESP32 firmware with a modern SvelteKit web application, allowing you to monitor, configure, and manage your solar inverter entirely through a web browser.
 
-## Features
+The web interface is compiled into static assets and served directly from the ESP32 using LittleFS, eliminating the need for an external web server while providing a fast, responsive experience.
 
-- Modern, responsive web interface
-- Built with **SvelteKit**, **TypeScript**, **Tailwind CSS**, and **DaisyUI**
-- Served directly from ESP32 using **LittleFS**
-- Modbus RTU support for reading and writing device registers
-- MQTT publishing with Home Assistant MQTT Discovery
-- Virtual sensors using configurable mathematical expressions
-- Configurable polling intervals and serial communication settings
-- REST API for configuration and device management
-- Optimized for low memory usage and embedded systems
-- Designed with future WebSocket support for real-time updates
+---
 
-## Project Structure
+## ✨ Features
+
+### 🌐 Modern Web Interface
+
+- Responsive UI built with **SvelteKit**, **TypeScript**, **Tailwind CSS**, and **DaisyUI**
+- Served directly from the ESP32 using LittleFS
+- Fully browser-based configuration
+- Mobile-friendly design
+
+### 🔌 Modbus Support
+
+- Read and write Modbus RTU registers
+- Multiple serial device support
+- Configurable polling intervals
+- Adjustable serial communication settings
+
+### 📡 MQTT & Home Assistant
+
+- MQTT publishing
+- Home Assistant MQTT Discovery
+- Automatic entity creation
+- Configurable topics
+
+### 🧮 Virtual Sensors
+
+- Create calculated values using mathematical expressions
+- Persistent configuration
+- No firmware modifications required
+
+### 🔄 OTA Updates
+
+- Firmware updates from GitHub Releases
+- Website (LittleFS) updates
+- Version checking
+- SHA-256 integrity verification
+
+### ⚡ Lightweight
+
+- Optimized for embedded hardware
+- Low memory footprint
+- Self-contained deployment
+- No external backend required
+
+### 🚧 Future Plans
+
+- Real-time updates via WebSockets
+- Additional device support
+- Expanded diagnostics
+- More Home Assistant integrations
+
+---
+
+# 📸 Screenshots
+
+> _Coming soon_
+
+---
+
+# 📁 Project Structure
 
 ```text
 .
 ├── firmware/
 │   ├── src/
 │   ├── include/
-│   ├── data/              # Files uploaded to LittleFS
+│   ├── data/          # Files uploaded to LittleFS
 │   └── ...
-├── web/                   # SvelteKit frontend
-├── configs/               # Sample configuration files
+├── web/               # SvelteKit frontend
+├── configs/           # Example configurations
 └── README.md
 ```
 
-## Getting Started
+---
 
-### Clone the repository
+# 🚀 Getting Started
+
+## Clone the repository
 
 ```bash
 git clone https://github.com/AetherKnowledge/solar-monitor.git
 cd solar-monitor
 ```
 
-### Install frontend dependencies
+## Install dependencies
 
 ```bash
 npm install
 ```
 
-### Start the development server
+## Run the frontend
 
 ```bash
 npm run dev
 ```
 
-### Build the web interface
+## Build the web interface
 
 ```bash
 npm run build
 ```
 
-The compiled frontend will be placed in the firmware's LittleFS data directory and can be uploaded to the ESP32 filesystem.
+The compiled frontend will automatically be placed in the firmware's LittleFS data directory.
 
-## Sample Configuration
+---
 
-Example configuration files are provided in the **`configs/`** directory.
+# ⚙️ Configuration
+
+Example configuration files are available in:
+
+```text
+configs/
+```
 
 To use them:
 
@@ -72,11 +129,17 @@ To use them:
 firmware/data/config/
 ```
 
-2. Upload the contents of the `firmware/data` directory to the ESP32 using LittleFS.
+2. Upload the LittleFS filesystem:
 
-These sample configurations can be used as a starting point and modified to match your own hardware and inverter settings.
+```bash
+pio run -t uploadfs
+```
 
-## Flashing the ESP32
+Modify the sample configuration to match your inverter and hardware setup.
+
+---
+
+# 🔥 Flashing the ESP32
 
 Build the firmware:
 
@@ -90,15 +153,17 @@ Upload the firmware:
 pio run -t upload
 ```
 
-Upload the LittleFS filesystem:
+Upload the filesystem:
 
 ```bash
 pio run -t uploadfs
 ```
 
-## Technology Stack
+---
 
-### Firmware
+# 🛠 Technology Stack
+
+## Firmware
 
 - ESP32
 - Arduino Framework
@@ -109,27 +174,42 @@ pio run -t uploadfs
 - PubSubClient
 - ESPAsyncWebServer
 - TinyExpr
+- mbedTLS
 
-### Frontend
+## Frontend
 
 - SvelteKit
 - TypeScript
 - Vite
 - Tailwind CSS
 - DaisyUI
+- TanStack Query
 
-## Project Goals
+---
 
-This project aims to provide a modern, lightweight, and fully self-contained monitoring solution for Modbus-based solar inverters and other compatible devices.
+# 🏗 Project Goals
 
-The primary goals are:
+Solar Monitor aims to provide a modern and fully self-contained monitoring platform for Modbus-based solar inverters.
 
-- Simple configuration through a web interface
+Core goals include:
+
+- Simple browser-based configuration
 - Native Home Assistant integration
-- Efficient Modbus communication
-- Low memory and storage usage suitable for embedded hardware
-- Easy extensibility for additional devices, sensors, and integrations
+- Reliable Modbus communication
+- Lightweight firmware suitable for embedded systems
+- Easy extensibility for new devices and sensors
+- Secure OTA firmware and website updates
 
-## License
+---
 
-This project is released under the MIT License.
+# 🤝 Contributing
+
+Contributions, feature requests, and bug reports are welcome!
+
+If you encounter a bug or have an idea for an improvement, please open an issue or submit a pull request.
+
+---
+
+# 📄 License
+
+This project is licensed under the **MIT License**.

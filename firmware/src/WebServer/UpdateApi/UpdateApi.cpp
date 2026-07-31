@@ -1,18 +1,17 @@
 #include "UpdateApi.h"
 #include <Common/Network.h>
-#include <Update.h>
 #include <Update/UpdateHandler.h>
-#include <System/SystemManager.h>
 #include <Version.h>
 #include <WebServer/WebServer.h>
 #include <Common/Logger.h>
-#include <WiFiClientSecure.h>
-#include <HTTPClient.h>
 #include <Update/UpdateHandler.h>
-#include "ArduinoJson/Object/JsonObject.hpp"
 
 namespace UpdateApi {
     void registerApi(AsyncWebServer& server) {
+        server.on("/api/update/status", HTTP_GET, [](AsyncWebServerRequest* request) {
+            handleGetStatus(request);
+        });
+
         server.on(
             "/api/update/firmware/manual",
             HTTP_POST,
@@ -94,6 +93,12 @@ namespace UpdateApi {
         });
 
         Log.println("Update API registered");
+    }
+
+    void handleGetStatus(AsyncWebServerRequest* request) {
+        JsonDocument doc;
+        UpdateHandler::getUpdateProgress().toJson(doc.to<JsonObject>());
+        Response::sendJson(request, doc);
     }
 
     void handleGetVersion(AsyncWebServerRequest* request) {
