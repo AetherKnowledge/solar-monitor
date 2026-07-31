@@ -22,11 +22,15 @@ struct DeviceDiscovery {
             json["name"] = name;
     }
 
-    void fromJson(JsonObject json) {
-        identifier = json["identifier"] | "";
-        manufacturer = json["manufacturer"] | "";
-        model = json["model"] | "";
-        name = json["name"] | "";
+    void fromJson(JsonObject json, bool update = false) {
+        if (update) {
+            identifier = json["new_identifier"] | identifier;
+        } else {
+            identifier = json["identifier"] | identifier;
+        }
+        manufacturer = json["manufacturer"] | manufacturer;
+        model = json["model"] | model;
+        name = json["name"] | name;
     }
 };
 
@@ -41,7 +45,7 @@ struct Discovery {
     virtual const char* component() const = 0;
 
     virtual void toJson(JsonObject) const = 0;
-    virtual void fromJson(JsonObject) = 0;
+    virtual void fromJson(JsonObject, bool) = 0;
 };
 
 struct SensorDiscovery : Discovery {
@@ -73,14 +77,18 @@ struct SensorDiscovery : Discovery {
             json["icon"] = icon;
     }
 
-    void fromJson(JsonObject json) override {
-        uniqueId = json["unique_id"] | "";
+    void fromJson(JsonObject json, bool update = false) override {
+        if (update) {
+            uniqueId = json["new_unique_id"] | uniqueId;
+        } else {
+            uniqueId = json["unique_id"] | uniqueId;
+        }
         name = json["name"] | uniqueId;
 
-        deviceClass = json["device_class"] | "";
-        stateClass = json["state_class"] | "";
-        unitOfMeasurement = json["unit_of_measurement"] | "";
-        icon = json["icon"] | "";
+        deviceClass = json["device_class"] | deviceClass;
+        stateClass = json["state_class"] | stateClass;
+        unitOfMeasurement = json["unit_of_measurement"] | unitOfMeasurement;
+        icon = json["icon"] | icon;
     }
 };
 
@@ -101,11 +109,11 @@ struct ControlDiscovery : SensorDiscovery {
         json["qos"] = qos;
     }
 
-    void fromJson(JsonObject json) override {
-        SensorDiscovery::fromJson(json);
+    void fromJson(JsonObject json, bool update = false) override {
+        SensorDiscovery::fromJson(json, update);
 
-        commandTemplate = json["command_template"] | "";
-        qos = json["qos"] | 0;
+        commandTemplate = json["command_template"] | commandTemplate;
+        qos = json["qos"] | qos;
     }
 };
 
@@ -120,9 +128,9 @@ struct ValueDiscovery : ControlDiscovery {
             json["value_template"] = valueTemplate;
     }
 
-    void fromJson(JsonObject json) override {
-        ControlDiscovery::fromJson(json);
-        valueTemplate = json["value_template"] | "";
+    void fromJson(JsonObject json, bool update = false) override {
+        ControlDiscovery::fromJson(json, update);
+        valueTemplate = json["value_template"] | valueTemplate;
     }
 };
 
@@ -138,8 +146,8 @@ struct SelectDiscovery : ValueDiscovery {
         serializeVector(json["options"], options);
     }
 
-    void fromJson(JsonObject json) override {
-        ValueDiscovery::fromJson(json);
+    void fromJson(JsonObject json, bool update = false) override {
+        ValueDiscovery::fromJson(json, update);
         deserializeVector(json["options"], options);
     }
 };
@@ -163,13 +171,13 @@ struct NumberDiscovery : ValueDiscovery {
         json["mode"] = mode;
     }
 
-    void fromJson(JsonObject json) override {
-        ValueDiscovery::fromJson(json);
+    void fromJson(JsonObject json, bool update = false) override {
+        ValueDiscovery::fromJson(json, update);
 
-        min = json["min"] | 0;
-        max = json["max"] | 100;
-        step = json["step"] | 1;
-        mode = json["mode"] | "auto";
+        min = json["min"] | min;
+        max = json["max"] | max;
+        step = json["step"] | step;
+        mode = json["mode"] | mode;
     }
 };
 
@@ -182,7 +190,7 @@ struct ButtonDiscovery : ControlDiscovery {
         ControlDiscovery::toJson(json);
     }
 
-    void fromJson(JsonObject json) override {
-        ControlDiscovery::fromJson(json);
+    void fromJson(JsonObject json, bool update = false) override {
+        ControlDiscovery::fromJson(json, update);
     }
 };

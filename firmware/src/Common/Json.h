@@ -40,25 +40,38 @@ concept JsonArrayContainer = requires(std::remove_reference_t<T>& value) {
 };
 
 // Serialize
-template <typename T>
+struct DefaultSerializer {
+    template <typename T>
+    void operator()(const T& value, JsonObject obj) const {
+        value.toJson(obj);
+    }
+};
+
+template <typename T, typename Serializer = DefaultSerializer>
     requires(JsonPrimitive<T> || JsonSerializable<T>)
-inline void serializeVector(JsonArray parent, const std::vector<T>& vec) {
+inline void serializeVector(JsonArray parent,
+                            const std::vector<T>& vec,
+                            Serializer serializer = {}) {
     for (const auto& item : vec) {
         if constexpr (JsonPrimitive<T>) {
             parent.add(item);
-        } else if constexpr (requires { item.get(); }) {
-            item.get().toJson(parent.add<JsonObject>());
         } else {
-            item.toJson(parent.add<JsonObject>());
+            JsonObject obj = parent.add<JsonObject>();
+
+            if constexpr (requires { item.get(); }) {
+                serializer(item.get(), obj);
+            } else {
+                serializer(item, obj);
+            }
         }
     }
 }
 
-template <JsonArrayContainer V, typename T>
+template <JsonArrayContainer V, typename T, typename Serializer = DefaultSerializer>
     requires(JsonPrimitive<T> || JsonSerializable<T>)
-inline void serializeVector(V&& parent, const std::vector<T>& vec) {
+inline void serializeVector(V&& parent, const std::vector<T>& vec, Serializer serializer = {}) {
     JsonArray array = parent.template to<JsonArray>();
-    serializeVector(array, vec);
+    serializeVector(array, vec, serializer);
 }
 
 // Deserialize
@@ -122,5 +135,29 @@ static void addValues(JsonObject obj,
         }
 
         obj[key] = value.value;
+    }
+}
+
+template <JsonValueEntity T>
+void applyVector(JsonArray array, std::vector<T>& vec) {
+    for (JsonObject obj : array) {
+        JsonObject discovery = obj["discovery"];
+
+        // Existing identifier used to locate the entity.
+        String uniqueId = discovery["unique_id"];
+
+        auto it = std::find_if(vec.begin(), vec.end(), [&](const T& item) {
+            return item.getDiscovery().uniqueId == uniqueId;
+        });
+
+        if (it != vec.end()) {
+            // Update existing entity. fromJson(update=true) may rename it
+            // using discovery.new_unique_id.
+            it->fromJson(obj, true);
+        } else {
+            // New entity.
+            auto& item = vec.emplace_back();
+            item.fromJson(obj);
+        }
     }
 }

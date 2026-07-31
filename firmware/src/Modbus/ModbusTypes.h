@@ -39,11 +39,11 @@ struct Entity {
         getDiscovery().toJson(discoveryJson);
     }
 
-    virtual void fromJson(JsonObject json) {
-        displayIndex = json["displayIndex"] | -1;
+    virtual void fromJson(JsonObject json, bool update = false) {
+        displayIndex = json["displayIndex"] | displayIndex;
 
         JsonObject discoveryJson = json["discovery"].as<JsonObject>();
-        getDiscovery().fromJson(discoveryJson);
+        getDiscovery().fromJson(discoveryJson, update);
     }
 };
 
@@ -62,7 +62,7 @@ struct Register {
     }
 
     void fromJson(JsonObject json) {
-        address = json["address"].as<uint16_t>();
+        address = json["address"] | address;
     }
 };
 
@@ -84,9 +84,9 @@ struct ReadRegister : Register, Entity {
         json["signedValue"] = signedValue;
     }
 
-    void fromJson(JsonObject json) override {
+    void fromJson(JsonObject json, bool update = false) override {
         Register::fromJson(json);
-        Entity::fromJson(json);
+        Entity::fromJson(json, update);
 
         rounding = json["rounding"].as<uint8_t>();
         transform = Enum::fromString<RegisterTransform>(json["transform"] | "None");
@@ -129,8 +129,8 @@ struct VirtualSensor : Entity {
         json["rounding"] = rounding;
     }
 
-    void fromJson(JsonObject json) override {
-        Entity::fromJson(json);
+    void fromJson(JsonObject json, bool update = false) override {
+        Entity::fromJson(json, update);
 
         expression = json["expression"].as<String>();
         isPersistent = json["isPersistent"] | false;
@@ -157,9 +157,9 @@ struct WriteRegister : Register, ControlEntity {
         ControlEntity::toJson(json);
     }
 
-    void fromJson(JsonObject json) override {
+    void fromJson(JsonObject json, bool update = false) override {
         Register::fromJson(json);
-        ControlEntity::fromJson(json);
+        ControlEntity::fromJson(json, update);
     }
 };
 
@@ -257,6 +257,12 @@ struct ModbusDevice : Device {
     std::vector<SelectWriteRegister> selectWriteRegisters;
     std::vector<NumberWriteRegister> numberWriteRegisters;
 
+    struct InfoSerializer : DefaultSerializer {
+        void operator()(const ModbusDevice& device, JsonObject obj) const {
+            device.toInfo(obj);
+        }
+    };
+
     void forEachEntity(const std::function<void(Entity&)>& fn) override {
         for (auto& r : readRegisters) fn(r);
         for (auto& v : virtualSensors) fn(v);
@@ -312,21 +318,46 @@ struct ModbusDevice : Device {
         discovery.toJson(discoveryJson);
     }
 
-    void fromJson(JsonObject json) {
-        slaveId = json["slaveId"].as<uint8_t>();
-        timeout = json["timeout"].as<uint32_t>();
-        baudrate = json["baudrate"].as<uint32_t>();
-        port = json["port"].as<uint8_t>();
-        swapBytes = json["swapBytes"] | false;
-        mqttEnabled = json["mqttEnabled"] | true;
+    void toInfo(JsonObject json) const {
+        json["slaveId"] = slaveId;
+        json["timeout"] = timeout;
+        json["baudrate"] = baudrate;
+        json["port"] = port;
+        json["swapBytes"] = swapBytes;
+        json["mqttEnabled"] = mqttEnabled;
+        json["modbusConnected"] = modbusConnected;
+
+        JsonObject discoveryJson = json["discovery"].to<JsonObject>();
+        discovery.toJson(discoveryJson);
+
+        json["readRegisterCount"] = readRegisters.size();
+        json["virtualSensorCount"] = virtualSensors.size();
+        json["selectWriteRegisterCount"] = selectWriteRegisters.size();
+        json["numberWriteRegisterCount"] = numberWriteRegisters.size();
+    }
+
+    void fromJson(JsonObject json, bool update = false) {
+        slaveId = json["slaveId"] | slaveId;
+        timeout = json["timeout"] | timeout;
+        baudrate = json["baudrate"] | baudrate;
+        port = json["port"] | port;
+        swapBytes = json["swapBytes"] | swapBytes;
+        mqttEnabled = json["mqttEnabled"] | mqttEnabled;
 
         JsonObject discoveryJson = json["discovery"].as<JsonObject>();
-        discovery.fromJson(discoveryJson);
+        discovery.fromJson(discoveryJson, update);
 
-        deserializeVector(json["readRegisters"], readRegisters);
-        deserializeVector(json["virtualSensors"], virtualSensors);
-        deserializeVector(json["selectWriteRegisters"], selectWriteRegisters);
-        deserializeVector(json["numberWriteRegisters"], numberWriteRegisters);
+        if (update) {
+            applyVector(json["readRegisters"], readRegisters);
+            applyVector(json["virtualSensors"], virtualSensors);
+            applyVector(json["selectWriteRegisters"], selectWriteRegisters);
+            applyVector(json["numberWriteRegisters"], numberWriteRegisters);
+        } else {
+            deserializeVector(json["readRegisters"], readRegisters);
+            deserializeVector(json["virtualSensors"], virtualSensors);
+            deserializeVector(json["selectWriteRegisters"], selectWriteRegisters);
+            deserializeVector(json["numberWriteRegisters"], numberWriteRegisters);
+        }
 
         generateTopics();
     }

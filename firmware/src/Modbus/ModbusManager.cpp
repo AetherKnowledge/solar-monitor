@@ -1,4 +1,5 @@
 #include "ModbusManager.h"
+#include "ModbusTypes.h"
 #include "ReadRegisterManager.h"
 #include "VirtualSensorManager.h"
 #include <Config/ConfigManager.h>
@@ -12,7 +13,7 @@ namespace ModbusManager {
     std::set<int> portsInUse;
 
     volatile UpdateStatus updateStatus = UpdateStatus::NotStarted;
-    std::vector<ModbusDevice> pendingDevices;
+    std::optional<PendingUpdate> pendingUpdate;
 
     double pollDeltaSeconds = 0.0;
 
@@ -92,18 +93,31 @@ namespace ModbusManager {
         }
     }
 
-    void requestUpdate(const std::vector<ModbusDevice>& devices) {
-        pendingDevices = devices;
-        updateStatus = UpdateStatus::Requested;
+    void requestUpdate(const String& id, JsonVariantConst json) {
+        pendingUpdate.emplace();
 
-        Log.println("\nModbus configuration updating");
+        pendingUpdate->identifier = id;
+        pendingUpdate->patch.set(json);
+
+        updateStatus = UpdateStatus::Requested;
     }
 
-    void updateConfig(const std::vector<ModbusDevice>& devices) {
-        updateStatus = UpdateStatus::InProgress;
+    bool updateConfig(PendingUpdate& update) {
+        auto* device = ConfigManager::config.getDeviceById(update.identifier);
 
-        VirtualSensorManager::savePersistence(pendingDevices);
-        ConfigManager::config.modbusDevices = std::move(pendingDevices);
+        if (!device) {
+            Log.println("No pending device to update");
+            updateStatus = UpdateStatus::UpdateFailed;
+            return false;
+        }
+
+        Log.println("Updating Modbus device: " + update.identifier);
+
+        updateStatus = UpdateStatus::InProgress;
+        VirtualSensorManager::savePersistence(ConfigManager::config.modbusDevices);
+
+        device->fromJson(update.patch.as<JsonObject>(), true);
+
         ConfigManager::save();
         MqttManager::reload();
         ModbusManager::setup();
@@ -111,7 +125,7 @@ namespace ModbusManager {
         updateStatus = UpdateStatus::UpdateComplete;
         Log.print("Modbus configuration updated. New config: ");
         Log.println(ConfigManager::config.toString().c_str());
-        return;
+        return true;
     }
 
     void publishDisplayData() {
@@ -128,7 +142,12 @@ namespace ModbusManager {
 
     void loop() {
         if (updateStatus == UpdateStatus::Requested) {
-            updateConfig(pendingDevices);
+            if (pendingUpdate) {
+                updateConfig(*pendingUpdate);
+                pendingUpdate.reset();
+            } else {
+                updateStatus = UpdateStatus::UpdateFailed;
+            }
             return;
         }
 
@@ -226,22 +245,22 @@ namespace ModbusManager {
         }
     }
 
-    void getValues(JsonDocument& doc) {
-        for (const auto& device : ConfigManager::config.modbusDevices) {
-            JsonObject deviceJson = doc[device.discovery.identifier].to<JsonObject>();
-
-            JsonObject read = deviceJson["readRegisters"].to<JsonObject>();
-            addValues(read, device.readRegisters);
-
-            JsonObject virtuals = deviceJson["virtualSensors"].to<JsonObject>();
-            addValues(virtuals, device.virtualSensors);
-
-            JsonObject selects = deviceJson["selectWriteRegisters"].to<JsonObject>();
-            addValues(selects, device.selectWriteRegisters);
-
-            JsonObject numbers = deviceJson["numberWriteRegisters"].to<JsonObject>();
-            addValues(numbers, device.numberWriteRegisters);
+    void getValues(JsonDocument& doc, String& id) {
+        const ModbusDevice* device = ConfigManager::config.getDeviceById(id);
+        if (!device) {
+            return;
         }
+        JsonObject read = doc["readRegisters"].to<JsonObject>();
+        addValues(read, device->readRegisters);
+
+        JsonObject virtuals = doc["virtualSensors"].to<JsonObject>();
+        addValues(virtuals, device->virtualSensors);
+
+        JsonObject selects = doc["selectWriteRegisters"].to<JsonObject>();
+        addValues(selects, device->selectWriteRegisters);
+
+        JsonObject numbers = doc["numberWriteRegisters"].to<JsonObject>();
+        addValues(numbers, device->numberWriteRegisters);
     }
 
 }  // namespace ModbusManager

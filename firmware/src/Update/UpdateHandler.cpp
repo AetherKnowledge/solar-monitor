@@ -93,6 +93,7 @@ namespace UpdateHandler {
                 updateProgress.status = UpdateStatus::UpdateFailed;
 
                 Log.println("Failed to begin " + String(name) + " update");
+                Log.printf("Update error: %d\n", Update.getError());
                 Update.printError(Log);
                 return;
             }
@@ -103,6 +104,7 @@ namespace UpdateHandler {
             updateProgress.status = UpdateStatus::UpdateFailed;
 
             Log.println("Failed to write " + String(name) + " chunk");
+            Log.printf("Update error: %d\n", Update.getError());
             Update.printError(Log);
             return;
         }
@@ -191,6 +193,7 @@ namespace UpdateHandler {
 
         if (!Update.begin(request.size, partition)) {
             Log.println("Failed to begin update");
+            Log.printf("Update error: %d\n", Update.getError());
             Update.printError(Log);
 
             http.end();
@@ -235,6 +238,7 @@ namespace UpdateHandler {
 
             if (Update.write(buffer, len) != static_cast<size_t>(len)) {
                 Log.println("Failed to write update chunk");
+                Log.printf("Update error: %d\n", Update.getError());
                 Update.printError(Log);
 
                 Update.abort();
@@ -314,6 +318,7 @@ namespace UpdateHandler {
 
         if (!Update.end(true)) {
             Log.println("Failed to finish update");
+            Log.printf("Update error: %d\n", Update.getError());
             Update.printError(Log);
 
             Update.abort();

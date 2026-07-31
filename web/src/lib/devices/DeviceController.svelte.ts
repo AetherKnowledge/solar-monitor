@@ -1,72 +1,92 @@
 import { apiFetch } from '$lib/common/CommonFunctions';
 import { UpdateStatus, type SimpleResponse } from '$lib/common/CommonTypes';
-import { hidePopup, showError, showLoading } from '$lib/popup/Popup.svelte';
+import { hidePopup, showLoading } from '$lib/popup/Popup.svelte';
 import { createQuery } from '@tanstack/svelte-query';
 import { onMount } from 'svelte';
-import { RegisterType, type ModbusDevice } from './DeviceTypes';
+import { RegisterType, type ModbusDevice, type ModbusDeviceInfo } from './DeviceTypes';
+import { createDevicePatch, type Patch } from './Patcher.svelte';
 
 export type ModbusDevices = {
-	devices: ModbusDevice[];
-	updateStatus: UpdateStatus;
+	devices: ModbusDeviceInfo[];
+};
+
+export type ModbusDeviceQuery = {
+	device: ModbusDevice;
 };
 
 type RegisterValues = Record<string, number>;
 
-type ModbusValues = Record<
-	string,
-	{
-		readRegisters?: RegisterValues;
-		virtualSensors?: RegisterValues;
-		selectWriteRegisters?: RegisterValues;
-		numberWriteRegisters?: RegisterValues;
-	}
->;
-
-export const devicesState = $state({
-	devices: [] as ModbusDevice[],
-	initialized: false,
-	hasChanged: false
-});
+type ModbusValues = {
+	readRegisters?: RegisterValues;
+	virtualSensors?: RegisterValues;
+	selectWriteRegisters?: RegisterValues;
+	numberWriteRegisters?: RegisterValues;
+};
 
 export function createDevicesController() {
 	const query = createQuery<ModbusDevices>(() => ({
-		queryKey: ['devicesConfig'],
-		queryFn: async () => apiFetch(`/api/modbus/config`),
+		queryKey: ['devicesInfo'],
+		queryFn: async () => apiFetch(`/api/modbus/devices`)
+	}));
+
+	$effect(() => {
+		if (query.isPending) {
+			showLoading('Loading device configuration...');
+		} else {
+			hidePopup();
+		}
+	});
+
+	return {
+		query
+	};
+}
+
+export function createDeviceController(deviceId: string) {
+	const query = createQuery<ModbusDeviceQuery>(() => ({
+		queryKey: ['device-' + deviceId],
+		queryFn: async () => apiFetch(`/api/modbus/devices?id=${deviceId}`),
+		refetchInterval: 30000
+	}));
+
+	const statusQuery = createQuery<{ updateStatus: UpdateStatus }>(() => ({
+		queryKey: ['updateStatus'],
+		queryFn: async () => apiFetch(`/api/modbus/devices/status?id=${deviceId}`),
+		initialData: { updateStatus: UpdateStatus.NotStarted },
+		initialDataUpdatedAt: Date.now(),
+		staleTime: 0,
 		refetchInterval: (query) => {
 			const status = query.state.data?.updateStatus;
 			if (status === UpdateStatus.InProgress || status === UpdateStatus.Requested) {
-				return 1000; // Refetch every second while scanning
+				return 1000;
 			}
 		}
 	}));
 
 	const valuesQuery = createQuery<ModbusValues>(() => ({
-		queryKey: ['devicesValues'],
-		queryFn: async () => apiFetch(`/api/modbus/values`),
+		queryKey: ['device-' + deviceId + '-values'],
+		queryFn: async () => apiFetch(`/api/modbus/values?id=${deviceId}`),
 		refetchInterval: 5000,
 		initialDataUpdatedAt: Date.now(),
 		staleTime: 0
 	}));
 
-	const savedDevices = $derived(query.data?.devices || []);
+	const savedDevice = $derived(query.data);
 
-	$effect(() => {
-		devicesState.hasChanged = JSON.stringify(devicesState.devices) !== JSON.stringify(savedDevices);
+	const deviceState = $state({
+		device: undefined as ModbusDevice | undefined,
+		initialized: false
 	});
 
 	$effect(() => {
-		if (!devicesState.initialized && !query.isPending) {
-			devicesState.devices = [...savedDevices];
-			devicesState.initialized = true;
+		if (!deviceState.initialized && !query.isPending) {
+			deviceState.device = savedDevice?.device;
+			deviceState.initialized = true;
 		}
 	});
 
 	$effect(() => {
-		if (
-			query.isPending ||
-			query.data?.updateStatus === UpdateStatus.InProgress ||
-			query.data?.updateStatus === UpdateStatus.Requested
-		) {
+		if (query.isPending) {
 			showLoading('Loading device configuration...');
 		} else {
 			hidePopup();
@@ -74,39 +94,45 @@ export function createDevicesController() {
 	});
 
 	$effect(() => {
-		devicesState.devices.forEach((device) => {
-			device.readRegisters.forEach((register) => {
-				register.value = getDeviceValues(
-					valuesQuery.data || {},
-					device.discovery.identifier,
-					RegisterType.Read,
-					register.discovery.unique_id
-				);
-			});
-			device.virtualSensors.forEach((sensor) => {
-				sensor.value = getDeviceValues(
-					valuesQuery.data || {},
-					device.discovery.identifier,
-					RegisterType.Virtual,
-					sensor.discovery.unique_id
-				);
-			});
-			device.selectWriteRegisters.forEach((register) => {
-				register.value = getDeviceValues(
-					valuesQuery.data || {},
-					device.discovery.identifier,
-					RegisterType.Select,
-					register.discovery.unique_id
-				);
-			});
-			device.numberWriteRegisters.forEach((register) => {
-				register.value = getDeviceValues(
-					valuesQuery.data || {},
-					device.discovery.identifier,
-					RegisterType.Number,
-					register.discovery.unique_id
-				);
-			});
+		if (
+			statusQuery.data?.updateStatus === UpdateStatus.InProgress ||
+			statusQuery.data?.updateStatus === UpdateStatus.Requested
+		) {
+			showLoading('Updating device configuration...');
+		} else {
+			query.refetch();
+			hidePopup();
+		}
+	});
+
+	$effect(() => {
+		deviceState.device?.readRegisters.forEach((register) => {
+			register.value = getDeviceValues(
+				valuesQuery.data || {},
+				RegisterType.Read,
+				register.discovery.unique_id
+			);
+		});
+		deviceState.device?.virtualSensors.forEach((sensor) => {
+			sensor.value = getDeviceValues(
+				valuesQuery.data || {},
+				RegisterType.Virtual,
+				sensor.discovery.unique_id
+			);
+		});
+		deviceState.device?.selectWriteRegisters.forEach((register) => {
+			register.value = getDeviceValues(
+				valuesQuery.data || {},
+				RegisterType.Select,
+				register.discovery.unique_id
+			);
+		});
+		deviceState.device?.numberWriteRegisters.forEach((register) => {
+			register.value = getDeviceValues(
+				valuesQuery.data || {},
+				RegisterType.Number,
+				register.discovery.unique_id
+			);
 		});
 	});
 
@@ -117,35 +143,61 @@ export function createDevicesController() {
 	});
 
 	async function save() {
-		try {
-			await updateDevicesConfig(devicesState.devices);
-			await query.refetch();
-		} catch {
-			showError('Failed to save device configuration. Please try again.');
+		if (!savedDevice || !deviceState.device || !hasChanged) {
 			return;
 		}
+
+		const patch = createDevicePatch(savedDevice.device, deviceState.device);
+
+		if (!patch) {
+			return;
+		}
+
+		await updateDeviceConfig(savedDevice.device.discovery.identifier, patch);
+		await statusQuery.refetch();
 	}
 
 	async function cancel() {
-		if (savedDevices.length > 0) {
-			devicesState.devices = [...savedDevices];
+		if (savedDevice) {
+			deviceState.device = { ...savedDevice.device };
 		}
 	}
 
+	const hasChanged = $derived.by(() => {
+		if (!savedDevice || !deviceState.device) {
+			return false;
+		}
+
+		return createDevicePatch(savedDevice.device, deviceState.device) !== undefined;
+	});
+
 	return {
 		query,
+		get state() {
+			return deviceState;
+		},
+		set state(value) {
+			deviceState.device = value.device;
+			deviceState.initialized = value.initialized;
+		},
 		save,
-		cancel
+		cancel,
+		get hasChanged() {
+			return hasChanged;
+		}
 	};
 }
 
-export async function updateDevicesConfig(devices: ModbusDevice[]): Promise<boolean> {
-	return await apiFetch<SimpleResponse>(`/api/modbus/config`, {
+export async function updateDeviceConfig(
+	identifier: string,
+	patch: Patch<ModbusDevice>
+): Promise<boolean> {
+	return await apiFetch<SimpleResponse>(`/api/modbus/devices?id=${identifier}`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		body: JSON.stringify({ devices })
+		body: JSON.stringify(patch)
 	})
 		.then(() => true)
 		.catch(() => false);
@@ -153,24 +205,17 @@ export async function updateDevicesConfig(devices: ModbusDevice[]): Promise<bool
 
 function getDeviceValues(
 	values: ModbusValues,
-	deviceId: string,
 	registerType: RegisterType,
 	uniqueId: string
 ): number {
-	const deviceValues = values[deviceId];
-	if (!deviceValues) {
-		return 0;
-	}
-
 	switch (registerType) {
 		case RegisterType.Read:
-			return deviceValues.readRegisters?.[uniqueId] ?? 0;
+			return values.readRegisters?.[uniqueId] ?? 0;
 		case RegisterType.Virtual:
-			return deviceValues.virtualSensors?.[uniqueId] ?? 0;
+			return values.virtualSensors?.[uniqueId] ?? 0;
 		case RegisterType.Select:
-			return deviceValues.selectWriteRegisters?.[uniqueId] ?? 0;
+			return values.selectWriteRegisters?.[uniqueId] ?? 0;
 		case RegisterType.Number:
-			return deviceValues.numberWriteRegisters?.[uniqueId] ?? 0;
+			return values.numberWriteRegisters?.[uniqueId] ?? 0;
 	}
-	return 0;
 }

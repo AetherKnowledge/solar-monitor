@@ -116,8 +116,27 @@ export interface NumberWriteRegister extends Register {
 	discovery: NumberDiscovery;
 }
 
+export interface ModbusDeviceInfo {
+	mqttEnabled: boolean;
+	modbusConnected: boolean;
+
+	slaveId: number;
+	timeout: number;
+	baudrate: number;
+	port: number;
+	swapBytes: boolean;
+
+	discovery: DeviceDiscovery;
+
+	readRegisterCount: number;
+	virtualSensorCount: number;
+	selectWriteRegisterCount: number;
+	numberWriteRegisterCount: number;
+}
+
 export interface ModbusDevice {
 	mqttEnabled: boolean;
+	modbusConnected: boolean;
 
 	slaveId: number;
 	timeout: number;

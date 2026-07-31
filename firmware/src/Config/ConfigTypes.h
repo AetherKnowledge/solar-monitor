@@ -88,6 +88,15 @@ struct Config {
                String(mqtt.toString()) + "\nModbus Devices:\n" + String(modbusDevices.size());
     }
 
+    ModbusDevice* getDeviceById(const String& id) {
+        for (auto& device : modbusDevices) {
+            if (device.discovery.identifier == id) {
+                return &device;
+            }
+        }
+        return nullptr;
+    }
+
     void toJson(JsonObject json) const {
         network.toJson(json["network"].to<JsonObject>());
         mqtt.toJson(json["mqtt"].to<JsonObject>());

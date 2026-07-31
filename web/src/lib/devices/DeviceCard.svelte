@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import type { ModbusDevice } from '$lib/devices/DeviceTypes';
+	import type { ModbusDeviceInfo } from '$lib/devices/DeviceTypes';
 	import {
 		ArrowLeftRight,
 		Cable,
@@ -16,10 +16,14 @@
 	} from '@lucide/svelte';
 
 	type Props = {
-		device: ModbusDevice;
+		device: ModbusDeviceInfo;
 	};
 
 	const { device = $bindable() }: Props = $props();
+
+	$effect(() => {
+		console.log('DeviceCard device data:', device);
+	});
 </script>
 
 <div
@@ -109,7 +113,7 @@
 				</div>
 
 				<div class="stat-value text-lg">
-					{device.readRegisters.length}
+					{device.readRegisterCount}
 				</div>
 
 				<div class="stat-desc">Read Registers</div>
@@ -121,7 +125,7 @@
 				</div>
 
 				<div class="stat-value text-lg">
-					{device.virtualSensors.length}
+					{device.virtualSensorCount}
 				</div>
 
 				<div class="stat-desc">Virtual Sensors</div>
@@ -133,7 +137,7 @@
 				</div>
 
 				<div class="stat-value text-lg">
-					{device.selectWriteRegisters.length + device.numberWriteRegisters.length}
+					{device.selectWriteRegisterCount + device.numberWriteRegisterCount}
 				</div>
 
 				<div class="stat-desc">Write Registers</div>

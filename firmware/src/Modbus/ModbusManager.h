@@ -4,13 +4,20 @@
 #include <set>
 #include <vector>
 #include <Common/UpdateStatus.h>
+#include <optional>
 
 namespace ModbusManager {
+
+    struct PendingUpdate {
+        String identifier;
+        JsonDocument patch;
+    };
+
     extern bool hasStarted;
     extern std::set<int> portsInUse;
 
     extern volatile UpdateStatus updateStatus;
-    extern std::vector<ModbusDevice> pendingDevices;
+    extern std::optional<PendingUpdate> pendingUpdate;
     extern double pollDeltaSeconds;
 
     extern DisplayData currentDisplayData;
@@ -20,13 +27,13 @@ namespace ModbusManager {
     void pollDevice(ModbusDevice& device);
     void publishDisplayData();
     void reload();
-    void requestUpdate(const std::vector<ModbusDevice>& devices);
-    void updateConfig(const std::vector<ModbusDevice>& devices);
+    void requestUpdate(const String& id, JsonVariantConst json);
+    bool updateConfig(PendingUpdate& update);
     void setupDevices(std::vector<ModbusDevice>& devices);
 
     bool processReadRegisters(ModbusDevice& device, ReadGroup& group);
     void updateVirtualSensors(ModbusDevice& device);
-    void getValues(JsonDocument& doc);
+    void getValues(JsonDocument& doc, String& id);
 
     void reset();
 }  // namespace ModbusManager

@@ -3,58 +3,98 @@
 #include <Common/Network.h>
 #include <Common/Json.h>
 #include <Modbus/ModbusManager.h>
+#include "ArduinoJson/Json/JsonSerializer.hpp"
 #include "Common/Enum.h"
 #include <Common/Logger.h>
 #include <esp_heap_caps.h>
+#include <algorithm>
 
 namespace ModbusApi {
     void registerApi(AsyncWebServer& server) {
-        server.on("/api/modbus/config", HTTP_GET, [](AsyncWebServerRequest* request) {
-            handleGetConfig(request);
+        server.on("/api/modbus/devices/status", HTTP_GET, [](AsyncWebServerRequest* request) {
+            handleGetStatus(request);
+        });
+
+        server.on("/api/modbus/devices", HTTP_GET, [](AsyncWebServerRequest* request) {
+            if (!request->hasParam("id")) {
+                handleGetDevices(request);
+                return;
+            }
+
+            handleGetDevice(request, request->getParam("id")->value());
         });
 
         server.on("/api/modbus/values", HTTP_GET, [](AsyncWebServerRequest* request) {
-            handleGetValues(request);
+            if (!request->hasParam("id")) {
+                Response::error(request, 400, "Missing device id");
+                return;
+            }
+
+            handleGetValues(request, request->getParam("id")->value());
         });
 
         server.addHandler(new AsyncCallbackJsonWebHandler(
-            "/api/modbus/config", [](AsyncWebServerRequest* request, JsonVariant& json) {
-                handleUpdateConfig(request, json);
+            "/api/modbus/devices", [](AsyncWebServerRequest* request, JsonVariant& json) {
+                if (!request->hasParam("id")) {
+                    Response::error(request, 400, "Missing device id");
+                    return;
+                }
+
+                handleUpdateDevice(request, json, request->getParam("id")->value());
             }));
 
         Log.println("Modbus API registered");
     }
 
-    void handleGetConfig(AsyncWebServerRequest* request) {
+    void handleGetDevices(AsyncWebServerRequest* request) {
         JsonDocument doc;
 
-        serializeVector(doc["devices"], ConfigManager::config.modbusDevices);
-        doc["updateStatus"] = Enum::toString(ModbusManager::updateStatus);
+        serializeVector(
+            doc["devices"], ConfigManager::config.modbusDevices, ModbusDevice::InfoSerializer());
 
-        Log.println("Sending Modbus Config: " + String(ConfigManager::config.modbusDevices.size()) +
-                    " devices");
+        Log.println("Sending Modbus Devices: " +
+                    String(ConfigManager::config.modbusDevices.size()) + " devices");
 
         Response::sendJson(request, doc);
     }
 
-    void handleGetValues(AsyncWebServerRequest* request) {
+    void handleGetStatus(AsyncWebServerRequest* request) {
         JsonDocument doc;
-        ModbusManager::getValues(doc);
 
-        AsyncResponseStream* response = request->beginResponseStream("application/json");
-        serializeJson(doc, *response);
-        request->send(response);
+        doc["updateStatus"] = Enum::toString(ModbusManager::updateStatus);
+
+        Response::sendJson(request, doc);
     }
 
-    void handleUpdateConfig(AsyncWebServerRequest* request, JsonVariant& json) {
-        std::vector<ModbusDevice> devices;
-        deserializeVector(json["devices"], devices);
+    void handleGetDevice(AsyncWebServerRequest* request, String id) {
+        JsonDocument doc;
 
-        Log.println("Recieved Modbus Config: " + String(devices.size()) + " devices");
-        serializeJson(json, Log);
-        Log.println();
+        const ModbusDevice* device = ConfigManager::config.getDeviceById(id);
+        if (!device) {
+            Response::error(request, 404, "Device not found");
+            return;
+        }
+        device->toJson(doc["device"].to<JsonObject>());
 
-        ModbusManager::requestUpdate(devices);
+        Response::sendJson(request, doc);
+    }
+
+    void handleGetValues(AsyncWebServerRequest* request, String id) {
+        JsonDocument doc;
+        ModbusManager::getValues(doc, id);
+        Response::sendJson(request, doc);
+    }
+
+    void handleUpdateDevice(AsyncWebServerRequest* request, JsonVariant& json, String id) {
+        auto device = ConfigManager::config.getDeviceById(id);
+        if (!device) {
+            Response::error(request, 404, "Device not found");
+            return;
+        }
+
+        Log.println("Recieved Modbus Update for device: " + id);
+
+        ModbusManager::requestUpdate(id, json);
         Response::success(request, 202, "OK");
     }
 }  // namespace ModbusApi

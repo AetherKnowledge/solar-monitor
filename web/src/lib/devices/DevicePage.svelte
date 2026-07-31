@@ -10,7 +10,7 @@
 	import GeneralCard from './Cards/MqttDetails.svelte';
 	import PopupBase from './Cards/PopupBase.svelte';
 	import RegisterTable from './Cards/RegisterTable.svelte';
-	import { createDevicesController, devicesState } from './DeviceController.svelte';
+	import { createDeviceController } from './DeviceController.svelte';
 	import {
 		addRegister,
 		getDefaultRegister,
@@ -20,15 +20,12 @@
 		type RegisterListItem
 	} from './DeviceTypes';
 
-	const deviceId = $derived(page.params.id);
 	let newRegister: RegisterItem | null = $state(null);
-
-	const { save, cancel } = createDevicesController();
-	let device = $derived(devicesState.devices?.find((d) => d.discovery.identifier === deviceId));
+	const controller = createDeviceController(page.params.id || '');
 	let showAddRegisterPopup = $state(false);
 
 	$effect(() => {
-		if (!device && devicesState.initialized) {
+		if (!controller.state.device && controller.state.initialized) {
 			showError('Device not found', () => {
 				goto(resolve('/devices'));
 			});
@@ -36,9 +33,9 @@
 	});
 
 	let registers: RegisterListItem[] = $derived.by(() => {
-		if (!device) return [];
+		if (!controller.state.device) return [];
 
-		const readRegisters = device.readRegisters.map((r) => ({
+		const readRegisters = controller.state.device.readRegisters.map((r) => ({
 			id: r.discovery.unique_id,
 			type: RegisterType.Read,
 			name: r.discovery.name,
@@ -52,7 +49,7 @@
 			}
 		})) satisfies RegisterListItem[];
 
-		const virtualRegisters = device.virtualSensors.map((r) => ({
+		const virtualRegisters = controller.state.device.virtualSensors.map((r) => ({
 			id: r.discovery.unique_id,
 			type: RegisterType.Virtual,
 			name: r.discovery.name,
@@ -64,7 +61,7 @@
 			}
 		})) satisfies RegisterListItem[];
 
-		const selectRegisters = device.selectWriteRegisters.map((r) => ({
+		const selectRegisters = controller.state.device.selectWriteRegisters.map((r) => ({
 			id: r.discovery.unique_id,
 			type: RegisterType.Select,
 			name: r.discovery.name,
@@ -77,7 +74,7 @@
 			}
 		})) satisfies RegisterListItem[];
 
-		const numberRegisters = device.numberWriteRegisters.map((r) => ({
+		const numberRegisters = controller.state.device.numberWriteRegisters.map((r) => ({
 			id: r.discovery.unique_id,
 			type: RegisterType.Number,
 			name: r.discovery.name,
@@ -96,12 +93,12 @@
 	let selectedRegister: RegisterListItem | null = $state(null);
 </script>
 
-{#if device}
-	<Header {device} />
+{#if controller.state.device}
+	<Header device={controller.state.device} />
 
 	<div class="grid gap-6 pb-6 xl:grid-cols-2">
-		<GeneralCard bind:device />
-		<MqttCard bind:device />
+		<GeneralCard bind:device={controller.state.device} />
+		<MqttCard bind:device={controller.state.device} />
 	</div>
 	<div class="grid gap-6 pb-6">
 		<RegisterTable
@@ -112,10 +109,10 @@
 	</div>
 
 	<ActionBar
-		hasChanged={devicesState.hasChanged}
+		hasChanged={controller.hasChanged}
 		isSaving={false}
-		onSave={save}
-		onCancel={cancel}
+		onSave={controller.save}
+		onCancel={controller.cancel}
 	/>
 
 	{#if selectedRegister}
@@ -124,11 +121,11 @@
 			onSave={() => (selectedRegister = null)}
 			onCancel={() => {
 				selectedRegister = null;
-				cancel();
+				controller.cancel();
 			}}
 			onDelete={() => {
-				if (device && selectedRegister) {
-					removeRegister(device, selectedRegister.data);
+				if (controller.state.device && selectedRegister) {
+					removeRegister(controller.state.device, selectedRegister.data);
 				}
 				selectedRegister = null;
 			}}
@@ -140,8 +137,8 @@
 			bind:register={newRegister}
 			isNew={true}
 			onSave={() => {
-				if (device && newRegister) {
-					addRegister(device, newRegister);
+				if (controller.state.device && newRegister) {
+					addRegister(controller.state.device, newRegister);
 				}
 				newRegister = null;
 			}}
