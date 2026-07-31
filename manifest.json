@@ -1,18 +1,20 @@
 {
-  "version": "v1.0.0",
-  "buildTime": "2026-07-30T17:13:00.523Z",
+  "version": "v1.1.0",
+  "buildTime": "2026-07-31T02:03:16.219Z",
   "firmware": {
-    "version": "v1.0.0",
+    "version": "v1.1.0",
     "file": "firmware.bin",
-    "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.0.0/firmware.bin",
-    "size": 1274016,
-    "sha256": "2f2a6e121fa86ed71614a3ce7528ff360ea034d295d8f17a3969e5794063c144"
+    "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.1.0/firmware.bin",
+    "size": 1275360,
+    "sha256": "cf86434672c3eebdc2155056ff3f4901f518ebe2c26d568dbbf630703fa9d2d3",
+    "signature": "MEUCIB4bAKFGHYH+RGEy+U2PzIKmQcltn35VkTkWRz7laxHlAiEAoLOWyyYuPoOyaRDCHLGgIvKsPgto66dyyQ/g9ICdclY="
   },
   "website": {
-    "version": "v1.0.0",
+    "version": "v1.1.0",
     "file": "website.bin",
-    "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.0.0/website.bin",
+    "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.1.0/website.bin",
     "size": 524288,
-    "sha256": "fddd7668f4d619ed5f27eedbb632767574aad6658e9ceb7ec46769cee4bfb7df"
+    "sha256": "c30cbbbc29614d42305f8a3980692017e90830c92dbff0d89cb10522e6caf490",
+    "signature": "MEUCIQDCejJQhu4/YEhSHYFkrESaG5MPyyjdSeLZrXyFQF3TuwIgIZ5sg2UdDsNSYIl9jWruZBGG7DtSagJF4dn0oxH8NI4="
   }
 }

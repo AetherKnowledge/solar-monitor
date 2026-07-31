@@ -5,6 +5,7 @@
 #include <ESPAsyncWebServer.h>
 #include <Common/UpdateStatus.h>
 #include <optional>
+#include "SignatureHandler.h"
 
 namespace UpdateHandler {
     struct UpdateProgress {
@@ -16,15 +17,27 @@ namespace UpdateHandler {
     struct UpdateRequest {
         String url;
         size_t size;
+        String file;
         String sha256;
         String version;
+        String signature;
         bool isFirmware = false;
 
         void fromJson(JsonDocument json) {
             url = json["url"] | "";
             size = json["size"] | 0;
+            file = json["file"] | "";
             sha256 = json["sha256"] | "";
             version = json["version"] | "0.0.0";
+            signature = json["signature"] | "";
+        }
+
+        String getPayload() const {
+            return version + "\n" + file + "\n" + url + "\n" + String(size) + "\n" + sha256;
+        }
+
+        bool validatePayload() const {
+            return verifySignature(getPayload(), signature);
         }
 
         String toString() const {

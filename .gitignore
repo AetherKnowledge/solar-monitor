@@ -17,5 +17,7 @@ logs
 .cache
 compile_commands.json
 firmware/include/Version.h
+firmware/include/UpdatePublicKey.h
 ui.vlx
 release
+signature/private.pem

@@ -15,12 +15,14 @@
     "upload:ota:config": "node scripts/ota.js config",
     "ota:restart": "node scripts/ota.js restart",
     "flash": "pnpm build:web && pnpm upload && pnpm uploadfs && pnpm monitor",
-    "manifest": "node scripts/generate-manifest.ts",
-    "release": "pnpm build && node scripts/generate-manifest.ts"
+    "manifest": "tsx scripts/generate-manifest.ts",
+    "release": "pnpm build && tsx scripts/generate-manifest.ts",
+    "generate-keys": "tsx scripts/generate-keys.ts"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
     "dotenv": "^17.4.2",
-    "dotenv-cli": "^11.0.0"
+    "dotenv-cli": "^11.0.0",
+    "tsx": "^4.23.1"
   }
 }

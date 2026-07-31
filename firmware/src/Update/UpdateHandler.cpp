@@ -10,12 +10,11 @@
 #include <Version.h>
 #include <WebServer/WebServer.h>
 #include <Common/Logger.h>
+#include "UpdatePublicKey.h"
 
 namespace UpdateHandler {
     UpdateProgress updateProgress = {UpdateStatus::NotStarted, 0, false};
-    UpdateRequest currentUpdateRequest = {"", 0, "", "0.0.0", false};
-    constexpr const char* RELEASE_DOWNLOAD_PREFIX =
-        "https://github.com/AetherKnowledge/solar-monitor/releases/download/";
+    UpdateRequest currentUpdateRequest = {"", 0, "", "", "0.0.0", "", false};
 
     TaskHandle_t updateTaskHandle = nullptr;
 
@@ -25,7 +24,7 @@ namespace UpdateHandler {
 
             downloadAndInstall(currentUpdateRequest, currentUpdateRequest.isFirmware);
 
-            currentUpdateRequest = {"", 0, "", "0.0.0", false};
+            currentUpdateRequest = {"", 0, "", "", "0.0.0", "", false};
         }
     }
 
@@ -376,13 +375,13 @@ namespace UpdateHandler {
             return false;
         }
 
-        if (request.url.isEmpty()) {
-            Log.println("Update request rejected: URL is empty");
+        if (!request.validatePayload()) {
+            Log.println("Update request rejected: Invalid signature");
             return false;
         }
 
-        if (!request.url.startsWith(RELEASE_DOWNLOAD_PREFIX)) {
-            Log.println("Update request rejected: Invalid download URL");
+        if (request.url.isEmpty()) {
+            Log.println("Update request rejected: URL is empty");
             return false;
         }
 

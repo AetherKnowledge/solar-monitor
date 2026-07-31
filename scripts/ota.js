@@ -31,7 +31,7 @@ const targets = {
 const target = targets[type];
 
 if (!target) {
-  console.error("Usage: node scripts/ota.js <firmware|web|config|restart>");
+  console.error("Usage: tsx scripts/ota.js <firmware|web|config|restart>");
   process.exit(1);
 }
 

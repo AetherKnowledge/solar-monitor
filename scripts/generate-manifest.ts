@@ -1,8 +1,11 @@
 // scripts/generate-manifest.mjs
 
-import { createHash } from "node:crypto";
+import { createHash, sign } from "node:crypto";
 import { copyFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { generateKeyPair } from "./generate-keys";
+
+const keyPair = await generateKeyPair();
 
 const root = process.cwd();
 
@@ -38,25 +41,68 @@ async function fileInfo(
 const firmware = await fileInfo(firmwarePath);
 const website = await fileInfo(websitePath);
 
-const manifest = {
+type ReleaseAsset = {
+  version: string;
+  file: string;
+  url: string;
+  size: number;
+  sha256: string;
+};
+
+type ReleaseAssetWithSignature = ReleaseAsset & {
+  signature: string;
+};
+
+type Manifest = {
+  version: string;
+  buildTime: string;
+  firmware: ReleaseAssetWithSignature;
+  website: ReleaseAssetWithSignature;
+};
+
+function assetPayload(asset: ReleaseAsset): Buffer {
+  return Buffer.from(
+    [
+      asset.version,
+      asset.file,
+      asset.url,
+      asset.size.toString(),
+      asset.sha256,
+    ].join("\n"),
+    "utf8",
+  );
+}
+
+function signAsset(asset: ReleaseAsset): ReleaseAssetWithSignature {
+  const signature = sign("sha256", assetPayload(asset), {
+    key: keyPair.privateKey,
+  });
+
+  return {
+    ...asset,
+    signature: signature.toString("base64"),
+  };
+}
+
+const manifest: Manifest = {
   version: VERSION,
   buildTime: new Date().toISOString(),
 
-  firmware: {
+  firmware: signAsset({
     version: FIRMWARE_VERSION,
     file: "firmware.bin",
     url: `${REPO}/${FIRMWARE_VERSION}/firmware.bin`,
     size: firmware.size,
     sha256: firmware.sha256,
-  },
+  }),
 
-  website: {
+  website: signAsset({
     version: WEBSITE_VERSION,
     file: "website.bin",
     url: `${REPO}/${WEBSITE_VERSION}/website.bin`,
     size: website.size,
     sha256: website.sha256,
-  },
+  }),
 };
 
 // Copy release assets
