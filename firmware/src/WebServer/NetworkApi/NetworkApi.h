@@ -3,7 +3,7 @@
 #include <PsychicHttp.h>
 
 namespace NetworkApi {
-    void registerApi(PsychicHttpServer& server);
+    void registerRoutes(PsychicHttpServer& server);
     esp_err_t handleGetNetworks(PsychicRequest* request, PsychicResponse* response);
     esp_err_t handleScanNetworks(PsychicRequest* request, PsychicResponse* response);
     esp_err_t handleGetConfig(PsychicRequest* request, PsychicResponse* response);

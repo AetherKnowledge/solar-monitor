@@ -4,7 +4,7 @@
 #include <PsychicHttp.h>
 
 namespace MqttApi {
-    void registerApi(PsychicHttpServer& server);
+    void registerRoutes(PsychicHttpServer& server);
     esp_err_t handleGetConfig(PsychicRequest* request, PsychicResponse* response);
     esp_err_t handleUpdateConfig(PsychicRequest* request,
                                  PsychicResponse* response,

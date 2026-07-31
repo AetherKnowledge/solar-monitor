@@ -4,7 +4,7 @@
 #include <PsychicHttp.h>
 
 namespace ModbusApi {
-    void registerApi(PsychicHttpServer& server);
+    void registerRoutes(PsychicHttpServer& server);
     esp_err_t handleGetDevices(PsychicRequest* request, PsychicResponse* response);
     esp_err_t handleGetDevice(PsychicRequest* request, PsychicResponse* response, String id);
     esp_err_t handleUpdateDevice(PsychicRequest* request,

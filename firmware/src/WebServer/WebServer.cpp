@@ -9,6 +9,7 @@
 #include "SystemApi/SystemApi.h"
 #include "WebSocket.h"
 #include <Common/Logger.h>
+#include "AuthApi/AuthApi.h"
 
 namespace WebServer {
     PsychicHttpServer server(80);
@@ -76,12 +77,13 @@ namespace WebServer {
 
     void registerApis() {
         WebSocket::setup(server);
-        NetworkApi::registerApi(server);
-        MqttApi::registerApi(server);
-        ConfigApi::registerApi(server);
-        ModbusApi::registerApi(server);
-        UpdateApi::registerApi(server);
-        SystemApi::registerApi(server);
+        NetworkApi::registerRoutes(server);
+        MqttApi::registerRoutes(server);
+        ConfigApi::registerRoutes(server);
+        ModbusApi::registerRoutes(server);
+        UpdateApi::registerRoutes(server);
+        SystemApi::registerRoutes(server);
+        AuthApi::registerRoutes(server);
     }
 
     bool stop() {

@@ -4,7 +4,7 @@
 #include <PsychicHttp.h>
 
 namespace ConfigApi {
-    void registerApi(PsychicHttpServer& server);
+    void registerRoutes(PsychicHttpServer& server);
     esp_err_t handleUploadConfig(PsychicRequest* request, JsonVariant& json);
     esp_err_t handleGetConfig(PsychicRequest* request, PsychicResponse* response);
 
