@@ -1,4 +1,5 @@
 import { apiFetch } from '$lib/common/CommonFunctions';
+import type { SimpleResponse } from '$lib/common/CommonTypes';
 import { createQuery } from '@tanstack/svelte-query';
 import { defaultSystemState, type SystemState } from './DashboardTypes';
 
@@ -14,4 +15,10 @@ export function createDashboardController() {
 	return {
 		query
 	};
+}
+
+export function logout() {
+	return apiFetch<SimpleResponse>(`/api/auth/logout`, {
+		method: 'POST'
+	});
 }

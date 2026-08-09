@@ -1,6 +1,8 @@
 <script lang="ts">
 	import favicon from '$lib/assets/favicon.svg';
 	import PopupHost from '$lib/popup/PopupHost.svelte';
+	import { queryClient } from '$lib/queryClient';
+	import { QueryClientProvider } from '@tanstack/svelte-query';
 	import './layout.css';
 
 	let { children } = $props();
@@ -12,5 +14,7 @@
 	<title>Solar Monitor</title>
 </svelte:head>
 
-{@render children()}
-<PopupHost />
+<QueryClientProvider client={queryClient}>
+	{@render children()}
+	<PopupHost />
+</QueryClientProvider>

@@ -1,5 +1,5 @@
 #include "NetworkApi.h"
-#include <Networking/NetworkManager.h>
+#include <Networking/NetworkService.h>
 #include <WiFi.h>
 #include <Common/Json.h>
 #include <Common/Network.h>
@@ -21,19 +21,19 @@ namespace NetworkApi {
 
     esp_err_t handleGetNetworks(PsychicRequest* request, PsychicResponse* response) {
         JsonDocument doc;
-        doc["status"] = Enum::toString(NetworkManager::scanStatus);
-        serializeVector(doc["networks"], NetworkManager::cachedWifiNetworks);
+        doc["status"] = Enum::toString(NetworkService::scanStatus);
+        serializeVector(doc["networks"], NetworkService::cachedWifiNetworks);
 
         return Response::sendJson(response, doc);
     }
 
     esp_err_t handleScanNetworks(PsychicRequest* request, PsychicResponse* response) {
-        if (NetworkManager::scanStatus != UpdateStatus::InProgress) {
-            NetworkManager::scanStatus = UpdateStatus::Requested;
+        if (NetworkService::scanStatus != UpdateStatus::InProgress) {
+            NetworkService::scanStatus = UpdateStatus::Requested;
         }
 
         JsonDocument doc;
-        doc["status"] = Enum::toString(NetworkManager::scanStatus);
+        doc["status"] = Enum::toString(NetworkService::scanStatus);
 
         return Response::sendJson(response, doc);
     }
@@ -41,7 +41,7 @@ namespace NetworkApi {
     esp_err_t handleGetConfig(PsychicRequest* request, PsychicResponse* response) {
         JsonDocument doc;
         ConfigManager::config.network.toJson(doc.to<JsonObject>());
-        doc["updateStatus"] = Enum::toString(NetworkManager::updateStatus);
+        doc["updateStatus"] = Enum::toString(NetworkService::updateStatus);
 
         return Response::sendJson(response, doc);
     }
@@ -49,7 +49,7 @@ namespace NetworkApi {
     esp_err_t handleUpdateConfig(PsychicRequest* request,
                                  PsychicResponse* response,
                                  JsonVariant& json) {
-        NetworkManager::requestUpdate(json);
-        return Response::success(response, 202, "OK");
+        NetworkService::requestUpdate(json);
+        return Response::success(response, "OK", 202);
     }
 }  // namespace NetworkApi

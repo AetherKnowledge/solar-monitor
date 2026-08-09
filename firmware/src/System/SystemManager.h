@@ -9,6 +9,7 @@ namespace SystemManager {
     void setup();
     void loop();
     void requestRestart();
+    void requestUpdate(const JsonVariant& json);
 
     void setupSensors();
     void setupControls();

@@ -1,10 +1,10 @@
-#include <Networking/NetworkManager.h>
+#include <Networking/NetworkService.h>
 #include <WiFi.h>
 #include <Config/ConfigManager.h>
 #include <Mqtt/MqttManager.h>
 #include <Common/Logger.h>
 
-namespace NetworkManager {
+namespace NetworkService {
     std::vector<WiFiNetwork> cachedWifiNetworks;
     UpdateStatus scanStatus = UpdateStatus::NotStarted;
 
@@ -139,6 +139,9 @@ namespace NetworkManager {
 
             Log.print("IP Address: ");
             Log.println(WiFi.localIP());
+
+            configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+
             return true;
         } else {
             status.connected = false;
@@ -176,4 +179,4 @@ namespace NetworkManager {
         Log.println("\nNetwork configuration updating");
     }
 
-}  // namespace NetworkManager
+}  // namespace NetworkService

@@ -21,3 +21,6 @@ firmware/include/UpdatePublicKey.h
 ui.vlx
 release
 signature/private.pem
+
+firmware/include/SecretKey.h
+/persistence.json

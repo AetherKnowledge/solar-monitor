@@ -12,6 +12,7 @@
 	let connected = $state(false);
 	let connecting = $state(false);
 	let autoScroll = $state(true);
+	let command = $state('');
 
 	let socket: WebSocket | null = null;
 	let logContainer: HTMLDivElement;
@@ -36,6 +37,9 @@
 			connected = true;
 			connecting = false;
 
+			// weird bug, we need to send a message to initialize the connection
+			socket?.send('__init__');
+
 			addSystemLog('Connected to device');
 		};
 
@@ -56,6 +60,10 @@
 
 		socket.onmessage = (event) => {
 			const message = String(event.data);
+
+			if (message === '\n' || message === '\r' || message === '\r\n') {
+				return;
+			}
 
 			if (message.endsWith('\r')) {
 				updateLastLog(message.slice(0, -1));
@@ -102,6 +110,20 @@
 		socket = null;
 
 		connect();
+	}
+
+	function sendCommand() {
+		if (!socket || socket.readyState !== WebSocket.OPEN) return;
+
+		const text = command.trim();
+
+		if (!text) return;
+
+		socket.send(text);
+
+		addSystemLog(`> ${text}`);
+
+		command = '';
 	}
 
 	function addLog(message: string) {
@@ -158,7 +180,7 @@
 	});
 </script>
 
-<div class="flex h-full min-h-0 w-full max-w-7xl flex-col">
+<div class="flex h-full min-h-0 w-full flex-col">
 	<div class="card flex h-full min-h-0 flex-1 border border-base-300 bg-base-100 shadow-sm">
 		<div class="card-body flex min-h-0 flex-1 flex-col gap-4 sm:gap-6">
 			<!-- Header -->
@@ -259,6 +281,35 @@
 							></pre>
 					{/each}
 				{/if}
+			</div>
+
+			<!-- Terminal Input -->
+			<div class="divider my-0"></div>
+
+			<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+				<div class="join flex-1">
+					<input
+						class="input-bordered input join-item flex-1 font-mono"
+						type="text"
+						placeholder="Enter command..."
+						bind:value={command}
+						disabled={!connected}
+						onkeydown={(e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								sendCommand();
+							}
+						}}
+					/>
+
+					<button
+						class="btn join-item btn-primary"
+						onclick={sendCommand}
+						disabled={!connected || command.trim().length === 0}
+					>
+						Send
+					</button>
+				</div>
 			</div>
 
 			<!-- Footer -->

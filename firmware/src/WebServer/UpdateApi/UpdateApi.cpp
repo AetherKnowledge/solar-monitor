@@ -85,20 +85,20 @@ namespace UpdateApi {
 
         switch (UpdateHandler::compareVersions(currentVersion, latestVersion)) {
             case 1:
-                return Response::send(
-                    response, 409, "Current version is newer than requested version");
+                return Response::error(
+                    response, "Current version is newer than requested version", 409);
 
             case 0:
-                return Response::send(response, 409, "Already up to date");
+                return Response::error(response, "Already up to date", 409);
 
             case -1:
                 break;  // Proceed with update
         }
 
         if (UpdateHandler::requestUpdate(updateRequest, isFirmware)) {
-            return Response::send(response, 200, "Update started successfully");
+            return Response::success(response, "Update started successfully");
         } else {
-            return Response::send(response, 500, "Failed to start update");
+            return Response::error(response, "Failed to start update", 500);
         }
     }
 

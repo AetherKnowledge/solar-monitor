@@ -27,6 +27,10 @@ struct SiteConfig {
         passwordEnabled = json["passwordEnabled"] | passwordEnabled;
         password = json["password"] | password;
     }
+
+    String toString() const {
+        return "Password Enabled: " + String(passwordEnabled) + "\nPassword: ***";
+    }
 };
 
 struct NetworkConfig {
@@ -139,6 +143,7 @@ struct Config {
     void toJson(JsonObject json, bool withPassword = false) const {
         network.toJson(json["network"].to<JsonObject>(), withPassword);
         mqtt.toJson(json["mqtt"].to<JsonObject>(), withPassword);
+        site.toJson(json["site"].to<JsonObject>(), withPassword);
 
         serializeVector(json["modbusDevices"], modbusDevices);
     }
@@ -146,6 +151,7 @@ struct Config {
     void fromJson(JsonObject json) {
         network.fromJson(json["network"].as<JsonObject>());
         mqtt.fromJson(json["mqtt"].as<JsonObject>());
+        site.fromJson(json["site"].as<JsonObject>());
 
         deserializeVector(json["modbusDevices"], modbusDevices);
     }
@@ -154,5 +160,6 @@ struct Config {
         network = NetworkConfig();
         mqtt = MQTTConfig();
         modbusDevices.clear();
+        site = SiteConfig();
     }
 };

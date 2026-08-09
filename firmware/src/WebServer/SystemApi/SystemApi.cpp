@@ -2,6 +2,7 @@
 #include <System/SystemManager.h>
 #include <Common/Network.h>
 #include <Common/Logger.h>
+#include <Config/ConfigManager.h>
 
 namespace SystemApi {
     void registerRoutes(PsychicHttpServer& server) {
@@ -14,7 +15,7 @@ namespace SystemApi {
     esp_err_t handleRestartRequest(PsychicRequest* request, PsychicResponse* response) {
         // Set the requestRestart flag in SystemManager
         SystemManager::requestRestart();
-        return Response::success(response, 202, "OK");
+        return Response::success(response, "OK", 202);
     }
 
     esp_err_t handleGetSystemData(PsychicRequest* request, PsychicResponse* response) {

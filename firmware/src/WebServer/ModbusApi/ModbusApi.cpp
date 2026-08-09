@@ -55,7 +55,7 @@ namespace ModbusApi {
 
         const ModbusDevice* device = ConfigManager::config.getDeviceById(id);
         if (!device) {
-            return Response::error(response, 404, "Device not found");
+            return Response::error(response, "Device not found", 404);
         }
         device->toJson(doc["device"].to<JsonObject>());
 
@@ -74,19 +74,19 @@ namespace ModbusApi {
                                  PsychicResponse* response,
                                  JsonVariant& json) {
         if (!request->hasParam("id")) {
-            return Response::error(response, 400, "Missing device id");
+            return Response::error(response, "Missing device id");
         }
 
         String id = request->getParam("id")->value();
 
         auto device = ConfigManager::config.getDeviceById(id);
         if (!device) {
-            return Response::error(response, 404, "Device not found");
+            return Response::error(response, "Device not found", 404);
         }
 
         Log.println("Recieved Modbus Update for device: " + id);
 
         ModbusManager::requestUpdate(id, json);
-        return Response::success(response, 202, "OK");
+        return Response::success(response, "OK", 202);
     }
 }  // namespace ModbusApi

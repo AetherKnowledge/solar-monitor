@@ -7,22 +7,21 @@ namespace WebSocket {
 
     void setup(PsychicHttpServer& server) {
         websocket.onOpen([](PsychicWebSocketClient* client) {
-            Log.printf("WebSocket client #%u connected\n", client->socket());
+            Serial.printf("WebSocket client #%u connected\n", client->socket());
         });
 
         websocket.onClose([](PsychicWebSocketClient* client) {
-            Log.printf("WebSocket client #%u disconnected\n", client->socket());
+            Serial.printf("WebSocket client #%u disconnected\n", client->socket());
         });
 
         websocket.onFrame(
             [](PsychicWebSocketRequest* request, httpd_ws_frame_t* frame) -> esp_err_t {
-                // Handle incoming messages here if needed.
+                if (frame->type == HTTPD_WS_TYPE_TEXT && frame->len == 8 &&
+                    memcmp(frame->payload, "__init__", 8) == 0) {
+                    return ESP_OK;
+                }
 
-                // If you don't care about incoming messages:
-                return ESP_OK;
-
-                // Or echo them back:
-                // return request->reply(frame);
+                return request->reply(frame);
             });
 
         server.on("/api/ws", &websocket);

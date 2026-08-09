@@ -1,5 +1,4 @@
 #include "WebServer.h"
-#include <PsychicHttp.h>
 #include <LittleFS.h>
 #include "NetworkApi/NetworkApi.h"
 #include "MqttApi/MqttApi.h"
@@ -14,6 +13,7 @@
 namespace WebServer {
     PsychicHttpServer server(80);
     fs::LittleFSFS WebFS;
+    Middleware auth;
 
     String WEBSITE_VERSION = "0.0.0";
     static void setWebsiteVersion() {
@@ -35,6 +35,16 @@ namespace WebServer {
         }
     }
 
+    static void createAuthMiddleware() {
+        if (!ConfigManager::config.site.passwordEnabled ||
+            ConfigManager::config.site.password.isEmpty()) {
+            return;
+        }
+
+        Log.println("Authentication enabled");
+        server.addMiddleware(&auth);
+    }
+
     bool start() {
         Log.println("Starting web server");
 
@@ -44,9 +54,9 @@ namespace WebServer {
             Log.println("LittleFS Mount Failed");
             return false;
         }
-
         setWebsiteVersion();
 
+        createAuthMiddleware();
         registerApis();
 
         server.serveStatic("/_app", WebFS, "/_app")
@@ -68,7 +78,6 @@ namespace WebServer {
             file.addHeader("Cache-Control", "no-cache");
             return file.send();
         });
-
         server.begin();
 
         Log.println("Web server started");

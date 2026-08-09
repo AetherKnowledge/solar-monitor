@@ -8,8 +8,8 @@
 
 namespace Response {
     inline esp_err_t send(PsychicResponse* response,
-                          int status,
                           const String& message,
+                          int status,
                           Print* out = nullptr) {
         JsonDocument doc;
         doc["message"] = message;
@@ -25,17 +25,17 @@ namespace Response {
     }
 
     inline esp_err_t success(PsychicResponse* response,
-                             int status = 200,
                              const String& message = "OK",
+                             int status = 200,
                              Print* out = nullptr) {
-        return send(response, status, message, out);
+        return send(response, message, status, out);
     }
 
     inline esp_err_t error(PsychicResponse* response,
-                           int status,
                            const String& message,
+                           int status = 400,
                            Print* out = nullptr) {
-        return send(response, status, message, out);
+        return send(response, message, status, out);
     }
 
     inline esp_err_t sendJson(PsychicResponse* response,

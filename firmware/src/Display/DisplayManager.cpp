@@ -3,20 +3,16 @@
 #include "DisplayTools.h"
 #include <Wire.h>
 #include <U8g2lib.h>
-#include <Networking/NetworkManager.h>
+#include <Networking/NetworkService.h>
 #include <Update/UpdateHandler.h>
 #include <Mqtt/MqttManager.h>
 #include <Common/Logger.h>
 #include <Modbus/ModbusManager.h>
 #include <optional>
+#include "Pins.h"
 
 namespace DisplayManager {
-    constexpr uint8_t SDA_PIN = 25;
-    constexpr uint8_t SCL_PIN = 26;
     constexpr uint8_t I2C_ADDRESS = 0x3F;
-
-    constexpr uint8_t PREVIOUS_BUTTON_PIN = 27;
-    constexpr uint8_t NEXT_BUTTON_PIN = 14;
 
     bool statusBarVisible = false;
     StatusBarStyle statusBarStyle;
@@ -74,10 +70,10 @@ namespace DisplayManager {
     }
 
     void setup() {
-        pinMode(PREVIOUS_BUTTON_PIN, INPUT_PULLUP);
-        pinMode(NEXT_BUTTON_PIN, INPUT_PULLUP);
+        pinMode(Pins::PREVIOUS_BUTTON, INPUT_PULLUP);
+        pinMode(Pins::NEXT_BUTTON, INPUT_PULLUP);
 
-        Wire.begin(SDA_PIN, SCL_PIN);
+        Wire.begin(Pins::I2C_SDA, Pins::I2C_SCL);
 
         display.setI2CAddress(I2C_ADDRESS << 1);
         display.begin();
@@ -92,14 +88,14 @@ namespace DisplayManager {
             return;
         }
 
-        xTaskCreatePinnedToCore(displayTask,  // Task function
-                                "Display",    // Name
-                                4096,         // Stack size
-                                nullptr,      // Parameter
-                                1,            // Priority
-                                nullptr,      // Task handle
-                                1             // Core (1 is usually best)
-        );
+        // xTaskCreatePinnedToCore(displayTask,  // Task function
+        //                         "Display",    // Name
+        //                         4096,         // Stack size
+        //                         nullptr,      // Parameter
+        //                         1,            // Priority
+        //                         nullptr,      // Task handle
+        //                         1             // Core (1 is usually best)
+        // );
     }
 
     void renderStatusBar() {
@@ -422,7 +418,7 @@ namespace DisplayManager {
     }
 
     static void pollNetworkStatus() {
-        const auto& networkStatus = NetworkManager::getNetworkStatus();
+        const auto& networkStatus = NetworkService::getNetworkStatus();
 
         DisplayLock lock;
         if (networkStatus.connected) {
@@ -466,8 +462,8 @@ namespace DisplayManager {
 
         const uint32_t now = millis();
 
-        bool nextButtonState = digitalRead(NEXT_BUTTON_PIN);
-        bool prevButtonState = digitalRead(PREVIOUS_BUTTON_PIN);
+        bool nextButtonState = digitalRead(Pins::NEXT_BUTTON);
+        bool prevButtonState = digitalRead(Pins::PREVIOUS_BUTTON);
 
         // Next button (falling edge)
         if (nextButtonState == LOW && prevNextButtonState == HIGH &&

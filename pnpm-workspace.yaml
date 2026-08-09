@@ -3,3 +3,5 @@ packages:
 allowBuilds:
   "@tailwindcss/oxide": true
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@lucide/svelte@1.31.0'

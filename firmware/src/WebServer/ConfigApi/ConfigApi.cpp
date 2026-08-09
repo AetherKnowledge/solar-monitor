@@ -29,7 +29,7 @@ namespace ConfigApi {
 
         if (error) {
             Log.printf("Failed to deserialize config: %s\n", error.c_str());
-            return Response::error(response, 500, "Failed to deserialize config");
+            return Response::error(response, "Failed to deserialize config", 500);
         }
 
         return Response::sendJson(response, doc);
@@ -83,12 +83,12 @@ namespace ConfigApi {
     esp_err_t onUploadFinish(PsychicRequest* request, PsychicResponse* response) {
         if (uploadFailed) {
             ConfigManager::ConfigFS.remove("/config.tmp");
-            return Response::error(response, 500, "Upload failed");
+            return Response::error(response, "Upload failed", 500);
         }
 
         if (!validateConfig()) {
             ConfigManager::ConfigFS.remove("/config.tmp");
-            return Response::error(response, 400, "Invalid config");
+            return Response::error(response, "Invalid config");
         }
 
         ConfigManager::ConfigFS.remove("/config.json");
@@ -96,7 +96,7 @@ namespace ConfigApi {
 
         SystemManager::requestRestart();
 
-        return Response::success(response, 200, "Config updated");
+        return Response::success(response, "Config updated");
     }
 
     bool validateConfig() {

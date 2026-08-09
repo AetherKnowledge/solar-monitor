@@ -5,7 +5,7 @@
 #include <Common/UpdateStatus.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
-#include <Networking/NetworkManager.h>
+#include <Networking/NetworkService.h>
 #include <mbedtls/sha256.h>
 #include <Version.h>
 #include <WebServer/WebServer.h>
@@ -44,12 +44,12 @@ namespace UpdateHandler {
 
             String completeMessage = name + " update complete. Restarting...";
 
-            return Response::success(response, 200, completeMessage, &Log);
+            return Response::success(response, completeMessage, 200, &Log);
         }
 
         updateProgress.status = UpdateStatus::NotStarted;
         String errorMessage = name + " update failed. Please check the logs for more information.";
-        return Response::error(response, 500, errorMessage, &Log);
+        return Response::error(response, errorMessage, 500, &Log);
     }
 
     esp_err_t onChunk(PsychicRequest* request,
@@ -163,7 +163,7 @@ namespace UpdateHandler {
         Log.printf("Starting %s update\n", name);
         Log.printf("%s size: %u bytes\n", name, request.size);
 
-        if (!NetworkManager::getNetworkStatus().connected) {
+        if (!NetworkService::getNetworkStatus().connected) {
             Log.println("No network connection");
             updateProgress.status = UpdateStatus::UpdateFailed;
             return false;
@@ -208,24 +208,14 @@ namespace UpdateHandler {
             return false;
         }
 
-        WiFiClient* stream = http.getStreamPtr();
+        auto* stream = http.getStreamPtr();
 
         static uint8_t buffer[1024];
         size_t written = 0;
 
         mbedtls_sha256_context sha;
         mbedtls_sha256_init(&sha);
-
-        if (mbedtls_sha256_starts_ret(&sha, 0) != 0) {
-            Log.println("Failed to initialize SHA-256");
-
-            Update.abort();
-            http.end();
-            mbedtls_sha256_free(&sha);
-
-            updateProgress.status = UpdateStatus::UpdateFailed;
-            return false;
-        }
+        mbedtls_sha256_starts(&sha, 0);
 
         updateProgress.status = UpdateStatus::InProgress;
 
@@ -256,19 +246,11 @@ namespace UpdateHandler {
                 return false;
             }
 
-            if (mbedtls_sha256_update_ret(&sha, buffer, len) != 0) {
-                Log.println("Failed to update SHA-256");
+            mbedtls_sha256_update(&sha, buffer, static_cast<size_t>(len));
 
-                Update.abort();
-                http.end();
-                mbedtls_sha256_free(&sha);
+            written += static_cast<size_t>(len);
 
-                updateProgress.status = UpdateStatus::UpdateFailed;
-                return false;
-            }
-
-            written += len;
-            Log.printf("%s: %u / %u bytes\r", name, written, request.size);
+            Log.printf("%s: %u / %u bytes\r", name, static_cast<unsigned>(written), request.size);
         }
 
         Log.println();
@@ -286,23 +268,13 @@ namespace UpdateHandler {
         }
 
         uint8_t digest[32];
-
-        if (mbedtls_sha256_finish_ret(&sha, digest) != 0) {
-            Log.println("Failed to finalize SHA-256");
-
-            Update.abort();
-            mbedtls_sha256_free(&sha);
-
-            updateProgress.status = UpdateStatus::UpdateFailed;
-            return false;
-        }
-
+        mbedtls_sha256_finish(&sha, digest);
         mbedtls_sha256_free(&sha);
 
         char actualHash[65];
 
         for (int i = 0; i < 32; i++) {
-            sprintf(actualHash + (i * 2), "%02x", digest[i]);
+            sprintf(actualHash + i * 2, "%02x", digest[i]);
         }
 
         actualHash[64] = '\0';

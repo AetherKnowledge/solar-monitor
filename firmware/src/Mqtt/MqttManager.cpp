@@ -94,10 +94,11 @@ namespace MqttManager {
         if (!mqttClient.connected()) {
             static unsigned long lastAttempt = 0;
 
-            Log.println("MQTT not connected, attempting to reconnect...");
-
             if (millis() - lastAttempt > 5000) {
                 lastAttempt = millis();
+
+                Log.println("MQTT not connected, attempting to reconnect...");
+
                 if (!MqttManager::connect()) {
                     Log.printf("MQTT connect failed, rc=%d\n", mqttClient.state());
                 }

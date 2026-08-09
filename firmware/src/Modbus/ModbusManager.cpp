@@ -7,6 +7,7 @@
 #include <Mqtt/MqttManager.h>
 #include <Common/Logger.h>
 #include <Display/DisplayManager.h>
+#include "Pins.h"
 
 namespace ModbusManager {
     bool hasStarted = false;
@@ -55,14 +56,14 @@ namespace ModbusManager {
             switch (device.port) {
                 case 1:
                     Serial1.end();  // Ensure Serial1 is not already in use
-                    Serial1.begin(device.baudrate, SERIAL_8N1, 16, 17);
+                    Serial1.begin(device.baudrate, SERIAL_8N1, Pins::UART1_RX, Pins::UART1_TX);
 
                     device.modbus.begin(device.slaveId, Serial1);
 
                     break;
                 case 2:
                     Serial2.end();  // Ensure Serial2 is not already in use
-                    Serial2.begin(device.baudrate, SERIAL_8N1, 18, 19);
+                    Serial2.begin(device.baudrate, SERIAL_8N1, Pins::UART2_RX, Pins::UART2_TX);
 
                     device.modbus.begin(device.slaveId, Serial2);
                     break;

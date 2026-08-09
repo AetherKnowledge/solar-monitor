@@ -1,7 +1,7 @@
 #include "ConfigManager.h"
 #include <ArduinoJson.h>
 #include <Mqtt/MqttManager.h>
-#include <Networking/NetworkManager.h>
+#include <Networking/NetworkService.h>
 #include <Modbus/ModbusManager.h>
 #include <Common/UpdateStatus.h>
 #include <Common/Logger.h>

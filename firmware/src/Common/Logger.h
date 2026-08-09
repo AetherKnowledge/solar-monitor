@@ -14,6 +14,9 @@ class Logger : public Print {
     PsychicWebSocketHandler* websocket = nullptr;
     String buffer;
 
+    bool lastWasCarriageReturn = false;
+
+    void processChar(char c);
     void flushWebSocket();
 };
 

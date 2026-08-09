@@ -1,17 +1,50 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { apiFetch } from '$lib/common/CommonFunctions';
+	import type { SimpleResponse } from '$lib/common/CommonTypes';
+	import { hidePopup, showError, showLoading } from '$lib/popup/Popup.svelte';
 	import { Eye, EyeOff, Lock, Moon, ShieldCheck, SunMedium } from '@lucide/svelte';
+	import { onMount } from 'svelte';
 
 	let password = $state('');
 	let loading = $state(false);
 	let showPassword = $state(false);
 
+	async function validateSession() {
+		try {
+			await apiFetch<SimpleResponse>(
+				'/api/auth/validate',
+				{
+					method: 'POST'
+				},
+				false
+			);
+			goto(resolve('/'));
+		} catch (e) {
+			console.error('Error during session validation:', e);
+		}
+	}
+
+	onMount(() => {
+		validateSession();
+	});
+
 	async function login() {
-		loading = true;
+		showLoading('Logging in...');
 
 		try {
-			console.log({ password });
-		} finally {
-			loading = false;
+			const response = await apiFetch<SimpleResponse>('/api/auth/login', {
+				method: 'POST',
+				body: JSON.stringify({ password })
+			});
+
+			console.log('Login successful:', response);
+			goto(resolve('/'));
+			hidePopup();
+		} catch (err) {
+			console.error(err);
+			showError('Login failed. Please try again.');
 		}
 	}
 </script>

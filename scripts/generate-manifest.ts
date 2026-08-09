@@ -20,7 +20,7 @@ const REPO =
   "https://github.com/AetherKnowledge/solar-monitor/releases/download";
 
 const firmwarePath = path.join(root, ".pio/build/esp32dev/firmware.bin");
-const websitePath = path.join(root, ".pio/build/esp32dev/littlefs.bin");
+const websitePath = path.join(root, ".pio/build/esp32dev/website.bin");
 
 const releaseDir = path.join(root, "release");
 

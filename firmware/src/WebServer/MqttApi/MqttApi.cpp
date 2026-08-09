@@ -24,6 +24,6 @@ namespace MqttApi {
                                  PsychicResponse* response,
                                  JsonVariant& json) {
         MqttManager::requestUpdate(json);
-        return Response::success(response, 202, "OK");
+        return Response::success(response, "OK", 202);
     }
 }  // namespace MqttApi
