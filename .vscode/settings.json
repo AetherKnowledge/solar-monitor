@@ -22,5 +22,6 @@
         "cmd": "pio run -t compiledb"
       }
     ]
-  }
+  },
+  "python.terminal.useEnvFile": true
 }
