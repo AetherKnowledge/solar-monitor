@@ -24,7 +24,7 @@ namespace NetworkApi {
         doc["status"] = Enum::toString(NetworkService::scanStatus);
         serializeVector(doc["networks"], NetworkService::cachedWifiNetworks);
 
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 
     esp_err_t handleScanNetworks(PsychicRequest* request, PsychicResponse* response) {
@@ -35,7 +35,7 @@ namespace NetworkApi {
         JsonDocument doc;
         doc["status"] = Enum::toString(NetworkService::scanStatus);
 
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 
     esp_err_t handleGetConfig(PsychicRequest* request, PsychicResponse* response) {
@@ -43,7 +43,7 @@ namespace NetworkApi {
         ConfigManager::config.network.toJson(doc.to<JsonObject>());
         doc["updateStatus"] = Enum::toString(NetworkService::updateStatus);
 
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 
     esp_err_t handleUpdateConfig(PsychicRequest* request,

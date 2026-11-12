@@ -133,7 +133,7 @@
 			</div>
 
 			<!-- Password -->
-			{#if siteConfig.passwordEnabled && siteConfig.hasPassword}
+			{#if siteConfig.passwordEnabled}
 				<div transition:slide class="flex flex-col overflow-hidden">
 					<div class="flex flex-col">
 						<span class="font-medium">Password</span>

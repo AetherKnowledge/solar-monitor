@@ -22,6 +22,6 @@ namespace SystemApi {
         JsonDocument doc;
         SystemManager::systemDevice.toJson(doc);
 
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 }  // namespace SystemApi

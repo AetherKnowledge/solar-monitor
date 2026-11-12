@@ -117,6 +117,8 @@ namespace ModbusManager {
         updateStatus = UpdateStatus::InProgress;
         VirtualSensorManager::savePersistence(ConfigManager::config.modbusDevices);
 
+        // Release expressions and references before register vectors change.
+        reset();
         device->fromJson(update.patch.as<JsonObject>(), true);
 
         ConfigManager::save();

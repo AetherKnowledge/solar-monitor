@@ -80,14 +80,14 @@ namespace AuthApi {
         JsonDocument doc;
         SystemManager::systemDevice.toJson(doc);
 
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 
     esp_err_t handleGetConfig(PsychicRequest* request, PsychicResponse* response) {
         JsonDocument doc;
         ConfigManager::config.site.toJson(doc.to<JsonObject>());
 
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 
     esp_err_t handleUpdateConfig(PsychicRequest* request,

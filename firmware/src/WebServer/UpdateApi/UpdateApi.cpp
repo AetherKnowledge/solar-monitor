@@ -58,7 +58,7 @@ namespace UpdateApi {
     esp_err_t handleGetStatus(PsychicRequest* request, PsychicResponse* response) {
         JsonDocument doc;
         UpdateHandler::getUpdateProgress().toJson(doc.to<JsonObject>());
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 
     esp_err_t handleGetVersion(PsychicRequest* request, PsychicResponse* response) {
@@ -66,7 +66,7 @@ namespace UpdateApi {
         doc["firmware"] = Version::FIRMWARE;
         doc["website"] = WebServer::WEBSITE_VERSION;
 
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 
     esp_err_t handleLatestUpdate(PsychicRequest* request,

@@ -39,7 +39,7 @@ namespace ModbusApi {
         Log.println("Sending Modbus Devices: " +
                     String(ConfigManager::config.modbusDevices.size()) + " devices");
 
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 
     esp_err_t handleGetStatus(PsychicRequest* request, PsychicResponse* response) {
@@ -47,7 +47,7 @@ namespace ModbusApi {
 
         doc["updateStatus"] = Enum::toString(ModbusManager::updateStatus);
 
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 
     esp_err_t handleGetDevice(PsychicRequest* request, PsychicResponse* response, String id) {
@@ -59,7 +59,7 @@ namespace ModbusApi {
         }
         device->toJson(doc["device"].to<JsonObject>());
 
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 
     esp_err_t handleGetValues(PsychicRequest* request, PsychicResponse* response) {
@@ -67,7 +67,7 @@ namespace ModbusApi {
 
         JsonDocument doc;
         ModbusManager::getValues(doc, id);
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 
     esp_err_t handleUpdateDevice(PsychicRequest* request,

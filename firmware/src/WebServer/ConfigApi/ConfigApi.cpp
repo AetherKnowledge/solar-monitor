@@ -32,7 +32,7 @@ namespace ConfigApi {
             return Response::error(response, "Failed to deserialize config", 500);
         }
 
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 
     esp_err_t onUpload(PsychicRequest* request,

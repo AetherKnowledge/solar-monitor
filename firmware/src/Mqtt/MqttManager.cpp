@@ -138,6 +138,9 @@ namespace MqttManager {
     }
 
     void publishAll() {
+        if (!ConfigManager::config.mqtt.autoDiscoveryEnabled)
+            return;
+
         for (const auto& device : ConfigManager::config.modbusDevices) {
             MqttDiscovery::publishDevice(device);
         }

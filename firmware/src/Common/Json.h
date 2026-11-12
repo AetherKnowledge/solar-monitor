@@ -144,11 +144,19 @@ void applyVector(JsonArray array, std::vector<T>& vec) {
         JsonObject discovery = obj["discovery"];
 
         // Existing identifier used to locate the entity.
-        String uniqueId = discovery["unique_id"];
+        String uniqueId = discovery["unique_id"] | "";
+        if (uniqueId.isEmpty())
+            continue;
 
         auto it = std::find_if(vec.begin(), vec.end(), [&](const T& item) {
             return item.getDiscovery().uniqueId == uniqueId;
         });
+
+        if (obj["deleted"] | false) {
+            if (it != vec.end())
+                vec.erase(it);
+            continue;
+        }
 
         if (it != vec.end()) {
             // Update existing entity. fromJson(update=true) may rename it

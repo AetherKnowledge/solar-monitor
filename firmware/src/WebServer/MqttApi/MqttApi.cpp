@@ -17,7 +17,7 @@ namespace MqttApi {
         JsonDocument doc;
         ConfigManager::config.mqtt.toJson(doc.to<JsonObject>());
 
-        return Response::sendJson(response, doc);
+        return Response::send(response, doc);
     }
 
     esp_err_t handleUpdateConfig(PsychicRequest* request,

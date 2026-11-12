@@ -88,14 +88,14 @@ namespace DisplayManager {
             return;
         }
 
-        // xTaskCreatePinnedToCore(displayTask,  // Task function
-        //                         "Display",    // Name
-        //                         4096,         // Stack size
-        //                         nullptr,      // Parameter
-        //                         1,            // Priority
-        //                         nullptr,      // Task handle
-        //                         1             // Core (1 is usually best)
-        // );
+        xTaskCreatePinnedToCore(displayTask,  // Task function
+                                "Display",    // Name
+                                4096,         // Stack size
+                                nullptr,      // Parameter
+                                1,            // Priority
+                                nullptr,      // Task handle
+                                1             // Core (1 is usually best)
+        );
     }
 
     void renderStatusBar() {
