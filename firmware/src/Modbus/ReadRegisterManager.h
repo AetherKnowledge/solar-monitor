@@ -4,7 +4,9 @@
 
 namespace ReadRegisterManager {
     constexpr uint16_t MAX_GAP = 2;
-    constexpr uint16_t MAX_REGISTERS_PER_REQUEST = 125;
+
+    // this comes from ModbusMaster 2.0.1 ku8MaxBufferSize
+    constexpr uint16_t MAX_REGISTERS_PER_REQUEST = 64;
 
     struct Result {
         bool success = false;

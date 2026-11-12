@@ -42,7 +42,7 @@ namespace WebServer {
 
         Token token;
 
-        token.payload.generate(WebServer::COOKIE_MAX_AGE);
+        token.payload.generate();
 
         char payloadJson[128];
 

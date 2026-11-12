@@ -10,14 +10,15 @@
     "upload": "pio run -t upload",
     "upload:web": "pnpm build:web && pio run -t uploadweb",
     "upload:storage": "pio run -t uploadstorage",
+    "backup": "tsx scripts/backup.ts",
     "clang": "pio run -t compiledb",
     "upload:ota:firmware": "pnpm build:firmware && tsx scripts/ota.ts firmware",
     "upload:ota:web": "pnpm build:web && tsx scripts/ota.ts web",
     "upload:ota:config": "tsx scripts/ota.ts config",
     "ota:restart": "tsx scripts/ota.ts restart",
-    "flash": "pnpm upload && pnpm build:web  && pnpm upload:web && pnpm monitor",
+    "flash": "pnpm upload && pnpm upload:web && pnpm monitor",
     "manifest": "tsx scripts/generate-manifest.ts",
-    "release": "pnpm build && tsx scripts/generate-manifest.ts",
+    "release": "tsx scripts/release.ts",
     "generate-keys": "tsx scripts/generate-keys.ts"
   },
   "devDependencies": {

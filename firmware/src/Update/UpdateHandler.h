@@ -63,7 +63,6 @@ namespace UpdateHandler {
                       uint64_t index,
                       bool final,
                       bool isFirmware);
-    ;
 
     int compareVersions(String a, String b);
 

@@ -14,7 +14,7 @@ namespace WebServer {
         uint64_t expiresAt = 0;
         uint8_t nonce[16];
 
-        bool generate(uint64_t lifetimeSeconds) {
+        bool generate(uint64_t lifetimeSeconds = COOKIE_MAX_AGE) {
             timeval tv;
             gettimeofday(&tv, nullptr);
 

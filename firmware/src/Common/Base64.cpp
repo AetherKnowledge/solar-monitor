@@ -55,10 +55,11 @@ namespace Base64 {
 
     bool decodeUrl(const char* input, uint8_t* output, size_t outputSize, size_t& outputLength) {
         char buffer[256];
+        const size_t maxPaddedLength = ((sizeof(buffer) - 1) / 4) * 4;
 
         size_t len = strlen(input);
 
-        if (len >= sizeof(buffer))
+        if (len > maxPaddedLength)
             return false;
 
         memcpy(buffer, input, len);

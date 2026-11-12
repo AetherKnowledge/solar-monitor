@@ -107,6 +107,7 @@ namespace NetworkService {
     bool connect(NetworkConfig& config) {
         Log.printf("Connecting to WiFi network: %s\n", config.wifiSsid.c_str());
         WiFi.mode(config.mode);
+        WiFi.hostname("Solar Monitor");
 
         if (config.mode == WIFI_AP_STA && !config.apSsid.isEmpty()) {
             Log.printf("Starting Access Point with SSID: %s\n", config.apSsid.c_str());

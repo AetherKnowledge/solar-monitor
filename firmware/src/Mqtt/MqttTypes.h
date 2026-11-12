@@ -83,7 +83,7 @@ struct SensorDiscovery : Discovery {
         } else {
             uniqueId = json["unique_id"] | uniqueId;
         }
-        name = json["name"] | uniqueId;
+        name = json["name"] | (update ? name : uniqueId);
 
         deviceClass = json["device_class"] | deviceClass;
         stateClass = json["state_class"] | stateClass;
@@ -148,7 +148,9 @@ struct SelectDiscovery : ValueDiscovery {
 
     void fromJson(JsonObject json, bool update = false) override {
         ValueDiscovery::fromJson(json, update);
-        deserializeVector(json["options"], options);
+        if (!update || json["options"].is<JsonArray>()) {
+            deserializeVector(json["options"], options);
+        }
     }
 };
 

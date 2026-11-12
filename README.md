@@ -141,6 +141,26 @@ Modify the sample configuration to match your inverter and hardware setup.
 
 # 🔥 Flashing the ESP32
 
+## USB backup
+
+Close the serial monitor, connect the board over USB, then run:
+
+```bash
+pnpm backup -b esp32dev
+# Or use the default environment from platformio.ini:
+pnpm backup
+```
+
+The command reads the connected device's partition table and storage filesystem,
+then saves `config.json` and `persistence.json` in a dated snapshot under
+`backup/`. Each snapshot also includes the raw storage image and partition table.
+Existing backups are preserved. Snapshot timestamps use UTC. If extraction fails,
+the raw capture remains in a `raw-<environment>-*` folder for recovery.
+The device resets during the read; only persistence already saved to flash is
+included. Back up before flashing a changed partition layout.
+
+## Firmware upload
+
 Build the firmware:
 
 ```bash

@@ -219,7 +219,15 @@ namespace UpdateHandler {
 
         updateProgress.status = UpdateStatus::InProgress;
 
+        constexpr uint32_t DOWNLOAD_IDLE_TIMEOUT_MS = 15'000;
+        uint32_t lastDataAt = millis();
+
         while (http.connected() && written < request.size) {
+            if (millis() - lastDataAt >= DOWNLOAD_IDLE_TIMEOUT_MS) {
+                Log.println("Download stalled: no data received for 15 seconds");
+                break;
+            }
+
             size_t available = stream->available();
 
             if (!available) {
@@ -230,8 +238,12 @@ namespace UpdateHandler {
             size_t toRead = std::min(available, sizeof(buffer));
             int len = stream->readBytes(buffer, toRead);
 
-            if (len <= 0)
+            if (len <= 0) {
+                delay(1);
                 continue;
+            }
+
+            lastDataAt = millis();
 
             if (Update.write(buffer, len) != static_cast<size_t>(len)) {
                 Log.println("Failed to write update chunk");
