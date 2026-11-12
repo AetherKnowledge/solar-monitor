@@ -39,7 +39,6 @@
 				body: JSON.stringify({ password })
 			});
 
-			console.log('Login successful:', response);
 			goto(resolve('/'));
 			hidePopup();
 		} catch (err) {

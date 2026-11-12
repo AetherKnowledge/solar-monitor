@@ -20,10 +20,6 @@
 	};
 
 	const { device = $bindable() }: Props = $props();
-
-	$effect(() => {
-		console.log('DeviceCard device data:', device);
-	});
 </script>
 
 <div

@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-11-12T09:41:52.157Z",
+  "buildTime": "2026-11-12T09:50:37.914Z",
   "boards": {
     "esp32dev": {
       "firmware": {
@@ -8,15 +8,15 @@
         "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.1.2/esp32dev_firmware.bin",
         "size": 1425872,
         "sha256": "2892d70431ba09270ada0d53e767737a8676644a8aac34c5de01a3b52541ba0b",
-        "signature": "MEUCIBOPAciVmWJnNrknH5y5VlsK5ybKFOVvGX6QNzAe/rZfAiEA/DaHiFRC89Uc1EdJYJurnApAF0fliffPrgU/7onmYNQ="
+        "signature": "MEQCIB2khvbWibXENUCqTxAhwe0O6PqyybOrRqAq4jQ7oCEDAiB/MksNc9WMlX2sb0KI3Hl9oXs4at1kvr/W0XqpOUlczg=="
       },
       "website": {
         "version": "v1.1.2",
         "file": "website.bin",
         "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.1.2/esp32dev_website.bin",
         "size": 524288,
-        "sha256": "cb9c61d3d7ab9f4978f04a06f436d9743ea9591ea326581ebfcf7a553effbe36",
-        "signature": "MEUCICG8C6Rq5dw9VRelb5eSSgULOg0jQdgbj2p+qhV1Dvt/AiEA+Wga/oV2UXEvUcoYREVkWroiFKE0lCGeHWzyWi+mtOI="
+        "sha256": "155e4be7926608643b2d6eaa184bec9fe80e813df28ffb8c72e29f72d2177415",
+        "signature": "MEUCIQCezvxtnz0EwoFskY6dh7EXkiuRVCdU555Lk74f++CiNQIgJO99Oz9qJGZY2eVDdXPJOaLQOiWdHSgZMPAZl/EWRIs="
       }
     },
     "esp32-s3-devkitc1-n16r8": {
@@ -26,15 +26,15 @@
         "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.1.2/esp32-s3-devkitc1-n16r8_firmware.bin",
         "size": 1410736,
         "sha256": "661f1d78ce4bab6781886cf3b2b9ac59e2724d683ca675d6ccb05d0742f09001",
-        "signature": "MEQCIBmdPc11/0Oi8ujT8g/hE+5ehRbVBt156aOEcjOPNzIwAiB/B+JVtU6l5zGYen8dIz/fDz4e2ZI69pNWv+UbJ766ow=="
+        "signature": "MEUCIEQnzvGORZaiK01KJBv2NdI9Ue1oewBgPGvh6LaDCazqAiEApS1VcihLKT5EiQUUVkNyYfJhLgrk1/qlvZAEe7GqLPM="
       },
       "website": {
         "version": "v1.1.2",
         "file": "website.bin",
         "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.1.2/esp32-s3-devkitc1-n16r8_website.bin",
         "size": 524288,
-        "sha256": "cb9c61d3d7ab9f4978f04a06f436d9743ea9591ea326581ebfcf7a553effbe36",
-        "signature": "MEQCIG7Kw8GaUWmWarR15hzUFkszrlv65MS6iPEfxNC3gbcVAiAeZfnSkuAQ1flVA6xSMu6PqmbvzJlDm7iiMiMm2byyEg=="
+        "sha256": "155e4be7926608643b2d6eaa184bec9fe80e813df28ffb8c72e29f72d2177415",
+        "signature": "MEYCIQDWp/1+TOHnwe3+TZTejAbpuuVm/bsCtK+NSN8FaUmv1gIhAOuPN4l1TdiVJYUu4Sd2gGwvR4l9XSkNX1fzExZEDaQk"
       }
     }
   }
