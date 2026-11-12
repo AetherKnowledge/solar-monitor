@@ -19,6 +19,7 @@ def generate_version_header():
         versions = json.load(file)
 
     firmware_version = versions.get("firmware")
+    board = env.subst("$PIOENV")
 
     if not firmware_version:
         raise RuntimeError(
@@ -29,10 +30,11 @@ def generate_version_header():
 #pragma once
 
 // AUTO-GENERATED FILE.
-// Do not edit manually. Generated from version.json.
+// Do not edit manually. Generated from version.json and the build environment.
 
 namespace Version {{
     inline constexpr const char* FIRMWARE = "{firmware_version}";
+    inline constexpr const char* BOARD = {json.dumps(board)};
 }}
 """
 
@@ -49,7 +51,7 @@ namespace Version {{
 
         if existing == content:
             print(
-                f"Firmware version: {firmware_version}"
+                f"Firmware version: {firmware_version} ({board})"
             )
             return
 
@@ -59,7 +61,7 @@ namespace Version {{
     )
 
     print(
-        f"Generated Version.h: {firmware_version}"
+        f"Generated Version.h: {firmware_version} ({board})"
     )
 
 

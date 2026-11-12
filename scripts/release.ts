@@ -1,23 +1,14 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { parseArgs } from "node:util";
-
-const { values } = parseArgs({
-  options: { board: { type: "string", short: "b" } },
-});
 
 const ini = readFileSync("platformio.ini", "utf8");
-const environment =
-  values.board ?? ini.match(/^\s*default_envs\s*=\s*([^\r\n;#]+)/m)?.[1].trim();
 const environments = Array.from(
   ini.matchAll(/^\s*\[env:([^\]]+)\]/gm),
   (match) => match[1],
 );
 
-if (!environment || !environments.includes(environment)) {
-  console.error(
-    "Choose one configured PlatformIO environment with -b <environment>.",
-  );
+if (environments.length === 0) {
+  console.error("No PlatformIO environments found in platformio.ini.");
   process.exit(1);
 }
 
@@ -42,8 +33,11 @@ function run(command: string, args: string[]) {
   }
 }
 
-console.log(`Building release for ${environment}...`);
+console.log("Building release for all configured boards...");
 run(pnpmCommand, [...pnpmPrefix, "--filter", "web", "build"]);
-run("pio", ["run", "-e", environment, "-t", "buildweb"]);
-run("pio", ["run", "-e", environment]);
-run(pnpmCommand, [...pnpmPrefix, "manifest", "-b", environment]);
+for (const environment of environments) {
+  console.log(`Building ${environment}...`);
+  run("pio", ["run", "-e", environment, "-t", "buildweb"]);
+  run("pio", ["run", "-e", environment]);
+}
+run(pnpmCommand, [...pnpmPrefix, "manifest"]);

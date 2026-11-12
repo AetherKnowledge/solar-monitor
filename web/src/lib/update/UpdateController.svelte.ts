@@ -1,8 +1,7 @@
 import { apiFetch } from '$lib/common/CommonFunctions';
 import { UpdateStatus } from '$lib/common/CommonTypes';
-import { hidePopup, showLoading } from '$lib/popup/Popup.svelte';
+import { hidePopup, showError, showLoading } from '$lib/popup/Popup.svelte';
 import { createQuery } from '@tanstack/svelte-query';
-import { onMount } from 'svelte';
 
 export type UpdateProgress = {
 	status: UpdateStatus;
@@ -18,12 +17,14 @@ export type ReleaseAsset = {
 	sha256: string;
 };
 
-export type Manifest = {
-	version: string;
-	buildTime: string;
-
+export type BoardManifest = {
 	firmware: ReleaseAsset;
 	website: ReleaseAsset;
+};
+
+export type Manifest = {
+	buildTime: string;
+	boards: Record<string, BoardManifest>;
 };
 
 export type VersionApiResponse = {
@@ -35,6 +36,27 @@ export const latestVersion = $state<VersionApiResponse>({
 	firmware: '0.0.0',
 	website: __WEBSITE_VERSION__
 });
+
+export async function getBoardManifest(): Promise<BoardManifest> {
+	const manifestResponse = await apiFetch<Manifest>(
+		'https://raw.githubusercontent.com/AetherKnowledge/solar-monitor/main/manifest.json',
+		{
+			cache: 'no-store'
+		}
+	);
+	const boardResponse = await apiFetch<{ boardType: string }>('/api/system/board');
+
+	if (!boardResponse?.boardType) {
+		throw new Error('Device did not report its board type. Update the firmware and try again.');
+	}
+
+	const boardManifest = manifestResponse?.boards?.[boardResponse.boardType];
+	if (!boardManifest?.firmware || !boardManifest?.website) {
+		throw new Error(`No update is available for board "${boardResponse.boardType}".`);
+	}
+
+	return boardManifest;
+}
 
 export function createUpdateController() {
 	const versionQuery = createQuery<VersionApiResponse>(() => ({
@@ -63,22 +85,26 @@ export function createUpdateController() {
 		}
 	}));
 
+	let previousStatus = UpdateStatus.NotStarted;
 	$effect(() => {
+		const { status, hasTotalSize } = statusQuery.data;
+		const statusChanged = status !== previousStatus;
+		const wasUpdating =
+			previousStatus === UpdateStatus.InProgress || previousStatus === UpdateStatus.Requested;
+		previousStatus = status;
+
 		// let the manual update do the loading progress
-		if (statusQuery.data?.hasTotalSize) {
+		if (hasTotalSize) {
 			return;
 		}
 
-		if (
-			statusQuery.data?.status === UpdateStatus.InProgress ||
-			statusQuery.data?.status === UpdateStatus.Requested
-		) {
-			showLoading('Updating device configuration...');
-		} else hidePopup();
-	});
-
-	onMount(() => {
-		checkForUpdates();
+		if (status === UpdateStatus.InProgress || status === UpdateStatus.Requested) {
+			showLoading('Installing update...');
+		} else if (status === UpdateStatus.UpdateFailed && statusChanged) {
+			showError('Update failed. Please check the device logs and try again.');
+		} else if (statusChanged && (wasUpdating || status === UpdateStatus.UpdateComplete)) {
+			hidePopup();
+		}
 	});
 
 	return {
@@ -157,13 +183,8 @@ export async function updateWebsiteManual(
 	});
 }
 
-export async function checkForUpdates(): Promise<Manifest> {
-	const manifest = await apiFetch<Manifest>(
-		'https://raw.githubusercontent.com/AetherKnowledge/solar-monitor/main/manifest.json',
-		{
-			cache: 'no-store'
-		}
-	);
+export async function checkForUpdates(): Promise<BoardManifest> {
+	const manifest = await getBoardManifest();
 
 	latestVersion.firmware = manifest.firmware.version;
 	latestVersion.website = manifest.website.version;
@@ -172,12 +193,7 @@ export async function checkForUpdates(): Promise<Manifest> {
 }
 
 export async function updateFirmware(): Promise<void> {
-	const manifest = await apiFetch<Manifest>(
-		'https://raw.githubusercontent.com/AetherKnowledge/solar-monitor/main/manifest.json',
-		{
-			cache: 'no-store'
-		}
-	);
+	const manifest = await getBoardManifest();
 
 	await apiFetch('/api/update/firmware', {
 		method: 'POST',
@@ -189,12 +205,7 @@ export async function updateFirmware(): Promise<void> {
 }
 
 export async function updateWebsite(): Promise<void> {
-	const manifest = await apiFetch<Manifest>(
-		'https://raw.githubusercontent.com/AetherKnowledge/solar-monitor/main/manifest.json',
-		{
-			cache: 'no-store'
-		}
-	);
+	const manifest = await getBoardManifest();
 
 	await apiFetch('/api/update/website', {
 		method: 'POST',

@@ -1,56 +1,10 @@
 // scripts/generate-manifest.mjs
 
 import { createHash, sign } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { copyFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { parseArgs } from "node:util";
 import { generateKeyPair } from "./generate-keys";
-
-const { values } = parseArgs({
-  options: { board: { type: "string", short: "b" } },
-});
-const board = values.board;
-
-if (!board) {
-  console.error("Specify a PlatformIO environment with -b <environment>.");
-  process.exit(1);
-}
-
-const keyPair = await generateKeyPair();
-
-const root = process.cwd();
-
-const version = JSON.parse(
-  await readFile(path.join(root, "version.json"), "utf8"),
-);
-
-const VERSION = `v${version.version}`;
-const FIRMWARE_VERSION = `v${version.firmware}`;
-const WEBSITE_VERSION = `v${version.website}`;
-const REPO =
-  "https://github.com/AetherKnowledge/solar-monitor/releases/download";
-
-const firmwarePath = path.join(root, `.pio/build/${board}/firmware.bin`);
-const websitePath = path.join(root, `.pio/build/${board}/website.bin`);
-
-const releaseDir = path.join(root, "release");
-
-await mkdir(releaseDir, { recursive: true });
-
-async function fileInfo(
-  file: string,
-): Promise<{ size: number; sha256: string }> {
-  const buffer = await readFile(file);
-  const { size } = await stat(file);
-
-  return {
-    size,
-    sha256: createHash("sha256").update(buffer).digest("hex"),
-  };
-}
-
-const firmware = await fileInfo(firmwarePath);
-const website = await fileInfo(websitePath);
 
 type ReleaseAsset = {
   version: string;
@@ -64,12 +18,48 @@ type ReleaseAssetWithSignature = ReleaseAsset & {
   signature: string;
 };
 
-type Manifest = {
-  version: string;
-  buildTime: string;
+type BoardManifest = {
   firmware: ReleaseAssetWithSignature;
   website: ReleaseAssetWithSignature;
 };
+
+type Manifest = {
+  buildTime: string;
+  boards: Record<string, BoardManifest>;
+};
+
+const ini = readFileSync("platformio.ini", "utf8");
+
+const boards = Array.from(
+  ini.matchAll(/^\s*\[env:([^\]]+)\]/gm),
+  (match) => match[1],
+);
+
+const keyPair = await generateKeyPair();
+
+const root = process.cwd();
+
+const version = JSON.parse(
+  await readFile(path.join(root, "version.json"), "utf8"),
+);
+
+const FIRMWARE_VERSION = `v${version.firmware}`;
+const WEBSITE_VERSION = `v${version.website}`;
+const REPO =
+  "https://github.com/AetherKnowledge/solar-monitor/releases/download";
+const releaseDir = path.join(root, "release");
+
+async function fileInfo(
+  file: string,
+): Promise<{ size: number; sha256: string }> {
+  const buffer = await readFile(file);
+  const { size } = await stat(file);
+
+  return {
+    size,
+    sha256: createHash("sha256").update(buffer).digest("hex"),
+  };
+}
 
 function assetPayload(asset: ReleaseAsset): Buffer {
   return Buffer.from(
@@ -95,31 +85,47 @@ function signAsset(asset: ReleaseAsset): ReleaseAssetWithSignature {
   };
 }
 
+async function generateBoardManifest(board: string): Promise<BoardManifest> {
+  const firmwarePath = path.join(root, `.pio/build/${board}/firmware.bin`);
+  const websitePath = path.join(root, `.pio/build/${board}/website.bin`);
+
+  const firmware = await fileInfo(firmwarePath);
+  const website = await fileInfo(websitePath);
+
+  // Create release directory if it doesn't exist
+  await mkdir(releaseDir, { recursive: true });
+
+  // Copy release assets
+  await copyFile(firmwarePath, path.join(releaseDir, board + "_firmware.bin"));
+  await copyFile(websitePath, path.join(releaseDir, board + "_website.bin"));
+
+  return {
+    firmware: signAsset({
+      version: FIRMWARE_VERSION,
+      file: "firmware.bin",
+      url: `${REPO}/${FIRMWARE_VERSION}/${board}_firmware.bin`,
+      size: firmware.size,
+      sha256: firmware.sha256,
+    }),
+    website: signAsset({
+      version: WEBSITE_VERSION,
+      file: "website.bin",
+      url: `${REPO}/${WEBSITE_VERSION}/${board}_website.bin`,
+      size: website.size,
+      sha256: website.sha256,
+    }),
+  };
+}
+
 const manifest: Manifest = {
-  version: VERSION,
   buildTime: new Date().toISOString(),
 
-  firmware: signAsset({
-    version: FIRMWARE_VERSION,
-    file: "firmware.bin",
-    url: `${REPO}/${FIRMWARE_VERSION}/firmware.bin`,
-    size: firmware.size,
-    sha256: firmware.sha256,
-  }),
-
-  website: signAsset({
-    version: WEBSITE_VERSION,
-    file: "website.bin",
-    url: `${REPO}/${WEBSITE_VERSION}/website.bin`,
-    size: website.size,
-    sha256: website.sha256,
-  }),
+  boards: Object.fromEntries(
+    await Promise.all(
+      boards.map(async (board) => [board, await generateBoardManifest(board)]),
+    ),
+  ),
 };
-
-// Copy release assets
-await copyFile(firmwarePath, path.join(releaseDir, "firmware.bin"));
-
-await copyFile(websitePath, path.join(releaseDir, "website.bin"));
 
 // Write manifest to release folder
 const manifestJson = JSON.stringify(manifest, null, 2) + "\n";

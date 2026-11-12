@@ -1,20 +1,41 @@
 {
-  "version": "v1.1.1",
-  "buildTime": "2026-07-31T09:22:32.009Z",
-  "firmware": {
-    "version": "v1.1.1",
-    "file": "firmware.bin",
-    "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.1.1/firmware.bin",
-    "size": 1274752,
-    "sha256": "11a73d9f923a36e0bd70d7ba8f1a7642854abe9befa80c6e0e2e0533b51f5018",
-    "signature": "MEUCICtphrdi54kVBkG8YtH7/cwfXpdIYkrOX5qRSgYr60+1AiEAj3VoE8C0v9zCXFS2YiS6ySYXtGf1FdbLfVi8kOldri4="
-  },
-  "website": {
-    "version": "v1.1.1",
-    "file": "website.bin",
-    "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.1.1/website.bin",
-    "size": 524288,
-    "sha256": "1728d148072501434b85e4b50e0d6e94957473272925e9ecb40ac606bd13a67e",
-    "signature": "MEUCIDBZvxiTV7E5ayJo0q6S8KUlG/0gE4xANKA71WXQ5nGFAiEAy6l6R9q3wk2yYfJ9aKfLz+63Hso4TOCUdOUAo4u6n6M="
+  "buildTime": "2026-11-12T09:41:52.157Z",
+  "boards": {
+    "esp32dev": {
+      "firmware": {
+        "version": "v1.1.2",
+        "file": "firmware.bin",
+        "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.1.2/esp32dev_firmware.bin",
+        "size": 1425872,
+        "sha256": "2892d70431ba09270ada0d53e767737a8676644a8aac34c5de01a3b52541ba0b",
+        "signature": "MEUCIBOPAciVmWJnNrknH5y5VlsK5ybKFOVvGX6QNzAe/rZfAiEA/DaHiFRC89Uc1EdJYJurnApAF0fliffPrgU/7onmYNQ="
+      },
+      "website": {
+        "version": "v1.1.2",
+        "file": "website.bin",
+        "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.1.2/esp32dev_website.bin",
+        "size": 524288,
+        "sha256": "cb9c61d3d7ab9f4978f04a06f436d9743ea9591ea326581ebfcf7a553effbe36",
+        "signature": "MEUCICG8C6Rq5dw9VRelb5eSSgULOg0jQdgbj2p+qhV1Dvt/AiEA+Wga/oV2UXEvUcoYREVkWroiFKE0lCGeHWzyWi+mtOI="
+      }
+    },
+    "esp32-s3-devkitc1-n16r8": {
+      "firmware": {
+        "version": "v1.1.2",
+        "file": "firmware.bin",
+        "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.1.2/esp32-s3-devkitc1-n16r8_firmware.bin",
+        "size": 1410736,
+        "sha256": "661f1d78ce4bab6781886cf3b2b9ac59e2724d683ca675d6ccb05d0742f09001",
+        "signature": "MEQCIBmdPc11/0Oi8ujT8g/hE+5ehRbVBt156aOEcjOPNzIwAiB/B+JVtU6l5zGYen8dIz/fDz4e2ZI69pNWv+UbJ766ow=="
+      },
+      "website": {
+        "version": "v1.1.2",
+        "file": "website.bin",
+        "url": "https://github.com/AetherKnowledge/solar-monitor/releases/download/v1.1.2/esp32-s3-devkitc1-n16r8_website.bin",
+        "size": 524288,
+        "sha256": "cb9c61d3d7ab9f4978f04a06f436d9743ea9591ea326581ebfcf7a553effbe36",
+        "signature": "MEQCIG7Kw8GaUWmWarR15hzUFkszrlv65MS6iPEfxNC3gbcVAiAeZfnSkuAQ1flVA6xSMu6PqmbvzJlDm7iiMiMm2byyEg=="
+      }
+    }
   }
 }

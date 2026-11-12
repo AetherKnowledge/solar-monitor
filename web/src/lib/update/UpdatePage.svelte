@@ -42,8 +42,15 @@
 		if (checkingForUpdates) return;
 
 		checkingForUpdates = true;
-		await checkForUpdates();
-		checkingForUpdates = false;
+		try {
+			await checkForUpdates();
+		} catch (error) {
+			showError(
+				error instanceof Error ? error.message : 'Failed to check for updates. Please try again.'
+			);
+		} finally {
+			checkingForUpdates = false;
+		}
 	}
 
 	async function onUpdateFirmwareManual() {
@@ -119,9 +126,15 @@
 			return;
 		}
 
-		showLoading('Updating firmware...');
-		await updateFirmware();
-		await controller.statusQuery.refetch();
+		try {
+			showLoading('Updating firmware...');
+			await updateFirmware();
+			await controller.statusQuery.refetch();
+		} catch (error) {
+			showError(
+				error instanceof Error ? error.message : 'Failed to update firmware. Please try again.'
+			);
+		}
 	}
 
 	async function onUpdateWebsite() {
@@ -137,12 +150,21 @@
 			return;
 		}
 
-		showLoading('Updating web interface...');
-		await updateWebsite();
-		await controller.statusQuery.refetch();
+		try {
+			showLoading('Updating web interface...');
+			await updateWebsite();
+			await controller.statusQuery.refetch();
+		} catch (error) {
+			showError(
+				error instanceof Error
+					? error.message
+					: 'Failed to update the web interface. Please try again.'
+			);
+		}
 	}
 
 	onMount(() => {
+		void onCheckUpdate();
 		return () => {
 			hidePopup();
 		};
