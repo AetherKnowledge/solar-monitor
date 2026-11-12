@@ -117,7 +117,7 @@ namespace ReadRegisterManager {
 
             uint16_t newCount = reg.address - lastGroup.startAddress + 1;
             if (reg.address <= lastGroup.startAddress + lastGroup.count + MAX_GAP &&
-                newCount < MAX_REGISTERS_PER_REQUEST) {
+                newCount <= MAX_REGISTERS_PER_REQUEST) {
                 lastGroup.registers.push_back(&reg);
                 lastGroup.count = newCount;
             } else {

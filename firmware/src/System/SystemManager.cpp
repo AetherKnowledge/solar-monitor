@@ -13,8 +13,7 @@
 
 namespace SystemManager {
     volatile bool requestedRestart = false;
-    unsigned long lastBuzz = 0;
-    bool buzzerActive = false;
+    volatile bool requestedUpdate = false;
 
     SystemDevice systemDevice =
         makeDevice("solar-monitor", "Solar Monitor", "Solar Monitor", "Solar Monitor");
@@ -158,5 +157,16 @@ namespace SystemManager {
 
     void requestRestart() {
         requestedRestart = true;
+    }
+
+    void requestUpdate(const JsonVariant& json) {
+        ConfigManager::config.site.fromJson(json);
+        ConfigManager::save();
+
+        Log.println();
+        Log.println("Site configuration updated");
+        Log.println(ConfigManager::config.site.toString().c_str());
+
+        requestRestart();
     }
 }  // namespace SystemManager

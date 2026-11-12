@@ -2,49 +2,57 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <ESPAsyncWebServer.h>
+#include <PsychicHttp.h>
 #include <optional>
 #include <unordered_map>
 
 namespace Response {
-    inline void send(AsyncWebServerRequest* request,
-                     int status,
-                     const String& message,
-                     Print* out = nullptr) {
+    inline esp_err_t send(PsychicResponse* response,
+                          const JsonVariantConst& value,
+                          int status = 200,
+                          Print* out = nullptr) {
+        PsychicStreamResponse stream(response, "application/json");
+        stream.setCode(status);
+
+        const esp_err_t err = stream.beginSend();
+        if (err != ESP_OK) {
+            return err;
+        }
+
+        serializeJson(value, stream);
+        const esp_err_t result = stream.endSend();
+
+        if (out) {
+            out->printf("Response: %d ", status);
+            serializeJson(value, *out);
+            out->println();
+        }
+
+        return result;
+    }
+
+    inline esp_err_t send(PsychicResponse* response,
+                          const String& message,
+                          int status,
+                          Print* out = nullptr) {
         JsonDocument doc;
         doc["message"] = message;
 
-        String json;
-        serializeJson(doc, json);
-
-        if (out) {
-            out->printf("Response: %d %s\n", status, message.c_str());
-        }
-
-        request->send(status, "application/json", json);
+        return send(response, doc, status, out);
     }
 
-    inline void success(AsyncWebServerRequest* request,
-                        int status = 200,
-                        const String& message = "OK",
-                        Print* out = nullptr) {
-        send(request, status, message, out);
+    inline esp_err_t success(PsychicResponse* response,
+                             const String& message = "OK",
+                             int status = 200,
+                             Print* out = nullptr) {
+        return send(response, message, status, out);
     }
 
-    inline void error(AsyncWebServerRequest* request,
-                      int status,
-                      const String& message,
-                      Print* out = nullptr) {
-        send(request, status, message, out);
-    }
-
-    inline void sendJson(AsyncWebServerRequest* request, const JsonVariantConst& value) {
-        AsyncResponseStream* response =
-            request->beginResponseStream("application/json", measureJson(value));
-
-        serializeJson(value, *response);
-
-        request->send(response);
+    inline esp_err_t error(PsychicResponse* response,
+                           const String& message,
+                           int status = 400,
+                           Print* out = nullptr) {
+        return send(response, message, status, out);
     }
 
 }  // namespace Response

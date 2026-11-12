@@ -5,6 +5,7 @@
 .vscode/launch.json
 .vscode/ipch
 .mypy_cache
+__pycache__/
 firmware/data
 config.json
 
@@ -13,7 +14,7 @@ web/src/routes/test
 !.env.example
 
 node_modules
-logs
+/logs/
 .cache
 compile_commands.json
 firmware/include/Version.h
@@ -21,3 +22,8 @@ firmware/include/UpdatePublicKey.h
 ui.vlx
 release
 signature/private.pem
+
+firmware/include/SecretKey.h
+/persistence.json
+
+/backup

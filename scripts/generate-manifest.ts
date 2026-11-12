@@ -3,7 +3,18 @@
 import { createHash, sign } from "node:crypto";
 import { copyFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { parseArgs } from "node:util";
 import { generateKeyPair } from "./generate-keys";
+
+const { values } = parseArgs({
+  options: { board: { type: "string", short: "b" } },
+});
+const board = values.board;
+
+if (!board) {
+  console.error("Specify a PlatformIO environment with -b <environment>.");
+  process.exit(1);
+}
 
 const keyPair = await generateKeyPair();
 
@@ -19,8 +30,8 @@ const WEBSITE_VERSION = `v${version.website}`;
 const REPO =
   "https://github.com/AetherKnowledge/solar-monitor/releases/download";
 
-const firmwarePath = path.join(root, ".pio/build/esp32dev/firmware.bin");
-const websitePath = path.join(root, ".pio/build/esp32dev/littlefs.bin");
+const firmwarePath = path.join(root, `.pio/build/${board}/firmware.bin`);
+const websitePath = path.join(root, `.pio/build/${board}/website.bin`);
 
 const releaseDir = path.join(root, "release");
 

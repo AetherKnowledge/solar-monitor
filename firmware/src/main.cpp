@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <Networking/NetworkManager.h>
+#include <Networking/NetworkService.h>
 #include <WebServer/WebServer.h>
 #include <Config/ConfigManager.h>
 #include <Mqtt/MqttManager.h>
@@ -11,13 +11,12 @@
 #include "Config/ConfigManager.h"
 #include "Display/DisplayManager.h"
 #include "Update/UpdateHandler.h"
-
-#define LED_PIN 32
+#include "Pins.h"
 
 void setup() {
     Serial.begin(115200);
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, HIGH);
+    pinMode(Pins::STATUS_LED, OUTPUT);
+    digitalWrite(Pins::STATUS_LED, HIGH);
 
     DisplayManager::setup();
     SystemManager::setup();
@@ -26,7 +25,7 @@ void setup() {
     DisplayManager::showLoadingProgress("Loading Config", 0);
     if (ConfigManager::load()) {
         DisplayManager::showLoadingProgress("Connecting to WiFi", 40);
-        NetworkManager::connect(ConfigManager::config.network);
+        NetworkService::connect(ConfigManager::config.network);
 
         DisplayManager::showLoadingProgress("Starting Modbus", 60);
         ModbusManager::setup();
@@ -48,7 +47,7 @@ void setup() {
 
 void loop() {
     SystemManager::loop();
-    NetworkManager::loop();
+    NetworkService::loop();
     ModbusManager::loop();
     MqttManager::loop();
     SoundManager::loop();

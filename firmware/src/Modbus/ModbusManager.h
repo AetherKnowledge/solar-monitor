@@ -27,7 +27,7 @@ namespace ModbusManager {
     void pollDevice(ModbusDevice& device);
     void publishDisplayData();
     void reload();
-    void requestUpdate(const String& id, JsonVariantConst json);
+    void requestUpdate(const String& id, const JsonVariantConst& json);
     bool updateConfig(PendingUpdate& update);
     void setupDevices(std::vector<ModbusDevice>& devices);
 

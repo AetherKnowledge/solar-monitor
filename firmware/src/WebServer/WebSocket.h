@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Arduino.h>
-#include <ESPAsyncWebServer.h>
+#include <PsychicHttp.h>
 
 namespace WebSocket {
-    void setup(AsyncWebServer& server);
+    void setup(PsychicHttpServer& server);
     void loop();
 }  // namespace WebSocket

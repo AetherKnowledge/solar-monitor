@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { UpdateStatus } from '$lib/common/CommonTypes';
+	import { createPatch } from '$lib/common/Patcher.svelte';
 	import NetworkMode from '$lib/network/NetworkMode.svelte';
 	import { createNetworkConfigQuery, updateNetworkConfig } from '$lib/network/NetworkQueries';
 	import { defaultNetworkConfig, type NetworkConfig } from '$lib/network/NetworkTypes';
@@ -55,9 +56,13 @@
 		updateValidity();
 	});
 
-	let hasChanged = $derived.by(
-		() => JSON.stringify(networkConfig) !== JSON.stringify(savedNetworkConfig)
-	);
+	const hasChanged = $derived.by(() => {
+		if (!networkConfig || !savedNetworkConfig) {
+			return false;
+		}
+
+		return createPatch(savedNetworkConfig, networkConfig) !== undefined;
+	});
 
 	function cancelChanges() {
 		if (savedNetworkConfig) {
@@ -66,8 +71,19 @@
 	}
 
 	async function saveChanges() {
+		if (!networkConfig || !savedNetworkConfig) {
+			return;
+		}
+
+		const patch = createPatch(savedNetworkConfig, networkConfig);
+
+		if (!patch) {
+			return;
+		}
+
+		showLoading('Saving network configuration...');
 		try {
-			await updateNetworkConfig(networkConfig);
+			await updateNetworkConfig(patch);
 			await query.refetch();
 		} catch {
 			showError('Failed to save network configuration. Please try again.');

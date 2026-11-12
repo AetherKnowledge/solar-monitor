@@ -1,7 +1,7 @@
 #include "ConfigManager.h"
 #include <ArduinoJson.h>
 #include <Mqtt/MqttManager.h>
-#include <Networking/NetworkManager.h>
+#include <Networking/NetworkService.h>
 #include <Modbus/ModbusManager.h>
 #include <Common/UpdateStatus.h>
 #include <Common/Logger.h>
@@ -73,7 +73,7 @@ namespace ConfigManager {
 
     bool save() {
         JsonDocument doc;
-        config.toJson(doc.to<JsonObject>());
+        config.toJson(doc.to<JsonObject>(), true);
 
         if (ConfigFS.exists(CONFIG_LOCATION) &&
             !copyFile(ConfigFS, CONFIG_LOCATION, CONFIG_BAK_LOCATION)) {

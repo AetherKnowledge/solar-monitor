@@ -1,5 +1,4 @@
 #include "WebServer.h"
-#include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include "NetworkApi/NetworkApi.h"
 #include "MqttApi/MqttApi.h"
@@ -9,10 +8,12 @@
 #include "SystemApi/SystemApi.h"
 #include "WebSocket.h"
 #include <Common/Logger.h>
+#include "AuthApi/AuthApi.h"
 
 namespace WebServer {
-    AsyncWebServer server(80);
+    PsychicHttpServer server(80);
     fs::LittleFSFS WebFS;
+    Middleware auth;
 
     String WEBSITE_VERSION = "0.0.0";
     static void setWebsiteVersion() {
@@ -34,6 +35,16 @@ namespace WebServer {
         }
     }
 
+    static void createAuthMiddleware() {
+        if (!ConfigManager::config.site.passwordEnabled ||
+            ConfigManager::config.site.password.isEmpty()) {
+            return;
+        }
+
+        Log.println("Authentication enabled");
+        server.addMiddleware(&auth);
+    }
+
     bool start() {
         Log.println("Starting web server");
 
@@ -43,39 +54,30 @@ namespace WebServer {
             Log.println("LittleFS Mount Failed");
             return false;
         }
-
         setWebsiteVersion();
 
+        createAuthMiddleware();
         registerApis();
 
         server.serveStatic("/_app", WebFS, "/_app")
-            .setCacheControl("public, max-age=31536000, immutable")
-            .setTryGzipFirst(true);
+            ->setCacheControl("public, max-age=31536000, immutable");
 
         server.serveStatic("/roboto.woff2", WebFS, "/roboto.woff2")
-            .setCacheControl("public, max-age=31536000, immutable")
-            .setTryGzipFirst(true);
+            ->setCacheControl("public, max-age=31536000, immutable");
 
         server.serveStatic("/", WebFS, "/")
-            .setDefaultFile("index.html")
-            .setCacheControl("no-cache")
-            .setTryGzipFirst(true);
+            ->setDefaultFile("index.html")
+            ->setCacheControl("no-cache");
 
-        server.onNotFound([](AsyncWebServerRequest* request) {
-            if (request->url().startsWith("/api/")) {
-                request->send(404);
-                return;
+        server.onNotFound([](PsychicRequest* request, PsychicResponse* response) -> esp_err_t {
+            if (request->path().startsWith("/api/")) {
+                return response->send(404);
             }
 
-            AsyncWebServerResponse* response =
-                request->beginResponse(WebFS, "/index.html.gz", "text/html");
-
-            response->addHeader("Cache-Control", "no-cache");
-            response->addHeader("Content-Encoding", "gzip");
-
-            request->send(response);
+            PsychicFileResponse file(response, WebFS, "/index.html");
+            file.addHeader("Cache-Control", "no-cache");
+            return file.send();
         });
-
         server.begin();
 
         Log.println("Web server started");
@@ -84,12 +86,13 @@ namespace WebServer {
 
     void registerApis() {
         WebSocket::setup(server);
-        NetworkApi::registerApi(server);
-        MqttApi::registerApi(server);
-        ConfigApi::registerApi(server);
-        ModbusApi::registerApi(server);
-        UpdateApi::registerApi(server);
-        SystemApi::registerApi(server);
+        NetworkApi::registerRoutes(server);
+        MqttApi::registerRoutes(server);
+        ConfigApi::registerRoutes(server);
+        ModbusApi::registerRoutes(server);
+        UpdateApi::registerRoutes(server);
+        SystemApi::registerRoutes(server);
+        AuthApi::registerRoutes(server);
     }
 
     bool stop() {

@@ -5,13 +5,34 @@ import type {
 	ReadRegister,
 	SelectWriteRegister,
 	VirtualSensor
-} from './DeviceTypes';
+} from '../devices/DeviceTypes';
 
 type RegisterEntity = ReadRegister | VirtualSensor | SelectWriteRegister | NumberWriteRegister;
 
+type EntityPatch<T extends RegisterEntity> =
+	Patch<T> | { discovery: { unique_id: string }; deleted: true };
+
 export type Patch<T> = {
-	[K in keyof T]?: T[K] extends object ? Patch<T[K]> : T[K];
+	[K in keyof T]?: T[K] extends (infer Item)[]
+		? Item extends RegisterEntity
+			? EntityPatch<Item>[]
+			: T[K]
+		: T[K] extends object
+			? Patch<T[K]>
+			: T[K];
 };
+
+export function createPatch<T extends object>(original: T, current: T): Patch<T> | undefined {
+	const patch: Patch<T> = {};
+
+	for (const key in current) {
+		if (Object.is(original[key], current[key])) continue;
+
+		patch[key] = current[key] as Patch<T>[typeof key];
+	}
+
+	return Object.keys(patch).length ? patch : undefined;
+}
 
 export function createDevicePatch(
 	original: ModbusDevice,
@@ -76,16 +97,17 @@ function diffDiscovery(
 function diffEntities<T extends RegisterEntity>(
 	original: T[],
 	current: T[]
-): Patch<T>[] | undefined {
-	const result: Patch<T>[] = [];
+): EntityPatch<T>[] | undefined {
+	const result: EntityPatch<T>[] = [];
 
 	const map = new Map(original.map((item) => [item.discovery.unique_id, item]));
 
 	for (const item of current) {
 		const old = map.get(item.discovery.unique_id);
+		map.delete(item.discovery.unique_id);
 
 		if (!old) {
-			result.push(structuredClone(item));
+			result.push($state.snapshot(item) as Patch<T>);
 			continue;
 		}
 
@@ -97,6 +119,10 @@ function diffEntities<T extends RegisterEntity>(
 			patch.discovery.unique_id = item.discovery.unique_id;
 			result.push(patch);
 		}
+	}
+
+	for (const unique_id of map.keys()) {
+		result.push({ discovery: { unique_id }, deleted: true });
 	}
 
 	return result.length ? result : undefined;

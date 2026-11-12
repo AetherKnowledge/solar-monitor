@@ -4,7 +4,6 @@
 #include <Common/File.h>
 #include <Common/Enum.h>
 #include <Common/UpdateStatus.h>
-#include <ESPAsyncWebServer.h>
 
 namespace ConfigManager {
     inline constexpr char CONFIG_LOCATION[] = "/config.json";

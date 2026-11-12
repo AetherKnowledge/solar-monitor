@@ -6,7 +6,7 @@
 #include <vector>
 #include <Config/ConfigTypes.h>
 
-namespace NetworkManager {
+namespace NetworkService {
     struct NetworkStatus {
         bool connected;
         String ssid;
@@ -24,7 +24,7 @@ namespace NetworkManager {
     void loop();
     void startScanning();
     void pollNetworkScan();
-    void requestUpdate(NetworkConfig& newConfig);
+    void requestUpdate(const JsonVariantConst& json);
     uint8_t rssiToWifiStrength(int8_t rssi);
     const NetworkStatus& getNetworkStatus();
-}  // namespace NetworkManager
+}  // namespace NetworkService

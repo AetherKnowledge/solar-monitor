@@ -5,7 +5,7 @@
 #include <Common/UpdateStatus.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
-#include <Networking/NetworkManager.h>
+#include <Networking/NetworkService.h>
 #include <mbedtls/sha256.h>
 #include <Version.h>
 #include <WebServer/WebServer.h>
@@ -34,7 +34,7 @@ namespace UpdateHandler {
         }
     }
 
-    void onUpdateFinish(AsyncWebServerRequest* request, bool isFirmware) {
+    esp_err_t onUpdateFinish(PsychicRequest* request, PsychicResponse* response, bool isFirmware) {
         const String name = isFirmware ? "Firmware" : "Website";
 
         if (!Update.hasError() && Update.isFinished() &&
@@ -44,26 +44,32 @@ namespace UpdateHandler {
 
             String completeMessage = name + " update complete. Restarting...";
 
-            Response::success(request, 200, completeMessage, &Log);
-            return;
+            return Response::success(response, completeMessage, 200, &Log);
         }
 
         updateProgress.status = UpdateStatus::NotStarted;
         String errorMessage = name + " update failed. Please check the logs for more information.";
-        Response::error(request, 500, errorMessage, &Log);
+        return Response::error(response, errorMessage, 500, &Log);
     }
 
-    void onChunk(uint8_t* data,
-                 size_t len,
-                 size_t index,
-                 bool final,
-                 std::optional<size_t> total,
-                 bool isFirmware) {
+    esp_err_t onChunk(PsychicRequest* request,
+                      uint8_t* data,
+                      size_t len,
+                      uint64_t index,
+                      bool final,
+                      bool isFirmware) {
         const char* name = isFirmware ? "Firmware" : "Website";
         const auto partition = isFirmware ? U_FLASH : U_SPIFFS;
 
+        std::optional<size_t> total;
+
+        // Only basic uploads have a meaningful content length.
+        if (index == 0 && !request->isMultipart()) {
+            total = request->contentLength();
+        }
+
         if (updateProgress.status == UpdateStatus::UpdateFailed) {
-            return;
+            return ESP_FAIL;
         }
 
         // First chunk
@@ -71,23 +77,17 @@ namespace UpdateHandler {
             if (updateProgress.status == UpdateStatus::InProgress ||
                 updateProgress.status == UpdateStatus::Requested) {
                 Log.println("Update already in progress");
-                return;
+                return ESP_FAIL;
             }
 
             updateProgress.status = UpdateStatus::Requested;
             Log.printf("Starting %s update\n", name);
+
             if (total) {
-                Log.printf("%s size: %u bytes\n", name, total.value());
+                Log.printf("%s size: %u bytes\n", name, *total);
             }
 
-            /*
-             * U_SPIFFS tells Update that we're updating
-             * the filesystem/data partition rather than
-             * an application partition.
-             */
-
-            bool hasStarted = total ? Update.begin(*total, partition)
-                                    : Update.begin(UPDATE_SIZE_UNKNOWN, partition);
+            bool hasStarted = Update.begin(total ? *total : UPDATE_SIZE_UNKNOWN, partition);
 
             if (!hasStarted) {
                 updateProgress.status = UpdateStatus::UpdateFailed;
@@ -95,7 +95,7 @@ namespace UpdateHandler {
                 Log.println("Failed to begin " + String(name) + " update");
                 Log.printf("Update error: %d\n", Update.getError());
                 Update.printError(Log);
-                return;
+                return ESP_FAIL;
             }
         }
 
@@ -106,7 +106,7 @@ namespace UpdateHandler {
             Log.println("Failed to write " + String(name) + " chunk");
             Log.printf("Update error: %d\n", Update.getError());
             Update.printError(Log);
-            return;
+            return ESP_FAIL;
         }
 
         if (updateProgress.status != UpdateStatus::InProgress) {
@@ -114,11 +114,16 @@ namespace UpdateHandler {
         }
 
         if (total) {
-            Log.printf("%s: %u / %u bytes\r", name, index + len, total.value());
-            updateProgress.progress = static_cast<uint8_t>((index + len) * 100 / total.value());
+            Log.printf("%s: %llu / %u bytes\r",
+                       name,
+                       static_cast<unsigned long long>(index + len),
+                       *total);
+
+            updateProgress.progress = static_cast<uint8_t>(((index + len) * 100) / *total);
             updateProgress.hasTotalSize = true;
         } else {
-            Log.printf("%s: %u bytes\r", name, index + len);
+            Log.printf("%s: %llu bytes\r", name, static_cast<unsigned long long>(index + len));
+
             updateProgress.progress = 0;
             updateProgress.hasTotalSize = false;
         }
@@ -132,12 +137,14 @@ namespace UpdateHandler {
 
                 Log.println("Failed to finish " + String(name) + " update");
                 Update.printError(Log);
-                return;
+                return ESP_FAIL;
             }
 
             updateProgress.status = UpdateStatus::UpdateComplete;
             Log.println(String(name) + " written successfully");
         }
+
+        return ESP_OK;
     }
 
     bool downloadAndInstall(const UpdateRequest& request, bool isFirmware) {
@@ -156,7 +163,7 @@ namespace UpdateHandler {
         Log.printf("Starting %s update\n", name);
         Log.printf("%s size: %u bytes\n", name, request.size);
 
-        if (!NetworkManager::getNetworkStatus().connected) {
+        if (!NetworkService::getNetworkStatus().connected) {
             Log.println("No network connection");
             updateProgress.status = UpdateStatus::UpdateFailed;
             return false;
@@ -201,28 +208,26 @@ namespace UpdateHandler {
             return false;
         }
 
-        WiFiClient* stream = http.getStreamPtr();
+        auto* stream = http.getStreamPtr();
 
         static uint8_t buffer[1024];
         size_t written = 0;
 
         mbedtls_sha256_context sha;
         mbedtls_sha256_init(&sha);
-
-        if (mbedtls_sha256_starts_ret(&sha, 0) != 0) {
-            Log.println("Failed to initialize SHA-256");
-
-            Update.abort();
-            http.end();
-            mbedtls_sha256_free(&sha);
-
-            updateProgress.status = UpdateStatus::UpdateFailed;
-            return false;
-        }
+        mbedtls_sha256_starts(&sha, 0);
 
         updateProgress.status = UpdateStatus::InProgress;
 
+        constexpr uint32_t DOWNLOAD_IDLE_TIMEOUT_MS = 15'000;
+        uint32_t lastDataAt = millis();
+
         while (http.connected() && written < request.size) {
+            if (millis() - lastDataAt >= DOWNLOAD_IDLE_TIMEOUT_MS) {
+                Log.println("Download stalled: no data received for 15 seconds");
+                break;
+            }
+
             size_t available = stream->available();
 
             if (!available) {
@@ -233,8 +238,12 @@ namespace UpdateHandler {
             size_t toRead = std::min(available, sizeof(buffer));
             int len = stream->readBytes(buffer, toRead);
 
-            if (len <= 0)
+            if (len <= 0) {
+                delay(1);
                 continue;
+            }
+
+            lastDataAt = millis();
 
             if (Update.write(buffer, len) != static_cast<size_t>(len)) {
                 Log.println("Failed to write update chunk");
@@ -249,19 +258,11 @@ namespace UpdateHandler {
                 return false;
             }
 
-            if (mbedtls_sha256_update_ret(&sha, buffer, len) != 0) {
-                Log.println("Failed to update SHA-256");
+            mbedtls_sha256_update(&sha, buffer, static_cast<size_t>(len));
 
-                Update.abort();
-                http.end();
-                mbedtls_sha256_free(&sha);
+            written += static_cast<size_t>(len);
 
-                updateProgress.status = UpdateStatus::UpdateFailed;
-                return false;
-            }
-
-            written += len;
-            Log.printf("%s: %u / %u bytes\r", name, written, request.size);
+            Log.printf("%s: %u / %u bytes\r", name, static_cast<unsigned>(written), request.size);
         }
 
         Log.println();
@@ -279,23 +280,13 @@ namespace UpdateHandler {
         }
 
         uint8_t digest[32];
-
-        if (mbedtls_sha256_finish_ret(&sha, digest) != 0) {
-            Log.println("Failed to finalize SHA-256");
-
-            Update.abort();
-            mbedtls_sha256_free(&sha);
-
-            updateProgress.status = UpdateStatus::UpdateFailed;
-            return false;
-        }
-
+        mbedtls_sha256_finish(&sha, digest);
         mbedtls_sha256_free(&sha);
 
         char actualHash[65];
 
         for (int i = 0; i < 32; i++) {
-            sprintf(actualHash + (i * 2), "%02x", digest[i]);
+            sprintf(actualHash + i * 2, "%02x", digest[i]);
         }
 
         actualHash[64] = '\0';

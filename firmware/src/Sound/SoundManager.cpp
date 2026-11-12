@@ -1,8 +1,7 @@
 #include "SoundManager.h"
+#include "Pins.h"
 
 namespace SoundManager {
-    constexpr uint8_t BUZZER_PIN = 33;
-    constexpr uint8_t BUZZER_CHANNEL = 0;
     constexpr uint8_t BUZZER_RESOLUTION = 8;
 
     uint32_t startTime = 0;
@@ -10,8 +9,7 @@ namespace SoundManager {
     bool playing = false;
 
     void setup() {
-        ledcSetup(BUZZER_CHANNEL, 2000, BUZZER_RESOLUTION);
-        ledcAttachPin(BUZZER_PIN, BUZZER_CHANNEL);
+        ledcAttach(Pins::BUZZER, 2000, BUZZER_RESOLUTION);
 
         stop();
     }
@@ -23,8 +21,8 @@ namespace SoundManager {
     }
 
     void playTone(uint32_t durationMs, uint8_t volume, uint32_t frequency) {
-        ledcWriteTone(BUZZER_CHANNEL, frequency);
-        ledcWrite(BUZZER_CHANNEL, volume);
+        ledcWriteTone(Pins::BUZZER, frequency);
+        ledcWrite(Pins::BUZZER, volume);
 
         startTime = millis();
         duration = durationMs;
@@ -32,7 +30,7 @@ namespace SoundManager {
     }
 
     void stop() {
-        ledcWrite(BUZZER_CHANNEL, 0);
+        ledcWrite(Pins::BUZZER, 0);
         playing = false;
     }
 }  // namespace SoundManager

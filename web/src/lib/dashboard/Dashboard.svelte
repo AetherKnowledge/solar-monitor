@@ -2,25 +2,11 @@
 	import { HardDrive, MemoryStick, MonitorSmartphone, Thermometer, Timer } from '@lucide/svelte';
 
 	import { createDashboardController } from './DashboardController.svelte';
+	import ResourceUsage from './ResourceUsage.svelte';
 
 	const { query } = createDashboardController();
 
 	const sensors = $derived(query.data.sensors);
-
-	function percent(used: number, total: number) {
-		if (total <= 0) return 0;
-
-		const value = (used / total) * 100;
-		return Number.isFinite(value) ? value : 0;
-	}
-
-	const ramPercent = $derived(percent(sensors.ram_usage, sensors.ram_total));
-	const flashPercent = $derived(percent(sensors.flash_used, sensors.flash_total));
-	const codePercent = $derived(percent(sensors.code_storage_used, sensors.code_storage_total));
-	const webPercent = $derived(percent(sensors.web_storage_used, sensors.web_storage_total));
-	const configPercent = $derived(
-		percent(sensors.config_storage_used, sensors.config_storage_total)
-	);
 
 	function formatUptime(seconds: number) {
 		const days = Math.floor(seconds / 86400);
@@ -35,29 +21,6 @@
 		if (hours > 0) return `${hours}h ${minutes}m`;
 		return `${minutes}m`;
 	}
-
-	function getHealth(percent: number) {
-		if (percent < 60) {
-			return {
-				text: 'Healthy',
-				class: 'badge-success'
-			};
-		}
-
-		if (percent < 85) {
-			return {
-				text: 'Warning',
-				class: 'badge-warning'
-			};
-		}
-
-		return {
-			text: 'Critical',
-			class: 'badge-error'
-		};
-	}
-
-	const ramHealth = $derived(getHealth(ramPercent));
 </script>
 
 <div class="card border border-base-300 bg-base-100 shadow-sm">
@@ -153,29 +116,13 @@
 		</div>
 
 		<div class="rounded-xl border border-base-300 bg-base-200/40 p-5">
-			<div class="mb-2 flex items-center justify-between">
-				<div>
-					<div class="font-medium">RAM Usage</div>
-
-					<div class="text-sm text-base-content/60">
-						{sensors.ram_usage.toFixed(1)}
-						/
-						{sensors.ram_total.toFixed(1)}
-						KiB
-					</div>
-				</div>
-
-				<div class={`badge gap-1 ${ramHealth.class}`}>
-					<span class="size-2 rounded-full bg-current"></span>
-					{ramHealth.text}
-				</div>
-			</div>
-
-			<progress class="progress w-full progress-primary" value={ramPercent} max="100"></progress>
-
-			<div class="mt-2 flex justify-end text-sm text-base-content/60">
-				{ramPercent.toFixed(0)}%
-			</div>
+			<ResourceUsage
+				label="RAM"
+				usage={sensors.ram_usage}
+				total={sensors.ram_total}
+				unit=" KiB"
+				badge
+			/>
 
 			<div class="divider"></div>
 
@@ -205,63 +152,41 @@
 		</div>
 
 		<div class="space-y-6 rounded-xl border border-base-300 bg-base-200/40 p-5">
-			<div>
-				<div class="mb-2 flex justify-between">
-					<span>Flash</span>
+			<ResourceUsage
+				label="Flash"
+				usage={sensors.flash_used}
+				total={sensors.flash_total}
+				unit=" MiB"
+				progressClass="progress-warning"
+				compact
+			/>
 
-					<span class="font-mono">
-						{sensors.flash_used.toFixed(2)} /
-						{sensors.flash_total.toFixed(2)}
-						MiB
-					</span>
-				</div>
+			<ResourceUsage
+				label="Code"
+				usage={sensors.code_storage_used}
+				total={sensors.code_storage_total}
+				unit=" KiB"
+				compact
+				progressClass="progress-info"
+			/>
 
-				<progress class="progress w-full progress-warning" value={flashPercent} max="100"
-				></progress>
-			</div>
+			<ResourceUsage
+				label="Website"
+				usage={sensors.web_storage_used}
+				total={sensors.web_storage_total}
+				unit=" KiB"
+				compact
+				progressClass="progress-info"
+			/>
 
-			<div>
-				<div class="mb-2 flex justify-between">
-					<span>Code Storage</span>
-
-					<span class="font-mono">
-						{sensors.code_storage_used.toFixed(0)} /
-						{sensors.code_storage_total.toFixed(0)}
-						KiB
-					</span>
-				</div>
-
-				<progress class="progress w-full progress-info" value={codePercent} max="100"></progress>
-			</div>
-
-			<div>
-				<div class="mb-2 flex justify-between">
-					<span>Website Storage</span>
-
-					<span class="font-mono">
-						{sensors.web_storage_used.toFixed(0)} /
-						{sensors.web_storage_total.toFixed(0)}
-						KiB
-					</span>
-				</div>
-
-				<progress class="progress w-full progress-info" value={webPercent} max="100"></progress>
-			</div>
-
-			<div>
-				<div class="mb-2 flex justify-between">
-					<span>Configuration Storage</span>
-
-					<span class="font-mono">
-						{sensors.config_storage_used.toFixed(0)} /
-						{sensors.config_storage_total.toFixed(0)}
-						KiB
-					</span>
-				</div>
-
-				<progress class="progress w-full progress-success" value={configPercent} max="100"
-				></progress>
-			</div>
+			<ResourceUsage
+				label="Configuration"
+				usage={sensors.config_storage_used}
+				total={sensors.config_storage_total}
+				unit=" KiB"
+				compact
+				progressClass="progress-success"
+			/>
 		</div>
 	</div>
 </div>

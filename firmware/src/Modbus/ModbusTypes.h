@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Common/Enum.h"
 #include "RegisterTransform.h"
 #include "WordOrder.h"
 #include <Arduino.h>
@@ -88,10 +89,11 @@ struct ReadRegister : Register, Entity {
         Register::fromJson(json);
         Entity::fromJson(json, update);
 
-        rounding = json["rounding"].as<uint8_t>();
-        transform = Enum::fromString<RegisterTransform>(json["transform"] | "None");
-        signedValue = json["signedValue"] | false;
-        transformArgument = json["transformArgument"].as<float>();
+        rounding = json["rounding"] | rounding;
+        transform =
+            Enum::fromString<RegisterTransform>(json["transform"] | Enum::toString(transform));
+        signedValue = json["signedValue"] | signedValue;
+        transformArgument = json["transformArgument"] | transformArgument;
     }
 
     SensorDiscovery& getDiscovery() override {
@@ -132,9 +134,9 @@ struct VirtualSensor : Entity {
     void fromJson(JsonObject json, bool update = false) override {
         Entity::fromJson(json, update);
 
-        expression = json["expression"].as<String>();
-        isPersistent = json["isPersistent"] | false;
-        rounding = json["rounding"] | 0;
+        expression = json["expression"] | expression;
+        isPersistent = json["isPersistent"] | isPersistent;
+        rounding = json["rounding"] | rounding;
     }
 
     SensorDiscovery& getDiscovery() override {

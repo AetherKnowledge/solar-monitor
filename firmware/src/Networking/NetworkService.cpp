@@ -1,10 +1,10 @@
-#include <Networking/NetworkManager.h>
+#include <Networking/NetworkService.h>
 #include <WiFi.h>
 #include <Config/ConfigManager.h>
 #include <Mqtt/MqttManager.h>
 #include <Common/Logger.h>
 
-namespace NetworkManager {
+namespace NetworkService {
     std::vector<WiFiNetwork> cachedWifiNetworks;
     UpdateStatus scanStatus = UpdateStatus::NotStarted;
 
@@ -107,6 +107,7 @@ namespace NetworkManager {
     bool connect(NetworkConfig& config) {
         Log.printf("Connecting to WiFi network: %s\n", config.wifiSsid.c_str());
         WiFi.mode(config.mode);
+        WiFi.hostname("Solar Monitor");
 
         if (config.mode == WIFI_AP_STA && !config.apSsid.isEmpty()) {
             Log.printf("Starting Access Point with SSID: %s\n", config.apSsid.c_str());
@@ -139,6 +140,9 @@ namespace NetworkManager {
 
             Log.print("IP Address: ");
             Log.println(WiFi.localIP());
+
+            configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+
             return true;
         } else {
             status.connected = false;
@@ -167,12 +171,13 @@ namespace NetworkManager {
         return status;
     }
 
-    void requestUpdate(NetworkConfig& newConfig) {
-        pendingConfig = newConfig;
-        ConfigManager::save();
+    void requestUpdate(const JsonVariantConst& json) {
+        pendingConfig = ConfigManager::config.network;
+        pendingConfig.fromJson(json);
+
         updateStatus = UpdateStatus::Requested;
 
         Log.println("\nNetwork configuration updating");
     }
 
-}  // namespace NetworkManager
+}  // namespace NetworkService
