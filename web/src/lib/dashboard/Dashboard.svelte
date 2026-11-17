@@ -1,12 +1,46 @@
 <script lang="ts">
-	import { HardDrive, MemoryStick, MonitorSmartphone, Thermometer, Timer } from '@lucide/svelte';
+	import { showError, showSuccess, showYesNo } from '$lib/popup/Popup.svelte';
+	import {
+		HardDrive,
+		MemoryStick,
+		MonitorSmartphone,
+		RotateCw,
+		Thermometer,
+		Timer
+	} from '@lucide/svelte';
 
-	import { createDashboardController } from './DashboardController.svelte';
+	import { createDashboardController, rebootDevice } from './DashboardController.svelte';
 	import ResourceUsage from './ResourceUsage.svelte';
 
 	const { query } = createDashboardController();
 
 	const sensors = $derived(query.data.sensors);
+	let rebooting = $state(false);
+
+	async function onReboot() {
+		if (rebooting) return;
+
+		rebooting = true;
+		try {
+			if (
+				!(await showYesNo({
+					message: 'Reboot this device?',
+					hintText: 'Monitoring will pause briefly while the device restarts.',
+					warning: true
+				}))
+			)
+				return;
+
+			await rebootDevice();
+			showSuccess('Reboot requested. The device will reconnect shortly.');
+		} catch (error) {
+			showError(
+				error instanceof Error ? error.message : 'Failed to reboot the device. Please try again.'
+			);
+		} finally {
+			rebooting = false;
+		}
+	}
 
 	function formatUptime(seconds: number) {
 		const days = Math.floor(seconds / 86400);
@@ -27,7 +61,7 @@
 	<div class="card-body gap-6">
 		<!-- Header -->
 
-		<div class="flex items-start justify-between">
+		<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 			<div class="flex items-center gap-3">
 				<div class="rounded-xl bg-primary/10 p-3 text-primary">
 					<MonitorSmartphone class="size-7" />
@@ -41,6 +75,20 @@
 					</p>
 				</div>
 			</div>
+
+			<button
+				type="button"
+				class="btn shrink-0 gap-2 btn-outline btn-error"
+				onclick={onReboot}
+				disabled={rebooting}
+			>
+				{#if rebooting}
+					<span class="loading loading-sm loading-spinner" aria-hidden="true"></span>
+				{:else}
+					<RotateCw class="size-4" />
+				{/if}
+				{rebooting ? 'Rebooting...' : 'Reboot'}
+			</button>
 		</div>
 
 		<div class="divider my-0"></div>

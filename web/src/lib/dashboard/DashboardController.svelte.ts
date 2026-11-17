@@ -17,6 +17,12 @@ export function createDashboardController() {
 	};
 }
 
+export function rebootDevice() {
+	return apiFetch<SimpleResponse>('/api/system/restart', {
+		method: 'POST'
+	});
+}
+
 export function logout() {
 	return apiFetch<SimpleResponse>(`/api/auth/logout`, {
 		method: 'POST'

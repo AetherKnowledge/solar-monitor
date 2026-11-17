@@ -123,6 +123,13 @@ struct VirtualSensor : Entity {
     // only updates if persistence is true
     bool isDirty = false;
 
+    void freeExpression() {
+        if (compiledExpression) {
+            te_free(compiledExpression);
+            compiledExpression = nullptr;
+        }
+    }
+
     void toJson(JsonObject json) const override {
         Entity::toJson(json);
 
@@ -301,6 +308,20 @@ struct ModbusDevice : Device {
             }
         }
         return nullptr;
+    }
+
+    void resetVirtualSensors() {
+        vars.clear();
+
+        for (auto& virtualSensor : this->virtualSensors) {
+            virtualSensor.freeExpression();
+        }
+    }
+
+    void resetRuntime() {
+        initialized = false;
+        readGroups.clear();
+        resetVirtualSensors();
     }
 
     void toJson(JsonObject json) const {

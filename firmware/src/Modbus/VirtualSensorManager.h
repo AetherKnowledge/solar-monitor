@@ -19,7 +19,6 @@ namespace VirtualSensorManager {
 
     void addVariable(ModbusDevice& device, const Entity& reg, unordered_set_t& usedIds);
 
-    void resetDevice(ModbusDevice& device);
     void compileExpressions(ModbusDevice& device);
 
     bool loadFile(File& file, std::vector<ModbusDevice>& devices);

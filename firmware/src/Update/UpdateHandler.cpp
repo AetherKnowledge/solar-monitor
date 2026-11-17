@@ -37,19 +37,24 @@ namespace UpdateHandler {
     esp_err_t onUpdateFinish(PsychicRequest* request, PsychicResponse* response, bool isFirmware) {
         const String name = isFirmware ? "Firmware" : "Website";
 
-        if (!Update.hasError() && Update.isFinished() &&
-            updateProgress.status == UpdateStatus::UpdateComplete) {
-            updateProgress.status = UpdateStatus::NotStarted;
-            SystemManager::requestRestart();
+        const bool updateFailed = Update.hasError() || !Update.isFinished() ||
+                                  updateProgress.status != UpdateStatus::UpdateComplete;
+        esp_err_t responseResult;
 
+        if (updateFailed) {
+            String errorMessage =
+                name + " update failed. Please check the logs for more information.";
+            responseResult = Response::error(response, errorMessage, 500, &Log);
+
+        } else {
             String completeMessage = name + " update complete. Restarting...";
-
-            return Response::success(response, completeMessage, 200, &Log);
+            responseResult = Response::success(response, completeMessage, 200, &Log);
         }
 
-        updateProgress.status = UpdateStatus::NotStarted;
-        String errorMessage = name + " update failed. Please check the logs for more information.";
-        return Response::error(response, errorMessage, 500, &Log);
+        // Restart the device whether the update succeeded or failed, as when update is requested it
+        // clears device state.
+        SystemManager::requestRestart();
+        return responseResult;
     }
 
     esp_err_t onChunk(PsychicRequest* request,

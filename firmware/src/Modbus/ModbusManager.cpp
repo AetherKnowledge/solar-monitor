@@ -88,9 +88,7 @@ namespace ModbusManager {
         Serial2.end();
 
         for (auto& device : ConfigManager::config.modbusDevices) {
-            device.initialized = false;
-            device.readGroups.clear();
-            VirtualSensorManager::resetDevice(device);
+            device.resetRuntime();
         }
     }
 

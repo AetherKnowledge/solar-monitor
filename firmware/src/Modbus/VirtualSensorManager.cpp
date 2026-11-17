@@ -159,9 +159,7 @@ namespace VirtualSensorManager {
                    device.discovery.name.c_str(),
                    device.discovery.identifier.c_str());
 
-        resetDevice(device);
-
-        device.vars.clear();
+        device.resetVirtualSensors();
         device.vars.reserve(device.readRegisters.size() + device.virtualSensors.size() +
                             GLOBAL_VARIABLES.size());
 
@@ -257,17 +255,6 @@ namespace VirtualSensorManager {
         }
 
         return changed;
-    }
-
-    void resetDevice(ModbusDevice& device) {
-        device.vars.clear();
-
-        for (auto& virtualSensor : device.virtualSensors) {
-            if (virtualSensor.compiledExpression) {
-                te_free(virtualSensor.compiledExpression);
-                virtualSensor.compiledExpression = nullptr;
-            }
-        }
     }
 
 }  // namespace VirtualSensorManager

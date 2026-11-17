@@ -10,6 +10,7 @@
 #include <esp_heap_caps.h>
 #include <Mqtt/MqttManager.h>
 #include <esp_ota_ops.h>
+#include <Update/UpdateHandler.h>
 
 namespace SystemManager {
     volatile bool requestedRestart = false;
@@ -96,14 +97,21 @@ namespace SystemManager {
     void loop() {
         // Handle system tasks
         if (requestedRestart) {
-            DisplayManager::showLoadingSpinner("Restarting...");
+            // Prevent restart if an update is in progress, as it may cause the update to fail and
+            // leave the device in an inconsistent state.
+            if (UpdateHandler::getUpdateProgress().status == UpdateStatus::InProgress) {
+                Log.println("Update in progress, waiting for it to finish before restarting...");
+                return;
+            }
+
             // Perform restart logic
             requestedRestart = false;
+            DisplayManager::showLoadingSpinner("Restarting...");
 
             VirtualSensorManager::savePersistence(ConfigManager::config.modbusDevices);
             Log.println("Restarting...");
 
-            delay(1000);
+            delay(5000);
             ESP.restart();
         }
 
